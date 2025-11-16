@@ -572,7 +572,7 @@
         </div>
         <div>
           <label for="register-meta">Meta mensual de gasto (opcional)</label>
-          <input type="number" id="register-meta" min="0" step="0.01" placeholder="Ej: 1500" />
+          <input type="text" id="register-meta" placeholder="Ej: 1500" />
         </div>
       </div>
 
@@ -729,7 +729,6 @@
                 <select id="origen">
                   <option value="normal">Normal</option>
                   <option value="tarjeta">Tarjeta</option>
-                  <option value="prestamo">Préstamo</option>
                 </select>
               </div>
               <div id="campo-tarjeta" class="hidden">
@@ -738,7 +737,7 @@
               </div>
               <div>
                 <label for="valor">Valor</label>
-                <input type="number" id="valor" step="0.01" min="0" required />
+                <input type="text" id="valor" required placeholder="Ej: 1.300,50" />
               </div>
               <div>
                 <label for="data">Fecha</label>
@@ -808,7 +807,7 @@
               </div>
               <div>
                 <label for="fijo-valor">Valor mensual</label>
-                <input type="number" id="fijo-valor" step="0.01" min="0" required />
+                <input type="text" id="fijo-valor" required placeholder="Ej: 1.300" />
               </div>
               <div>
                 <label for="fijo-vencimiento">Día de vencimiento</label>
@@ -991,7 +990,7 @@
             <p class="card-subtitle">
               Define tu edad, sexo, país, moneda, ingreso mensual y una meta mensual general de gastos.
               También puedes definir un objetivo específico de ahorro (ej.: pagar un computador de 10.000).
-              Cada objetivo tiene su propio “inicio”, y o progreso se resetea al cambiar el objetivo o al usar el botón de reinicio.
+              Cada objetivo tiene su propio “inicio”, y el progreso se resetea al cambiar el objetivo o al usar el botón de reinicio.
             </p>
             <form id="form-perfil">
               <div>
@@ -1021,11 +1020,11 @@
               </div>
               <div>
                 <label for="perfil-meta">Meta mensual de gasto</label>
-                <input type="number" id="perfil-meta" min="0" step="0.01" placeholder="Ej: 1500" />
+                <input type="text" id="perfil-meta" placeholder="Ej: 1500" />
               </div>
               <div>
                 <label for="perfil-ingreso">Ingreso mensual aproximado</label>
-                <input type="number" id="perfil-ingreso" min="0" step="0.01" placeholder="Ej: 2500" />
+                <input type="text" id="perfil-ingreso" placeholder="Ej: 2500" />
               </div>
               <div>
                 <label for="perfil-moneda">Moneda</label>
@@ -1046,7 +1045,7 @@
               </div>
               <div>
                 <label for="perfil-objetivo-valor">Valor objetivo</label>
-                <input type="number" id="perfil-objetivo-valor" min="0" step="0.01" placeholder="Ej: 10000" />
+                <input type="text" id="perfil-objetivo-valor" placeholder="Ej: 10.000" />
               </div>
               <div>
                 <button type="submit" class="primary">Guardar perfil</button>
@@ -1119,6 +1118,20 @@
     }
   }
 
+  // Conversión local: "1.300,50" -> 1300.50
+  function parseNumeroLocal(str) {
+    if (str === null || str === undefined) return 0;
+    if (typeof str !== "string") str = String(str);
+    str = str.trim();
+    if (!str) return 0;
+    // quitar puntos (separadores de miles)
+    str = str.replace(/\./g, "");
+    // cambiar coma decimal por punto
+    str = str.replace(",", ".");
+    const n = parseFloat(str);
+    return isNaN(n) ? 0 : n;
+  }
+
   let monedaUsuario = "USD";
 
   function formatearMoneda(valor) {
@@ -1176,10 +1189,10 @@
   // Objetivo de ahorro específico
   let objetivoNombre = "";
   let objetivoValor = 0;
-  let objetivoAhorroBase = 0;   // ahorro total en el momento de iniciar/cambiar/resetear el objetivo
+  let objetivoAhorroBase = 0;
   let objetivoFechaInicio = null;
   let objetivoCompletado = false;
-  let objetivosHistorial = [];  // lista de objetivos concluidos
+  let objetivosHistorial = [];
 
   function guardarLocal() {
     localStorage.setItem("usuarios-financiero", JSON.stringify(usuariosLocal));
@@ -1332,7 +1345,7 @@
 
       usuarioActual = { email };
       const edad = parseInt(registerEdad.value || "0", 10) || null;
-      const metaMensual = parseFloat(registerMeta.value || "0") || 0;
+      const metaMensual = parseNumeroLocal(registerMeta.value || "0");
       edadUsuario = edad;
       metaMensualUsuario = metaMensual;
       ingresoMensualUsuario = 0;
@@ -1438,7 +1451,6 @@
   const statMetaUso     = document.getElementById("stat-meta-uso");
   const statIngresoAlerta = document.getElementById("stat-ingreso-alerta");
 
-  // OBJETIVO
   const objNombreSpan    = document.getElementById("obj-nombre");
   const objMetaSpan      = document.getElementById("obj-meta");
   const objAhorradoSpan  = document.getElementById("obj-ahorrado");
@@ -1638,23 +1650,21 @@
     edadUsuario           = parseInt(perfilEdadInput.value || "0", 10) || null;
     sexoUsuario           = perfilSexoInput.value || "";
     paisUsuario           = perfilPaisInput.value || "";
-    metaMensualUsuario    = parseFloat(perfilMetaInput.value || "0") || 0;
-    ingresoMensualUsuario = parseFloat(perfilIngresoInput.value || "0") || 0;
+    metaMensualUsuario    = parseNumeroLocal(perfilMetaInput.value || "0");
+    ingresoMensualUsuario = parseNumeroLocal(perfilIngresoInput.value || "0");
 
     const nuevoNombre = perfilObjetivoNombreInput.value.trim();
-    const nuevoValor  = parseFloat(perfilObjetivoValorInput.value || "0") || 0;
+    const nuevoValor  = parseNumeroLocal(perfilObjetivoValorInput.value || "0");
 
     const cambiouObjetivo = (nuevoNombre !== viejoNombre) || (nuevoValor !== viejoValor);
 
     if (cambiouObjetivo && nuevoNombre && nuevoValor > 0) {
-      // Nuevo objetivo o cambio de objetivo -> progreso empieza desde 0
       objetivoNombre      = nuevoNombre;
       objetivoValor       = nuevoValor;
       objetivoAhorroBase  = ahorroTotal;
       objetivoFechaInicio = new Date().toISOString().slice(0, 10);
       objetivoCompletado  = false;
     } else {
-      // Solo actualizar valores sin reiniciar lógica (por ejemplo, limpiar objetivo)
       objetivoNombre = nuevoNombre;
       objetivoValor  = nuevoValor;
       if (!nuevoNombre || nuevoValor <= 0) {
@@ -1953,7 +1963,7 @@
   document.getElementById("form-fijo").addEventListener("submit", (e) => {
     e.preventDefault();
     const descripcion = document.getElementById("fijo-descripcion").value.trim();
-    const valor       = parseFloat(document.getElementById("fijo-valor").value || "0");
+    const valor       = parseNumeroLocal(document.getElementById("fijo-valor").value || "0");
     const vencimiento = parseInt(document.getElementById("fijo-vencimiento").value || "1", 10);
     if (!descripcion || valor <= 0) return;
 
@@ -2026,7 +2036,8 @@
     tarjetasLocal.forEach(t => {
       const opt = document.createElement("option");
       opt.value = t.id;
-      const label = `${t.alias || "Tarjeta"} ${t.digitos ? "• ****" + t.digitos : ""}`;
+      const sufijo = t.digitos ? "• ****" + t.digitos : "";
+      const label = `${t.alias || "Tarjeta"} ${sufijo}`;
       opt.textContent = label;
       selectTarjeta.appendChild(opt);
     });
@@ -2114,9 +2125,9 @@
         let origenTexto = "-";
         if (t.tipo === "salida") {
           origenTexto =
-            t.origen === "tarjeta"   ? descripcionTarjeta(t) :
-            t.origen === "prestamo"  ? "Préstamo" :
-                                       "Normal";
+            t.origen === "tarjeta"
+              ? descripcionTarjeta(t)
+              : "Normal";
         }
 
         const tr = document.createElement("tr");
@@ -2202,7 +2213,7 @@
     e.preventDefault();
     const tipo        = document.getElementById("tipo").value;
     const catRaw      = document.getElementById("categoria").value;
-    const valor       = parseFloat(document.getElementById("valor").value || "0");
+    const valor       = parseNumeroLocal(document.getElementById("valor").value || "0");
     const fecha       = document.getElementById("data").value;
     const descripcion = document.getElementById("descripcion").value.trim();
 
@@ -2362,7 +2373,6 @@
     }
   }
 
-  // Ahorro total histórico
   function calcularAhorroTotal() {
     let totalEntradas = 0;
     let totalSalidas  = 0;
@@ -2445,7 +2455,6 @@
     objTexto.textContent = texto;
     dibujarGraficoObjetivo(porcentaje);
 
-    // Detectar finalización del objetivo y guardar en historial (solo una vez)
     if (objetivoValor > 0 && porcentaje >= 100 && !objetivoCompletado) {
       objetivoCompletado = true;
       objetivosHistorial.push({
@@ -2594,4 +2603,3 @@
 </script>
 </body>
 </html>
-
