@@ -1127,7 +1127,6 @@
     }
   }
 
-  // Conversión local: "1.300,50" -> 1300.50
   function parseNumeroLocal(str) {
     if (str === null || str === undefined) return 0;
     if (typeof str !== "string") str = String(str);
@@ -1345,25 +1344,33 @@
       registerExtra.classList.add("hidden");
     }
     loginMessage.textContent = "";
+    loginMessage.style.color = "#f97316";
   });
 
+  // >>> BLOCO DE LOGIN AJUSTADO <<<
   loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const email = loginEmail.value.trim().toLowerCase();
     const password = loginPassword.value.trim();
     if (!email || !password) return;
 
+    loginMessage.style.color = "#f97316";
+    loginMessage.textContent = "";
+
     if (modoRegistro) {
       try {
         const { error } = await nhost.auth.signUpEmailPassword({ email, password });
         if (error) {
-          loginMessage.textContent = error.message || "Error al crear cuenta.";
+          console.error("Nhost signUpEmailPassword error:", error);
+          loginMessage.textContent = error.message || "Error al crear cuenta (Nhost).";
           return;
         }
 
         const { error: loginError } = await nhost.auth.signInEmailPassword({ email, password });
         if (loginError) {
-          loginMessage.textContent = loginError.message || "Cuenta creada, pero falló al iniciar sesión.";
+          console.error("Nhost signInEmailPassword después de signUp error:", loginError);
+          loginMessage.textContent =
+            loginError.message || "Cuenta creada, pero falló al iniciar sesión.";
           return;
         }
 
@@ -1387,25 +1394,38 @@
         yaMostroModalCategorias = false;
 
         guardarLocal();
+        loginMessage.style.color = "#22c55e";
         loginMessage.textContent = "Cuenta creada e iniciada con éxito.";
         abrirApp();
       } catch (err) {
-        loginMessage.textContent = "Error de conexión con Nhost.";
+        console.error("Error de conexión / SDK con Nhost (signUp):", err);
+        const mensajeError =
+          (err && (err.response?.error || err.message)) ||
+          "Error de conexión con Nhost (ver consola del navegador - F12).";
+        loginMessage.style.color = "#f97316";
+        loginMessage.textContent = mensajeError;
       }
     } else {
       try {
         const { error } = await nhost.auth.signInEmailPassword({ email, password });
         if (error) {
-          loginMessage.textContent = "Credenciales inválidas.";
+          console.error("Nhost signInEmailPassword error:", error);
+          loginMessage.textContent = error.message || "Credenciales inválidas.";
           return;
         }
         usuarioActual = { email };
         abrirApp();
       } catch (err) {
-        loginMessage.textContent = "Error de conexión con Nhost.";
+        console.error("Error de conexión / SDK con Nhost (signIn):", err);
+        const mensajeError =
+          (err && (err.response?.error || err.message)) ||
+          "Error de conexión con Nhost (ver consola del navegador - F12).";
+        loginMessage.style.color = "#f97316";
+        loginMessage.textContent = mensajeError;
       }
     }
   });
+  // <<< FIM BLOCO LOGIN >>>
 
   function abrirApp() {
     document.getElementById("user-email").textContent = usuarioActual.email;
@@ -1417,7 +1437,11 @@
   }
 
   document.getElementById("logout-btn").addEventListener("click", async () => {
-    await nhost.auth.signOut();
+    try {
+      await nhost.auth.signOut();
+    } catch (e) {
+      console.error("Error al cerrar sesión en Nhost:", e);
+    }
     usuarioActual = null;
     app.classList.add("hidden");
     loginScreen.classList.remove("hidden");
@@ -2579,8 +2603,7 @@
   });
 
   window.addEventListener("load", () => {
-    // opcional: poder revisar si ya hay sesión en nhost
-    // pero por simplicidad, siempre pedimos login al recargar.
+    // Sem auto-login por enquanto; sempre mostra tela de login ao recarregar.
   });
 </script>
 </body>
