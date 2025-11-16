@@ -1347,7 +1347,7 @@
     loginMessage.style.color = "#f97316";
   });
 
-  // >>> BLOCO DE LOGIN AJUSTADO <<<
+  // BLOQUE LOGIN AJUSTADO CON AVISO DE VERIFICACIÓN
   loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const email = loginEmail.value.trim().toLowerCase();
@@ -1358,6 +1358,7 @@
     loginMessage.textContent = "";
 
     if (modoRegistro) {
+      // REGISTRO: CREA LA CUENTA Y PIDE VERIFICAR EL EMAIL (SIN INICIAR SESIÓN AUTOMÁTICAMENTE)
       try {
         const { error } = await nhost.auth.signUpEmailPassword({ email, password });
         if (error) {
@@ -1366,18 +1367,13 @@
           return;
         }
 
-        const { error: loginError } = await nhost.auth.signInEmailPassword({ email, password });
-        if (loginError) {
-          console.error("Nhost signInEmailPassword después de signUp error:", loginError);
-          loginMessage.textContent =
-            loginError.message || "Cuenta creada, pero falló al iniciar sesión.";
-          return;
-        }
-
-        usuarioActual = { email };
-
+        // Guardar edad/meta de registro como perfil inicial (localStorage), sin dejar logueado
         const edad = parseInt(registerEdad.value || "0", 10) || null;
         const metaMensual = parseNumeroLocal(registerMeta.value || "0");
+
+        const usuarioTemp = { email };
+        const usuarioAnterior = usuarioActual;
+        usuarioActual = usuarioTemp;
 
         edadUsuario = edad;
         metaMensualUsuario = metaMensual;
@@ -1394,9 +1390,18 @@
         yaMostroModalCategorias = false;
 
         guardarLocal();
+        usuarioActual = usuarioAnterior;
+
         loginMessage.style.color = "#22c55e";
-        loginMessage.textContent = "Cuenta creada e iniciada con éxito.";
-        abrirApp();
+        loginMessage.textContent =
+          "Cuenta creada. Revisa tu correo y verifica tu email. Luego inicia sesión con tu contraseña.";
+
+        // Volver a modo login
+        modoRegistro = false;
+        loginSubmit.textContent = "Entrar";
+        toggleText.textContent = "¿No tienes cuenta?";
+        toggleModeBtn.textContent = "Crear cuenta";
+        registerExtra.classList.add("hidden");
       } catch (err) {
         console.error("Error de conexión / SDK con Nhost (signUp):", err);
         const mensajeError =
@@ -1406,6 +1411,7 @@
         loginMessage.textContent = mensajeError;
       }
     } else {
+      // LOGIN NORMAL
       try {
         const { error } = await nhost.auth.signInEmailPassword({ email, password });
         if (error) {
@@ -1425,7 +1431,6 @@
       }
     }
   });
-  // <<< FIM BLOCO LOGIN >>>
 
   function abrirApp() {
     document.getElementById("user-email").textContent = usuarioActual.email;
@@ -2603,7 +2608,7 @@
   });
 
   window.addEventListener("load", () => {
-    // Sem auto-login por enquanto; sempre mostra tela de login ao recarregar.
+    // Siempre mostrar pantalla de login al recargar.
   });
 </script>
 </body>
