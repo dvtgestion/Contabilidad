@@ -553,7 +553,7 @@
 <section id="login-screen">
   <div id="login-box">
     <h2>Entrar al Control Financiero</h2>
-    <p>Inicia sesión o crea una cuenta. Después conectaremos todo esto con Supabase.</p>
+    <p>Inicia sesión o crea una cuenta. Después conectaremos todo esto con Supabase/Nhost.</p>
 
     <form id="login-form">
       <div>
@@ -1105,7 +1105,16 @@
   </div>
 </div>
 
-<script>
+<script type="module">
+  import { createClient } from 'https://unpkg.com/@nhost/nhost-js@4.1.0/dist/index.esm.js';
+
+  const nhost = createClient({
+    subdomain: 'cpmnrcipviprenstjcwg',
+    region: 'sa-east-1'
+  });
+
+  window.nhost = nhost;
+
   function monedaPorDefectoParaPais(pais) {
     switch (pais) {
       case "bo": return "BOB";
@@ -1124,9 +1133,7 @@
     if (typeof str !== "string") str = String(str);
     str = str.trim();
     if (!str) return 0;
-    // quitar puntos (separadores de miles)
     str = str.replace(/\./g, "");
-    // cambiar coma decimal por punto
     str = str.replace(",", ".");
     const n = parseFloat(str);
     return isNaN(n) ? 0 : n;
@@ -1155,10 +1162,11 @@
     }
   }
 
-  function obtenerAnioMesActual() {
+  function obterAnioMesActualInner() {
     const hoy = new Date();
     return hoy.toISOString().slice(0, 7);
   }
+  const obtenerAnioMesActual = obterAnioMesActualInner;
 
   function filtrarMesActual(lista, campoFecha) {
     const anioMesActual = obtenerAnioMesActual();
@@ -1173,7 +1181,7 @@
   }
 
   let usuarioActual = null;
-  let usuariosLocal = JSON.parse(localStorage.getItem("usuarios-financiero") || "[]");
+  let usuariosLocal = []; // não é mais usado para autenticação
 
   let categoriasLocal = [];
   let transaccionesLocal = [];
@@ -1186,7 +1194,6 @@
   let paisUsuario = "";
   let yaMostroModalCategorias = false;
 
-  // Objetivo de ahorro específico
   let objetivoNombre = "";
   let objetivoValor = 0;
   let objetivoAhorroBase = 0;
@@ -1195,6 +1202,7 @@
   let objetivosHistorial = [];
 
   function guardarLocal() {
+    // usuariosLocal já não é relevante para login, mas mantemos a chave vazia
     localStorage.setItem("usuarios-financiero", JSON.stringify(usuariosLocal));
     if (!usuarioActual) return;
     const email = usuarioActual.email;
@@ -1327,50 +1335,63 @@
     loginMessage.textContent = "";
   });
 
-  loginForm.addEventListener("submit", (e) => {
+  loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const email = loginEmail.value.trim().toLowerCase();
     const password = loginPassword.value.trim();
     if (!email || !password) return;
 
     if (modoRegistro) {
-      const existente = usuariosLocal.find(u => u.email === email);
-      if (existente) {
-        loginMessage.textContent = "Ya existe una cuenta con este correo.";
-        return;
+      try {
+        const { error } = await nhost.auth.signUpEmailPassword({ email, password });
+        if (error) {
+          loginMessage.textContent = error.message || "Error al crear cuenta.";
+          return;
+        }
+
+        const { error: loginError } = await nhost.auth.signInEmailPassword({ email, password });
+        if (loginError) {
+          loginMessage.textContent = loginError.message || "Cuenta creada, pero fallo al iniciar sesión.";
+          return;
+        }
+
+        usuarioActual = { email };
+
+        const edad = parseInt(registerEdad.value || "0", 10) || null;
+        const metaMensual = parseNumeroLocal(registerMeta.value || "0");
+
+        edadUsuario = edad;
+        metaMensualUsuario = metaMensual;
+        ingresoMensualUsuario = 0;
+        sexoUsuario = "";
+        paisUsuario = "";
+        monedaUsuario = "USD";
+        objetivoNombre = "";
+        objetivoValor = 0;
+        objetivoAhorroBase = 0;
+        objetivoFechaInicio = null;
+        objetivoCompletado = false;
+        objetivosHistorial = [];
+        yaMostroModalCategorias = false;
+
+        guardarLocal();
+        loginMessage.textContent = "Cuenta creada e iniciada con éxito.";
+        abrirApp();
+      } catch (err) {
+        loginMessage.textContent = "Error de conexión con Nhost.";
       }
-
-      const nuevo = { email, password };
-      usuariosLocal.push(nuevo);
-
-      usuarioActual = { email };
-      const edad = parseInt(registerEdad.value || "0", 10) || null;
-      const metaMensual = parseNumeroLocal(registerMeta.value || "0");
-      edadUsuario = edad;
-      metaMensualUsuario = metaMensual;
-      ingresoMensualUsuario = 0;
-      sexoUsuario = "";
-      paisUsuario = "";
-      monedaUsuario = "USD";
-      objetivoNombre = "";
-      objetivoValor = 0;
-      objetivoAhorroBase = 0;
-      objetivoFechaInicio = null;
-      objetivoCompletado = false;
-      objetivosHistorial = [];
-      yaMostroModalCategorias = false;
-
-      guardarLocal();
-      loginMessage.textContent = "Cuenta creada. Iniciaste sesión automáticamente.";
-      abrirApp();
     } else {
-      const usuario = usuariosLocal.find(u => u.email === email && u.password === password);
-      if (!usuario) {
-        loginMessage.textContent = "Credenciales inválidas.";
-        return;
+      try {
+        const { error } = await nhost.auth.signInEmailPassword({ email, password });
+        if (error) {
+          loginMessage.textContent = "Credenciales inválidas.";
+          return;
+        }
+        usuarioActual = { email };
+        abrirApp();
+      } catch (err) {
+        loginMessage.textContent = "Error de conexión con Nhost.";
       }
-      usuarioActual = { email };
-      abrirApp();
     }
   });
 
@@ -1383,7 +1404,8 @@
     mostrarModalCategoriasSiCorresponde();
   }
 
-  document.getElementById("logout-btn").addEventListener("click", () => {
+  document.getElementById("logout-btn").addEventListener("click", async () => {
+    await nhost.auth.signOut();
     usuarioActual = null;
     app.classList.add("hidden");
     loginScreen.classList.remove("hidden");
@@ -1810,7 +1832,7 @@
 
   tablaCategoriasBody.addEventListener("click", (e) => {
     const btn = e.target.closest(".btn-eliminar-categoria");
-    if (!btn) return;
+       if (!btn) return;
     const id = parseInt(btn.dataset.id, 10);
     if (!id) return;
 
@@ -2354,13 +2376,13 @@
 
       if (porcentajeIngreso >= 100) {
         colorAlerta = "#ef4444";
-        mensaje += " Estás por encima del 100% de tu ingreso, cuidado con endeudarte.";
+        mensagem += " Estás por encima del 100% de tu ingreso, cuidado con endeudarte.";
       } else if (porcentajeIngreso >= 90) {
         colorAlerta = "#ef4444";
-        mensaje += " Alerta: estás muy cerca de consumir todo tu ingreso del mes.";
+        mensagem += " Alerta: estás muy cerca de consumir todo tu ingreso del mes.";
       } else if (porcentajeIngreso >= 70) {
         colorAlerta = "#f97316";
-        mensaje += " Atención: ya consumiste más de 70% de tu ingreso.";
+        mensagem += " Atención: ya consumiste más de 70% de tu ingreso.";
       }
 
       mensaje += ` Ahorro estimado del mes: ${formatearMoneda(ahorro)}.`;
@@ -2482,8 +2504,8 @@
   }
 
   function inicializarReporte() {
-    const meses = obtenerMesesDeTransacciones();
-    const mesActual = obtenerAnioMesActual();
+    const meses = obterMesesDeTransaccionesInner();
+    const mesActual = obterAnioMesActualInner();
     selectReporteMes.innerHTML = "";
 
     if (meses.length === 0) {
@@ -2508,7 +2530,7 @@
 
     selectReporteMes.addEventListener("change", actualizarReporte);
     btnReporteMesActual.addEventListener("click", () => {
-      const mesActual2 = obtenerAnioMesActual();
+      const mesActual2 = obterAnioMesActualInner();
       if (![...selectReporteMes.options].some(o => o.value === mesActual2)) {
         const opt = document.createElement("option");
         opt.value = mesActual2;
@@ -2518,6 +2540,10 @@
       selectReporteMes.value = mesActual2;
       actualizarReporte();
     });
+  }
+
+  function obterMesesDeTransaccionesInner() {
+    return obtenerMesesDeTransacciones();
   }
 
   function actualizarReporte() {
@@ -2600,6 +2626,7 @@
       reporteTablaCategorias.appendChild(tr);
     });
   }
+
 </script>
 </body>
 </html>
