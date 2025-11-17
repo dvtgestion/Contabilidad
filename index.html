@@ -1312,6 +1312,108 @@
     }
   }
 
+  // --- NUEVO: Cargar perfil desde Nhost / Hasura ---
+  async function cargarPerfilDesdeNhost() {
+    if (!usuarioActual || !usuarioActual.email) return;
+    try {
+      const { data, error } = await nhost.graphql.request(`
+        query PerfilPorEmail($email: String!) {
+          perfil_financiero_by_pk(email: $email) {
+            email
+            edad
+            sexo
+            pais
+            moneda
+            meta_mensual
+            ingreso_mensual
+            objetivo_nombre
+            objetivo_valor
+            objetivo_ahorro_base
+            objetivo_fecha_inicio
+            objetivo_completado
+          }
+        }
+      `, { email: usuarioActual.email });
+
+      if (error) {
+        console.error("Error al cargar perfil desde Nhost:", error);
+        return;
+      }
+
+      const perfil = data?.perfil_financiero_by_pk;
+      if (!perfil) return;
+
+      edadUsuario           = perfil.edad ?? edadUsuario ?? null;
+      sexoUsuario           = perfil.sexo ?? sexoUsuario ?? "";
+      paisUsuario           = perfil.pais ?? paisUsuario ?? "";
+      monedaUsuario         = perfil.moneda || monedaPorDefectoParaPais(paisUsuario) || monedaUsuario || "USD";
+      metaMensualUsuario    = typeof perfil.meta_mensual === "number" ? perfil.meta_mensual : (metaMensualUsuario || 0);
+      ingresoMensualUsuario = typeof perfil.ingreso_mensual === "number" ? perfil.ingreso_mensual : (ingresoMensualUsuario || 0);
+      objetivoNombre        = perfil.objetivo_nombre ?? objetivoNombre ?? "";
+      objetivoValor         = typeof perfil.objetivo_valor === "number" ? perfil.objetivo_valor : (objetivoValor || 0);
+      objetivoAhorroBase    = typeof perfil.objetivo_ahorro_base === "number" ? perfil.objetivo_ahorro_base : (objetivoAhorroBase || 0);
+      objetivoFechaInicio   = perfil.objetivo_fecha_inicio ?? objetivoFechaInicio ?? null;
+      objetivoCompletado    = perfil.objetivo_completado ?? objetivoCompletado ?? false;
+
+      guardarLocal();
+    } catch (e) {
+      console.error("Error de conexión con Nhost al cargar perfil:", e);
+    }
+  }
+
+  // --- NUEVO: Guardar perfil en Nhost / Hasura ---
+  async function guardarPerfilEnNhost() {
+    if (!usuarioActual || !usuarioActual.email) return;
+    try {
+      const obj = {
+        email: usuarioActual.email,
+        edad: edadUsuario,
+        sexo: sexoUsuario || null,
+        pais: paisUsuario || null,
+        moneda: monedaUsuario || null,
+        meta_mensual: metaMensualUsuario,
+        ingreso_mensual: ingresoMensualUsuario,
+        objetivo_nombre: objetivoNombre || null,
+        objetivo_valor: objetivoValor || 0,
+        objetivo_ahorro_base: objetivoAhorroBase || 0,
+        objetivo_fecha_inicio: objetivoFechaInicio || null,
+        objetivo_completado: objetivoCompletado
+      };
+
+      const { error } = await nhost.graphql.request(`
+        mutation UpsertPerfilFinanciero($obj: perfil_financiero_insert_input!) {
+          insert_perfil_financiero_one(
+            object: $obj,
+            on_conflict: {
+              constraint: perfil_financiero_pkey,
+              update_columns: [
+                edad,
+                sexo,
+                pais,
+                moneda,
+                meta_mensual,
+                ingreso_mensual,
+                objetivo_nombre,
+                objetivo_valor,
+                objetivo_ahorro_base,
+                objetivo_fecha_inicio,
+                objetivo_completado
+              ]
+            }
+          ) {
+            email
+          }
+        }
+      `, { obj });
+
+      if (error) {
+        console.error("Error al guardar perfil en Nhost:", error);
+      }
+    } catch (e) {
+      console.error("Error de conexión con Nhost al guardar perfil:", e);
+    }
+  }
+
   const loginScreen      = document.getElementById("login-screen");
   const app              = document.getElementById("app");
   const loginForm        = document.getElementById("login-form");
@@ -1420,7 +1522,7 @@
           return;
         }
         usuarioActual = { email };
-        abrirApp();
+        await abrirApp();
       } catch (err) {
         console.error("Error de conexión / SDK con Nhost (signIn):", err);
         const mensajeError =
@@ -1432,11 +1534,19 @@
     }
   });
 
-  function abrirApp() {
+  // --- AJUSTADA: ahora async para poder esperar cargarPerfilDesdeNhost ---
+  async function abrirApp() {
     document.getElementById("user-email").textContent = usuarioActual.email;
     loginScreen.classList.add("hidden");
     app.classList.remove("hidden");
+
+    // 1) Carrega dados locais (categorias, transações, etc.)
     cargarDatosUsuario();
+
+    // 2) Tenta sincronizar perfil com Nhost (sobrescreve apenas campos de perfil)
+    await cargarPerfilDesdeNhost();
+
+    // 3) Atualiza UI com o que estiver em memória
     inicializarInterfaz();
     mostrarModalCategoriasSiCorresponde();
   }
@@ -1703,7 +1813,8 @@
       "Cálculo aproximado y solo orientativo, no es una recomendación financiera oficial.";
   }
 
-  formPerfil.addEventListener("submit", (e) => {
+  // --- AJUSTADO: agora async e chama guardarPerfilEnNhost ---
+  formPerfil.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const viejoNombre = objetivoNombre || "";
@@ -1744,6 +1855,8 @@
     monedaUsuario = monedaSel;
 
     guardarLocal();
+    await guardarPerfilEnNhost();
+
     rellenarPerfil();
     actualizarResumen();
     analisisLatam();
@@ -1772,7 +1885,8 @@
     actualizarObjetivo();
   });
 
-  resetObjetivoBtn.addEventListener("click", () => {
+  // --- AJUSTADO: também sincroniza com Nhost ao resetar objetivo ---
+  resetObjetivoBtn.addEventListener("click", async () => {
     if (!objetivoNombre || !objetivoValor || objetivoValor <= 0) {
       alert("Primero define un objetivo con nombre y valor en el formulario.");
       return;
@@ -1785,6 +1899,7 @@
     objetivoFechaInicio = new Date().toISOString().slice(0, 10);
     objetivoCompletado  = false;
     guardarLocal();
+    await guardarPerfilEnNhost();
     actualizarObjetivo();
   });
 
