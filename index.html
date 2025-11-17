@@ -1212,6 +1212,9 @@
   let objetivoCompletado = false;
   let objetivosHistorial = [];
 
+  // ID del registro de perfil_financiero en Hasura (si existe)
+  let perfilServidorId = null;
+
   function guardarLocal() {
     localStorage.setItem("usuarios-financiero", JSON.stringify(usuariosLocal));
     if (!usuarioActual) return;
@@ -1312,14 +1315,18 @@
     }
   }
 
-  // --- NUEVO: Cargar perfil desde Nhost / Hasura ---
-  async function cargarPerfilDesdeNhost() {
-    if (!usuarioActual || !usuarioActual.email) return;
+  // CARGAR PERFIL DESDE HASURA (NHOST / GRAPHQL)
+  async function cargarPerfilDesdeServidor() {
+    if (!usuarioActual) return;
     try {
-      const { data, error } = await nhost.graphql.request(`
-        query PerfilPorEmail($email: String!) {
-          perfil_financiero_by_pk(email: $email) {
-            email
+      const user = await nhost.auth.getUser();
+      if (!user) return;
+      usuarioActual.id = user.id;
+
+      const query = `
+        query GetPerfilFinanciero($user_id: uuid!) {
+          perfil_financiero(where: { user_id: { _eq: $user_id } }, limit: 1) {
+            id
             edad
             sexo
             pais
@@ -1331,42 +1338,52 @@
             objetivo_ahorro_base
             objetivo_fecha_inicio
             objetivo_completado
+            objetivos_historial
+            mostro_modal_categorias
           }
         }
-      `, { email: usuarioActual.email });
+      `;
 
+      const { data, error } = await nhost.graphql.request(query, { user_id: user.id });
       if (error) {
-        console.error("Error al cargar perfil desde Nhost:", error);
+        console.error("Error GraphQL al cargar perfil_financiero:", error);
         return;
       }
+      const lista = data?.perfil_financiero || [];
+      if (lista.length > 0) {
+        const p = lista[0];
+        perfilServidorId        = p.id;
+        metaMensualUsuario      = p.meta_mensual || 0;
+        ingresoMensualUsuario   = p.ingreso_mensual || 0;
+        edadUsuario             = p.edad ?? null;
+        sexoUsuario             = p.sexo || "";
+        paisUsuario             = p.pais || "";
+        monedaUsuario           = p.moneda || (monedaPorDefectoParaPais(paisUsuario) || "USD");
+        objetivoNombre          = p.objetivo_nombre || "";
+        objetivoValor           = p.objetivo_valor || 0;
+        objetivoAhorroBase      = p.objetivo_ahorro_base || 0;
+        objetivoFechaInicio     = p.objetivo_fecha_inicio || null;
+        objetivoCompletado      = !!p.objetivo_completado;
+        objetivosHistorial      = p.objetivos_historial || [];
+        yaMostroModalCategorias = !!p.mostro_modal_categorias;
 
-      const perfil = data?.perfil_financiero_by_pk;
-      if (!perfil) return;
-
-      edadUsuario           = perfil.edad ?? edadUsuario ?? null;
-      sexoUsuario           = perfil.sexo ?? sexoUsuario ?? "";
-      paisUsuario           = perfil.pais ?? paisUsuario ?? "";
-      monedaUsuario         = perfil.moneda || monedaPorDefectoParaPais(paisUsuario) || monedaUsuario || "USD";
-      metaMensualUsuario    = typeof perfil.meta_mensual === "number" ? perfil.meta_mensual : (metaMensualUsuario || 0);
-      ingresoMensualUsuario = typeof perfil.ingreso_mensual === "number" ? perfil.ingreso_mensual : (ingresoMensualUsuario || 0);
-      objetivoNombre        = perfil.objetivo_nombre ?? objetivoNombre ?? "";
-      objetivoValor         = typeof perfil.objetivo_valor === "number" ? perfil.objetivo_valor : (objetivoValor || 0);
-      objetivoAhorroBase    = typeof perfil.objetivo_ahorro_base === "number" ? perfil.objetivo_ahorro_base : (objetivoAhorroBase || 0);
-      objetivoFechaInicio   = perfil.objetivo_fecha_inicio ?? objetivoFechaInicio ?? null;
-      objetivoCompletado    = perfil.objetivo_completado ?? objetivoCompletado ?? false;
-
-      guardarLocal();
+        guardarLocal();
+      } else {
+        perfilServidorId = null;
+      }
     } catch (e) {
-      console.error("Error de conexión con Nhost al cargar perfil:", e);
+      console.error("Error al cargar perfil desde servidor:", e);
     }
   }
 
-  // --- NUEVO: Guardar perfil en Nhost / Hasura ---
-  async function guardarPerfilEnNhost() {
-    if (!usuarioActual || !usuarioActual.email) return;
+  // GUARDAR / ACTUALIZAR PERFIL EN HASURA
+  async function guardarPerfilServidor() {
+    if (!usuarioActual) return;
     try {
-      const obj = {
-        email: usuarioActual.email,
+      const user = await nhost.auth.getUser();
+      if (!user) return;
+
+      const basePerfil = {
         edad: edadUsuario,
         sexo: sexoUsuario || null,
         pais: paisUsuario || null,
@@ -1377,40 +1394,48 @@
         objetivo_valor: objetivoValor || 0,
         objetivo_ahorro_base: objetivoAhorroBase || 0,
         objetivo_fecha_inicio: objetivoFechaInicio || null,
-        objetivo_completado: objetivoCompletado
+        objetivo_completado: objetivoCompletado,
+        objetivos_historial: objetivosHistorial || [],
+        mostro_modal_categorias: yaMostroModalCategorias
       };
 
-      const { error } = await nhost.graphql.request(`
-        mutation UpsertPerfilFinanciero($obj: perfil_financiero_insert_input!) {
-          insert_perfil_financiero_one(
-            object: $obj,
-            on_conflict: {
-              constraint: perfil_financiero_pkey,
-              update_columns: [
-                edad,
-                sexo,
-                pais,
-                moneda,
-                meta_mensual,
-                ingreso_mensual,
-                objetivo_nombre,
-                objetivo_valor,
-                objetivo_ahorro_base,
-                objetivo_fecha_inicio,
-                objetivo_completado
-              ]
+      if (perfilServidorId) {
+        const mutationUpdate = `
+          mutation UpdatePerfilFinanciero($id: uuid!, $_set: perfil_financiero_set_input!) {
+            update_perfil_financiero_by_pk(pk_columns: {id: $id}, _set: $_set) {
+              id
             }
-          ) {
-            email
           }
+        `;
+        const { error } = await nhost.graphql.request(mutationUpdate, {
+          id: perfilServidorId,
+          _set: basePerfil
+        });
+        if (error) {
+          console.error("Error actualizando perfil_financiero:", error);
         }
-      `, { obj });
-
-      if (error) {
-        console.error("Error al guardar perfil en Nhost:", error);
+      } else {
+        const mutationInsert = `
+          mutation InsertPerfilFinanciero($object: perfil_financiero_insert_input!) {
+            insert_perfil_financiero_one(object: $object) {
+              id
+            }
+          }
+        `;
+        const { data, error } = await nhost.graphql.request(mutationInsert, {
+          object: {
+            user_id: user.id,
+            ...basePerfil
+          }
+        });
+        if (error) {
+          console.error("Error insertando perfil_financiero:", error);
+        } else if (data?.insert_perfil_financiero_one?.id) {
+          perfilServidorId = data.insert_perfil_financiero_one.id;
+        }
       }
     } catch (e) {
-      console.error("Error de conexión con Nhost al guardar perfil:", e);
+      console.error("Error al guardar perfil en servidor:", e);
     }
   }
 
@@ -1534,19 +1559,19 @@
     }
   });
 
-  // --- AJUSTADA: ahora async para poder esperar cargarPerfilDesdeNhost ---
   async function abrirApp() {
     document.getElementById("user-email").textContent = usuarioActual.email;
     loginScreen.classList.add("hidden");
     app.classList.remove("hidden");
 
-    // 1) Carrega dados locais (categorias, transações, etc.)
     cargarDatosUsuario();
+    await cargarPerfilDesdeServidor();
 
-    // 2) Tenta sincronizar perfil com Nhost (sobrescreve apenas campos de perfil)
-    await cargarPerfilDesdeNhost();
+    // Si no hay registro en el servidor todavía, subimos el perfil local actual
+    if (!perfilServidorId) {
+      await guardarPerfilServidor();
+    }
 
-    // 3) Atualiza UI com o que estiver em memória
     inicializarInterfaz();
     mostrarModalCategoriasSiCorresponde();
   }
@@ -1558,6 +1583,7 @@
       console.error("Error al cerrar sesión en Nhost:", e);
     }
     usuarioActual = null;
+    perfilServidorId = null;
     app.classList.add("hidden");
     loginScreen.classList.remove("hidden");
   });
@@ -1566,6 +1592,7 @@
     modalCategorias.classList.add("hidden");
     yaMostroModalCategorias = true;
     guardarLocal();
+    guardarPerfilServidor();
   });
 
   function mostrarModalCategoriasSiCorresponde() {
@@ -1813,8 +1840,7 @@
       "Cálculo aproximado y solo orientativo, no es una recomendación financiera oficial.";
   }
 
-  // --- AJUSTADO: agora async e chama guardarPerfilEnNhost ---
-  formPerfil.addEventListener("submit", async (e) => {
+  formPerfil.addEventListener("submit", (e) => {
     e.preventDefault();
 
     const viejoNombre = objetivoNombre || "";
@@ -1855,7 +1881,7 @@
     monedaUsuario = monedaSel;
 
     guardarLocal();
-    await guardarPerfilEnNhost();
+    guardarPerfilServidor();
 
     rellenarPerfil();
     actualizarResumen();
@@ -1871,6 +1897,7 @@
       monedaUsuario = m;
       perfilMonedaInput.value = m;
       guardarLocal();
+      guardarPerfilServidor();
       actualizarResumen();
       analisisLatam();
       actualizarObjetivo();
@@ -1880,13 +1907,13 @@
   perfilMonedaInput.addEventListener("change", () => {
     monedaUsuario = perfilMonedaInput.value || "USD";
     guardarLocal();
+    guardarPerfilServidor();
     actualizarResumen();
     analisisLatam();
     actualizarObjetivo();
   });
 
-  // --- AJUSTADO: também sincroniza com Nhost ao resetar objetivo ---
-  resetObjetivoBtn.addEventListener("click", async () => {
+  resetObjetivoBtn.addEventListener("click", () => {
     if (!objetivoNombre || !objetivoValor || objetivoValor <= 0) {
       alert("Primero define un objetivo con nombre y valor en el formulario.");
       return;
@@ -1899,7 +1926,7 @@
     objetivoFechaInicio = new Date().toISOString().slice(0, 10);
     objetivoCompletado  = false;
     guardarLocal();
-    await guardarPerfilEnNhost();
+    guardarPerfilServidor();
     actualizarObjetivo();
   });
 
@@ -1966,6 +1993,7 @@
         if (confirm("¿Eliminar esta categoría? Las transacciones existentes seguirán mostrando el nombre antiguo si ya lo guardaron.")) {
           categoriasLocal = categoriasLocal.filter(c => c.id !== cat.id);
           guardarLocal();
+          guardarPerfilServidor();
           rellenarTablaCategorias();
           rellenarSelectCategorias();
         }
@@ -2312,6 +2340,7 @@
         fechaConclusion: hoy
       });
       guardarLocal();
+      guardarPerfilServidor();
     }
 
     const porcentaje = objetivoValor > 0 ? (ahorroObjetivo / objetivoValor) * 100 : 0;
