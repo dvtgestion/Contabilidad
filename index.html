@@ -14,7 +14,7 @@
       color: #e5e7eb;
     }
 
-    /* INDICADOR DE CARREGAMENTO (NOVO) */
+    /* INDICADOR DE CARREGAMENTO */
     #loading-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -1112,14 +1112,15 @@
 </div>
 
 <script type="module">
-  // MUDANÇA 1: Usando a versão @latest para evitar bugs de versões antigas/beta
-  import { createClient } from 'https://unpkg.com/@nhost/nhost-js@latest/dist/nhost-js.es.js';
+  // AJUSTE CRÍTICO PARA IPAD: Usando esm.sh para garantir módulo ES compatível
+  import { createClient } from 'https://esm.sh/@nhost/nhost-js@latest';
 
   // CONFIGURAÇÃO DO NHOST
   const nhost = createClient({
     subdomain: 'cpmnrcipviprenstjcwg',
-    region: 'sa-east-1'
-    // MUDANÇA 2: Removi 'clientStorageType'. Deixe o Nhost escolher o melhor para o iPad.
+    region: 'sa-east-1',
+    // REATIVADO: localStorage é mais seguro para evitar bloqueio de cookies no Safari/iPad
+    clientStorageType: 'localStorage' 
   });
 
   window.nhost = nhost;
@@ -1225,17 +1226,14 @@
 
   // --- CARREGAR DADOS ---
   async function cargarDatosDelServidor() {
-    // Tenta obter usuário da sessão atual
     let user = nhost.auth.getUser();
     
-    // Se não achou, tenta refresh
     if (!user) {
         const session = await nhost.auth.getSession();
         if (session) user = session.user;
     }
 
     if (!user) {
-        // Silencioso no load inicial
         document.getElementById("app").classList.add("hidden");
         document.getElementById("login-screen").classList.remove("hidden");
         return;
@@ -1294,7 +1292,6 @@
       inicializarInterfaz();
       mostrarModalCategoriasSiCorresponde();
       
-      // Esconde login, mostra app
       document.getElementById("login-screen").classList.add("hidden");
       document.getElementById("app").classList.remove("hidden");
 
@@ -1409,7 +1406,6 @@
           return;
         }
 
-        // Verifica se sessao veio
         if (res.session) {
             usuarioActual = res.session.user;
             edadUsuario = parseInt(registerEdad.value || "0", 10) || null;
@@ -1417,7 +1413,7 @@
             await guardarPerfilEnServidor();
             abrirApp();
         } else {
-            // Se não veio sessão no registro, pode ser verificação de email
+            // Se registro ok mas sem sessao, pode ser verificação
             loginMessage.style.color = "#22c55e";
             loginMessage.textContent = "Cuenta creada. Intenta iniciar sesión ahora.";
             modoRegistro = false;
@@ -1442,23 +1438,13 @@
         }
 
         if (!res.session) {
-           // DIAGNÓSTICO DE ERRO
            console.warn("Sem sessão. Resposta completa:", res);
-           
-           // Se o usuário existe mas não tem sessão, pode ser verificação de email
-           if (res.needsEmailVerification) {
-              alert("DIAGNÓSTICO: Nhost diz que precisa verificar o email, mesmo você tendo desativado. Verifique se 'Require Email Verification' está mesmo OFF no painel.");
-              return;
-           }
-
-           // Se não tem erro, não tem sessão e não pede verificação, é estranho
-           alert("DIAGNÓSTICO AVANÇADO:\nLogin OK, mas sem Sessão.\nUser ID: " + (res.user ? res.user.id : 'null') + "\nVerificação necessária: " + res.needsEmailVerification);
-           
-           loginMessage.textContent = "Login exitoso pero sin sesión.";
+           // Mantenho o alerta para diagnóstico se persistir
+           alert("ERRO DE CORS DETECTADO:\nO Nhost recusou enviar a sessão para este endereço.\n\nSOLUÇÃO:\nVá no painel Nhost > Authentication > Allowed Redirect URLs e adicione:\n" + window.location.href);
+           loginMessage.textContent = "Erro: Bloqueio de segurança (CORS).";
            return;
         }
 
-        // Se chegou aqui, sucesso!
         usuarioActual = res.session.user;
         abrirApp();
 
@@ -1471,22 +1457,16 @@
   });
 
   async function abrirApp() {
-    // Só tenta carregar se tiver usuário
     if(!usuarioActual) return;
-    
-    // Muda a tela
     document.getElementById("login-screen").classList.add("hidden");
     document.getElementById("app").classList.remove("hidden");
-    
     await cargarDatosDelServidor();
   }
 
   document.getElementById("logout-btn").addEventListener("click", async () => {
     try { await nhost.auth.signOut(); } catch (e) {}
     usuarioActual = null;
-    // Limpa dados locais
     categoriasLocal=[]; transaccionesLocal=[]; fijosLocal=[]; tarjetasLocal=[];
-    // Troca tela
     document.getElementById("app").classList.add("hidden");
     document.getElementById("login-screen").classList.remove("hidden");
   });
@@ -1520,7 +1500,7 @@
     sidebar.classList.remove("open");
   });
 
-  // --- ACOES COM GRAPHQL (CATEGORIAS, FIJOS, ETC) ---
+  // --- ACOES COM GRAPHQL ---
   const formCategoria = document.getElementById("form-categoria");
   formCategoria.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -1673,7 +1653,7 @@
       });
   }
 
-  // Lógica de Estados dos Gastos Fixos (Cores)
+  // Lógica de Estados dos Gastos Fixos
   function estadoFijoParaMes(fijo, anioMesActual) {
     const hoy = new Date();
     const diaHoy = hoy.getDate();
@@ -1826,7 +1806,6 @@
   document.getElementById("btn-limpiar-filtros").addEventListener("click", ()=>{document.getElementById("filtro-texto").value="";document.getElementById("filtro-fecha").value="";rellenarTablaTransacciones();});
   
   window.addEventListener("load", async () => {
-      // Tenta recuperar sessão persistente
       const session = await nhost.auth.getSession();
       if(session && session.user) {
           usuarioActual = session.user;
