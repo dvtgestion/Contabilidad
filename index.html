@@ -1433,11 +1433,23 @@
           return;
         }
 
-        // Verificação defensiva para evitar o erro 'undefined is not an object'
-        if (!res.session) {
-           loginMessage.textContent = "Login exitoso pero sin sesión. Verifica tu email.";
-           return;
-        }
+        // Correção: Se o Nhost retornar o usuário, consideramos logado, mesmo se a sessão demorar a montar
+if (!res.session) {
+   console.warn("Aviso: Sessão nula recebida do Nhost.", res);
+   
+   // SE TIVER USUÁRIO, DEIXA ENTRAR!
+   if (res.user) {
+       console.log("Usuário detectado! Forçando entrada...");
+       usuarioActual = res.user;
+       await abrirApp(); // <--- AQUI ESTÁ O PULO DO GATO
+       return; 
+   }
+
+   // Só exibe erro se não tiver nem sessão nem usuário
+   loginMessage.textContent = "Login exitoso pero sin sesión. Verifica tu email.";
+   return;
+}
+
         
         if (!res.session.user) {
            loginMessage.textContent = "Error: Sesión recibida sin datos de usuario.";
