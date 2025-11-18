@@ -14,6 +14,21 @@
       color: #e5e7eb;
     }
 
+    /* INDICADOR DE CARREGAMENTO (NOVO - Para saber quando está salvando na nuvem) */
+    #loading-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(2, 6, 23, 0.85);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: #22c55e;
+      font-size: 1.2rem;
+      backdrop-filter: blur(4px);
+    }
+
     header {
       background: linear-gradient(90deg, #0ea5e9, #6366f1);
       color: #f9fafb;
@@ -549,11 +564,12 @@
 
 <body>
 
-<!-- PANTALLA DE LOGIN -->
+<div id="loading-overlay" class="hidden">Cargando datos...</div>
+
 <section id="login-screen">
   <div id="login-box">
     <h2>Entrar al Control Financiero</h2>
-    <p>Inicia sesión o crea una cuenta. Los datos financieros se guardan por usuario en este navegador.</p>
+    <p>Inicia sesión o crea una cuenta. Tus datos se sincronizarán en la nube.</p>
 
     <form id="login-form">
       <div>
@@ -586,7 +602,6 @@
   </div>
 </section>
 
-<!-- APLICACIÓN PRINCIPAL -->
 <div id="app" class="hidden">
   <header>
     <div style="display:flex; align-items:center; gap:0.5rem;">
@@ -614,7 +629,6 @@
     <main>
       <div class="main-inner">
 
-        <!-- DASHBOARD -->
         <section id="section-dashboard">
           <div class="card">
             <h3>Resumen del mes actual</h3>
@@ -644,7 +658,6 @@
             </div>
           </div>
 
-          <!-- OBJETIVO DE AHORRO ESPECÍFICO -->
           <div class="card">
             <h3>Objetivo de ahorro específico</h3>
             <p class="card-subtitle">
@@ -708,7 +721,6 @@
           </div>
         </section>
 
-        <!-- TRANSACCIONES -->
         <section id="section-transacciones" class="hidden">
           <div class="card">
             <h3>Nueva transacción</h3>
@@ -796,7 +808,6 @@
           </div>
         </section>
 
-        <!-- GASTOS FIJOS -->
         <section id="section-fijos" class="hidden">
           <div class="card">
             <h3>Nuevo gasto fijo mensual</h3>
@@ -842,7 +853,6 @@
           </div>
         </section>
 
-        <!-- TARJETAS -->
         <section id="section-tarjetas" class="hidden">
           <div class="card">
             <h3>Registrar tarjeta</h3>
@@ -886,7 +896,6 @@
           </div>
         </section>
 
-        <!-- REPORTE MENSUAL -->
         <section id="section-reportes" class="hidden">
           <div class="card">
             <h3>Reporte mensual</h3>
@@ -941,7 +950,6 @@
           </div>
         </section>
 
-        <!-- CATEGORÍAS Y METAS -->
         <section id="section-categorias" class="hidden">
           <div class="card">
             <h3>Categorías</h3>
@@ -983,13 +991,12 @@
           </div>
         </section>
 
-        <!-- PERFIL -->
         <section id="section-perfil" class="hidden">
           <div class="card">
             <h3>Perfil financiero</h3>
             <p class="card-subtitle">
               Define tu edad, sexo, país, moneda, ingreso mensual y una meta mensual general de gastos.
-              También puedes definir un objetivo específico de ahorro (ej.: pagar un computador de 10.000).
+              Tambien puedes definir un objetivo específico de ahorro (ej.: pagar un computador de 10.000).
               Cada objetivo tiene su propio “inicio”, y el progreso se resetea al cambiar el objetivo o al usar el botón de reinicio.
             </p>
             <form id="form-perfil">
@@ -1087,7 +1094,6 @@
   </div>
 </div>
 
-<!-- MODAL PRIMEROS PASOS (CATEGORÍAS) -->
 <div id="modal-categorias" class="modal hidden">
   <div class="card" style="max-width:420px; width:90%; text-align:left;">
     <h3>Primeros pasos</h3>
@@ -1114,6 +1120,13 @@
   });
 
   window.nhost = nhost;
+
+  // --- UTILITARIOS ---
+  function loading(show) {
+    const el = document.getElementById('loading-overlay');
+    if (show) el.classList.remove('hidden');
+    else el.classList.add('hidden');
+  }
 
   function monedaPorDefectoParaPais(pais) {
     switch (pais) {
@@ -1191,13 +1204,14 @@
     return anio.toString().padStart(4, "0") + "-" + mes.toString().padStart(2, "0");
   }
 
+  // --- ESTADO GLOBAL (CACHE) ---
   let usuarioActual = null;
-  let usuariosLocal = [];
-
+  
   let categoriasLocal = [];
   let transaccionesLocal = [];
   let fijosLocal = [];
   let tarjetasLocal = [];
+  
   let metaMensualUsuario = 0;
   let ingresoMensualUsuario = 0;
   let edadUsuario = null;
@@ -1212,106 +1226,131 @@
   let objetivoCompletado = false;
   let objetivosHistorial = [];
 
-  function guardarLocal() {
-    localStorage.setItem("usuarios-financiero", JSON.stringify(usuariosLocal));
+  // --- CARREGAR DADOS DO SERVIDOR ---
+  async function cargarDatosDelServidor() {
     if (!usuarioActual) return;
-    const email = usuarioActual.email;
-    localStorage.setItem("categorias-financiero-" + email, JSON.stringify(categoriasLocal));
-    localStorage.setItem("transacciones-financiero-" + email, JSON.stringify(transaccionesLocal));
-    localStorage.setItem("fijos-financiero-" + email, JSON.stringify(fijosLocal));
-    localStorage.setItem("tarjetas-financiero-" + email, JSON.stringify(tarjetasLocal));
-    const perfil = {
-      metaMensual: metaMensualUsuario,
-      ingresoMensual: ingresoMensualUsuario,
-      edad: edadUsuario,
-      sexo: sexoUsuario,
-      pais: paisUsuario,
-      moneda: monedaUsuario,
-      objetivoNombre,
-      objetivoValor,
-      objetivoAhorroBase,
-      objetivoFechaInicio,
-      objetivoCompletado,
-      objetivosHistorial,
-      mostroModalCategorias: yaMostroModalCategorias
-    };
-    localStorage.setItem("perfil-financiero-" + email, JSON.stringify(perfil));
-  }
-
-  function cargarDatosUsuario() {
-    if (!usuarioActual) return;
-    const email = usuarioActual.email;
-    categoriasLocal     = JSON.parse(localStorage.getItem("categorias-financiero-" + email) || "[]");
-    transaccionesLocal  = JSON.parse(localStorage.getItem("transacciones-financiero-" + email) || "[]");
-    fijosLocal          = JSON.parse(localStorage.getItem("fijos-financiero-" + email) || "[]");
-    tarjetasLocal       = JSON.parse(localStorage.getItem("tarjetas-financiero-" + email) || "[]");
-
-    const perfilStr = localStorage.getItem("perfil-financiero-" + email);
-    if (perfilStr) {
-      try {
-        const perfil = JSON.parse(perfilStr);
-        metaMensualUsuario       = perfil.metaMensual || 0;
-        ingresoMensualUsuario    = perfil.ingresoMensual || 0;
-        edadUsuario              = perfil.edad || null;
-        sexoUsuario              = perfil.sexo || "";
-        paisUsuario              = perfil.pais || "";
-        monedaUsuario            = perfil.moneda || "";
-        objetivoNombre           = perfil.objetivoNombre || "";
-        objetivoValor            = perfil.objetivoValor || 0;
-        objetivoAhorroBase       = perfil.objetivoAhorroBase || 0;
-        objetivoFechaInicio      = perfil.objetivoFechaInicio || null;
-        objetivoCompletado       = !!perfil.objetivoCompletado;
-        objetivosHistorial       = perfil.objetivosHistorial || [];
-        yaMostroModalCategorias  = !!perfil.mostroModalCategorias;
-      } catch (e) {
-        metaMensualUsuario = 0;
-        ingresoMensualUsuario = 0;
-        edadUsuario = null;
-        sexoUsuario = "";
-        paisUsuario = "";
-        monedaUsuario = "";
-        objetivoNombre = "";
-        objetivoValor = 0;
-        objetivoAhorroBase = 0;
-        objetivoFechaInicio = null;
-        objetivoCompletado = false;
-        objetivosHistorial = [];
-        yaMostroModalCategorias = false;
+    loading(true);
+    try {
+      const query = `
+        query GetAllData {
+          categorias { id nome grupo }
+          gastos_fijos { id descripcion valor vencimiento mes_inicio }
+          tarjetas { id alias digitos banco }
+          transacciones { id tipo categoria_id gasto_fijo_id tarjeta_id origen valor fecha descripcion }
+          perfil_financiero {
+            edad sexo pais moneda meta_mensual ingreso_mensual
+            objetivo_nombre objetivo_valor objetivo_ahorro_base
+            objetivo_fecha_inicio objetivo_completado
+            mostro_modal_categorias objetivos_historial
+          }
+        }
+      `;
+      const { data, error } = await nhost.graphql.request(query);
+      if (error) {
+        console.error("Error fetching data:", error);
+        alert("Error sincronizando datos. Ver consola.");
+        loading(false);
+        return;
       }
-    } else {
-      metaMensualUsuario = 0;
-      ingresoMensualUsuario = 0;
-      edadUsuario = null;
-      sexoUsuario = "";
-      paisUsuario = "";
-      monedaUsuario = "";
-      objetivoNombre = "";
-      objetivoValor = 0;
-      objetivoAhorroBase = 0;
-      objetivoFechaInicio = null;
-      objetivoCompletado = false;
-      objetivosHistorial = [];
-      yaMostroModalCategorias = false;
-    }
 
-    if (!monedaUsuario) {
-      monedaUsuario = monedaPorDefectoParaPais(paisUsuario) || "USD";
-    }
-
-    if (fijosLocal.length > 0 && !("id" in fijosLocal[0])) {
-      const mesActual = obtenerAnioMesActual();
-      const mesInicio = siguienteAnioMes(mesActual);
-      fijosLocal = fijosLocal.map((f, idx) => ({
-        id: idx + 1,
-        descripcion: f.descricao || f.descripcion,
-        valor: f.valor,
-        vencimiento: f.vencimento || f.vencimiento,
-        mesInicio
+      // Mapear dados
+      categoriasLocal = data.categorias || [];
+      
+      fijosLocal = (data.gastos_fijos || []).map(f => ({
+        id: f.id,
+        descripcion: f.descripcion,
+        valor: Number(f.valor),
+        vencimiento: f.vencimiento,
+        mesInicio: f.mes_inicio
       }));
-      guardarLocal();
+
+      tarjetasLocal = data.tarjetas || [];
+
+      transaccionesLocal = (data.transacciones || []).map(t => ({
+        id: t.id,
+        tipo: t.tipo,
+        categoriaId: t.categoria_id,
+        gastoFijoId: t.gasto_fijo_id,
+        tarjetaId: t.tarjeta_id,
+        origen: t.origen,
+        valor: Number(t.valor),
+        fecha: t.fecha,
+        descripcion: t.descripcion
+      }));
+
+      // Perfil
+      const p = (data.perfil_financiero && data.perfil_financiero[0]) || {};
+      metaMensualUsuario    = Number(p.meta_mensual || 0);
+      ingresoMensualUsuario = Number(p.ingreso_mensual || 0);
+      edadUsuario           = p.edad || null;
+      sexoUsuario           = p.sexo || "";
+      paisUsuario           = p.pais || "";
+      monedaUsuario         = p.moneda || monedaPorDefectoParaPais(paisUsuario) || "USD";
+      objetivoNombre        = p.objetivo_nombre || "";
+      objetivoValor         = Number(p.objetivo_valor || 0);
+      objetivoAhorroBase    = Number(p.objetivo_ahorro_base || 0);
+      objetivoFechaInicio   = p.objetivo_fecha_inicio || null;
+      objetivoCompletado    = !!p.objetivo_completado;
+      yaMostroModalCategorias = !!p.mostro_modal_categorias;
+      objetivosHistorial    = p.objetivos_historial || [];
+
+      inicializarInterfaz();
+      mostrarModalCategoriasSiCorresponde();
+
+    } catch (e) {
+      console.error(e);
+    } finally {
+      loading(false);
     }
   }
 
+  // --- SALVAR PERFIL NA NUVEM ---
+  async function guardarPerfilEnServidor() {
+    loading(true);
+    try {
+      const mutation = `
+        mutation UpsertPerfil($obj: perfil_financiero_insert_input!) {
+          insert_perfil_financiero_one(
+            object: $obj,
+            on_conflict: {
+              constraint: perfil_financiero_pkey,
+              update_columns: [edad, sexo, pais, moneda, meta_mensual, ingreso_mensual, objetivo_nombre, objetivo_valor, objetivo_ahorro_base, objetivo_fecha_inicio, objetivo_completado, mostro_modal_categorias, objetivos_historial]
+            }
+          ) { user_id }
+        }
+      `;
+      
+      const variables = {
+        obj: {
+          user_id: usuarioActual.id,
+          edad: edadUsuario,
+          sexo: sexoUsuario || null,
+          pais: paisUsuario || null,
+          moneda: monedaUsuario || null,
+          meta_mensual: metaMensualUsuario,
+          ingreso_mensual: ingresoMensualUsuario,
+          objetivo_nombre: objetivoNombre || null,
+          objetivo_valor: objetivoValor,
+          objetivo_ahorro_base: objetivoAhorroBase,
+          objetivo_fecha_inicio: objetivoFechaInicio,
+          objetivo_completado: objetivoCompletado,
+          mostro_modal_categorias: yaMostroModalCategorias,
+          objetivos_historial: objetivosHistorial
+        }
+      };
+      
+      await nhost.graphql.request(mutation, variables);
+      perfilMensaje.textContent = "Guardado en la nube.";
+      setTimeout(() => perfilMensaje.textContent="", 2000);
+    } catch(e) {
+      console.error("Error saving profile", e);
+      alert("Error guardando perfil.");
+    } finally {
+      loading(false);
+    }
+  }
+
+  // --- LOGIN E REGISTRO ---
   const loginScreen      = document.getElementById("login-screen");
   const app              = document.getElementById("app");
   const loginForm        = document.getElementById("login-form");
@@ -1347,7 +1386,6 @@
     loginMessage.style.color = "#f97316";
   });
 
-  // BLOQUE LOGIN AJUSTADO CON AVISO DE VERIFICACIÓN
   loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const email = loginEmail.value.trim().toLowerCase();
@@ -1355,121 +1393,70 @@
     if (!email || !password) return;
 
     loginMessage.style.color = "#f97316";
-    loginMessage.textContent = "";
+    loginMessage.textContent = "Procesando...";
 
     if (modoRegistro) {
-      // REGISTRO: CREA LA CUENTA Y PIDE VERIFICAR EL EMAIL (SIN INICIAR SESIÓN AUTOMÁTICAMENTE)
       try {
-        const { error } = await nhost.auth.signUpEmailPassword({ email, password });
+        const { session, error } = await nhost.auth.signUpEmailPassword({ email, password });
         if (error) {
-          console.error("Nhost signUpEmailPassword error:", error);
-          loginMessage.textContent = error.message || "Error al crear cuenta (Nhost).";
+          loginMessage.textContent = error.message || "Error al crear cuenta.";
           return;
         }
 
-        // Guardar edad/meta de registro como perfil inicial (localStorage), sin dejar logueado
-        const edad = parseInt(registerEdad.value || "0", 10) || null;
-        const metaMensual = parseNumeroLocal(registerMeta.value || "0");
-
-        const usuarioTemp = { email };
-        const usuarioAnterior = usuarioActual;
-        usuarioActual = usuarioTemp;
-
-        edadUsuario = edad;
-        metaMensualUsuario = metaMensual;
-        ingresoMensualUsuario = 0;
-        sexoUsuario = "";
-        paisUsuario = "";
-        monedaUsuario = "USD";
-        objetivoNombre = "";
-        objetivoValor = 0;
-        objetivoAhorroBase = 0;
-        objetivoFechaInicio = null;
-        objetivoCompletado = false;
-        objetivosHistorial = [];
-        yaMostroModalCategorias = false;
-
-        guardarLocal();
-        usuarioActual = usuarioAnterior;
-
-        loginMessage.style.color = "#22c55e";
-        loginMessage.textContent =
-          "Cuenta creada. Revisa tu correo y verifica tu email. Luego inicia sesión con tu contraseña.";
-
-        // Volver a modo login
-        modoRegistro = false;
-        loginSubmit.textContent = "Entrar";
-        toggleText.textContent = "¿No tienes cuenta?";
-        toggleModeBtn.textContent = "Crear cuenta";
-        registerExtra.classList.add("hidden");
+        if (session) {
+            usuarioActual = session.user;
+            edadUsuario = parseInt(registerEdad.value || "0", 10) || null;
+            metaMensualUsuario = parseNumeroLocal(registerMeta.value || "0");
+            await guardarPerfilEnServidor();
+            abrirApp();
+        } else {
+            loginMessage.style.color = "#22c55e";
+            loginMessage.textContent = "Cuenta creada. Verifica tu email y luego inicia sesión.";
+            modoRegistro = false;
+            loginSubmit.textContent = "Entrar";
+            toggleText.textContent = "¿No tienes cuenta?";
+            toggleModeBtn.textContent = "Crear cuenta";
+            registerExtra.classList.add("hidden");
+        }
       } catch (err) {
-        console.error("Error de conexión / SDK con Nhost (signUp):", err);
-        const mensajeError =
-          (err && (err.response?.error || err.message)) ||
-          "Error de conexión con Nhost (ver consola del navegador - F12).";
-        loginMessage.style.color = "#f97316";
-        loginMessage.textContent = mensajeError;
+        loginMessage.textContent = "Error de conexión.";
       }
     } else {
-      // LOGIN NORMAL
       try {
-        const { error } = await nhost.auth.signInEmailPassword({ email, password });
+        const { session, error } = await nhost.auth.signInEmailPassword({ email, password });
         if (error) {
-          console.error("Nhost signInEmailPassword error:", error);
-          loginMessage.textContent = error.message || "Credenciales inválidas.";
+          loginMessage.textContent = "Credenciales inválidas.";
           return;
         }
-
-        // Pega o usuário autenticado do Nhost (vem com id, email, etc.)
-        const user = nhost.auth.getUser();
-        if (!user) {
-          loginMessage.textContent = "Login realizado, pero no se pudo obtener el usuario actual.";
-          return;
-        }
-
-        // Agora usuarioActual tem também o id (necessário para o Hasura)
-        usuarioActual = user;
+        usuarioActual = session.user;
         abrirApp();
       } catch (err) {
-        console.error("Error de conexión / SDK con Nhost (signIn):", err);
-        const mensajeError =
-          (err && (err.response?.error || err.message)) ||
-          "Error de conexión con Nhost (ver consola del navegador - F12).";
-        loginMessage.style.color = "#f97316";
-        loginMessage.textContent = mensajeError;
+        loginMessage.textContent = "Error de conexión.";
       }
     }
   });
 
-  function abrirApp() {
-    document.getElementById("user-email").textContent = usuarioActual?.email || "";
+  async function abrirApp() {
+    document.getElementById("user-email").textContent = usuarioActual.email;
     loginScreen.classList.add("hidden");
     app.classList.remove("hidden");
-
-    // Ainda carrega dados locais (categorias, transacciones, etc.)
-    cargarDatosUsuario();
-    inicializarInterfaz();
-    mostrarModalCategoriasSiCorresponde();
-
-    // Depois sobrescreve o PERFIL com o que estiver no servidor (Hasura)
-    cargarPerfilServidor();
+    await cargarDatosDelServidor();
   }
 
   document.getElementById("logout-btn").addEventListener("click", async () => {
     try {
       await nhost.auth.signOut();
-    } catch (e) {
-      console.error("Error al cerrar sesión en Nhost:", e);
-    }
+    } catch (e) { console.error(e); }
     usuarioActual = null;
     app.classList.add("hidden");
     loginScreen.classList.remove("hidden");
+    categoriasLocal=[]; transaccionesLocal=[]; fijosLocal=[]; tarjetasLocal=[];
   });
 
-  modalCategoriasOk.addEventListener("click", () => {
+  modalCategoriasOk.addEventListener("click", async () => {
     modalCategorias.classList.add("hidden");
     yaMostroModalCategorias = true;
-    guardarLocal();
+    await guardarPerfilEnServidor();
   });
 
   function mostrarModalCategoriasSiCorresponde() {
@@ -1501,6 +1488,100 @@
     sidebar.classList.remove("open");
   });
 
+  // --- LÓGICA DE CATEGORIAS (NUVEM) ---
+  const formCategoria = document.getElementById("form-categoria");
+  formCategoria.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const nome = document.getElementById("cat-nome").value.trim();
+    const grupo = document.getElementById("cat-grupo").value;
+    if (!nome) return;
+
+    loading(true);
+    try {
+      const mutation = `mutation AddCat($nome: String!, $grupo: String!, $uid: uuid!) {
+        insert_categorias_one(object: {nome: $nome, grupo: $grupo, user_id: $uid}) { id }
+      }`;
+      await nhost.graphql.request(mutation, { nome, grupo, uid: usuarioActual.id });
+      document.getElementById("cat-nome").value = "";
+      await cargarDatosDelServidor();
+    } catch(err) { console.error(err); alert("Error agregando categoría"); loading(false); }
+  });
+
+  async function eliminarCategoria(id) {
+    if(!confirm("¿Eliminar categoría?")) return;
+    loading(true);
+    try {
+      await nhost.graphql.request(`mutation DelCat($id: uuid!) { delete_categorias_by_pk(id: $id) { id } }`, { id });
+      await cargarDatosDelServidor();
+    } catch(err) { console.error(err); loading(false); }
+  }
+
+  // --- LÓGICA DE GASTOS FIJOS (NUVEM) ---
+  const formFijo = document.getElementById("form-fijo");
+  formFijo.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const descripcion = document.getElementById("fijo-descripcion").value.trim();
+    const valor = parseNumeroLocal(document.getElementById("fijo-valor").value || "0");
+    const vencimiento = parseInt(document.getElementById("fijo-vencimiento").value || "0", 10);
+    const mesInicio = siguienteAnioMes(obtenerAnioMesActual());
+    
+    if (!descripcion || !valor || !vencimiento) return;
+
+    loading(true);
+    try {
+      const mutation = `mutation AddFijo($desc: String!, $val: numeric!, $venc: Int!, $mes: String!, $uid: uuid!) {
+        insert_gastos_fijos_one(object: {descripcion: $desc, valor: $val, vencimiento: $venc, mes_inicio: $mes, user_id: $uid}) { id }
+      }`;
+      await nhost.graphql.request(mutation, { desc: descripcion, val: valor, venc: vencimiento, mes: mesInicio, uid: usuarioActual.id });
+      document.getElementById("fijo-descripcion").value = "";
+      document.getElementById("fijo-valor").value = "";
+      document.getElementById("fijo-vencimiento").value = "";
+      await cargarDatosDelServidor();
+    } catch(err) { console.error(err); alert("Error agregando gasto fijo"); loading(false); }
+  });
+
+  async function eliminarFijo(id) {
+    if(!confirm("¿Eliminar gasto fijo?")) return;
+    loading(true);
+    try {
+      await nhost.graphql.request(`mutation DelFijo($id: uuid!) { delete_gastos_fijos_by_pk(id: $id) { id } }`, { id });
+      await cargarDatosDelServidor();
+    } catch(err) { console.error(err); loading(false); }
+  }
+
+  // --- LÓGICA DE CARTÕES (NUVEM) ---
+  const formTarjeta = document.getElementById("form-tarjeta");
+  formTarjeta.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const alias = document.getElementById("tarjeta-alias").value.trim();
+    const digitos = document.getElementById("tarjeta-digitos").value.trim();
+    const banco = document.getElementById("tarjeta-banco").value.trim();
+
+    if (!alias && !digitos) return;
+
+    loading(true);
+    try {
+      const mutation = `mutation AddCard($alias: String, $dig: String, $banco: String, $uid: uuid!) {
+        insert_tarjetas_one(object: {alias: $alias, digitos: $dig, banco: $banco, user_id: $uid}) { id }
+      }`;
+      await nhost.graphql.request(mutation, { alias, dig: digitos, banco, uid: usuarioActual.id });
+      document.getElementById("tarjeta-alias").value = "";
+      document.getElementById("tarjeta-digitos").value = "";
+      document.getElementById("tarjeta-banco").value = "";
+      await cargarDatosDelServidor();
+    } catch(err) { console.error(err); alert("Error agregando tarjeta"); loading(false); }
+  });
+
+  async function eliminarTarjeta(id) {
+    if(!confirm("¿Eliminar tarjeta?")) return;
+    loading(true);
+    try {
+      await nhost.graphql.request(`mutation DelCard($id: uuid!) { delete_tarjetas_by_pk(id: $id) { id } }`, { id });
+      await cargarDatosDelServidor();
+    } catch(err) { console.error(err); loading(false); }
+  }
+
+  // --- LÓGICA DE TRANSAÇÕES (NUVEM) ---
   const selectCategoria   = document.getElementById("categoria");
   const campoOrigen       = document.getElementById("campo-origen");
   const selectOrigen      = document.getElementById("origen");
@@ -1508,13 +1589,105 @@
   const selectGastoFijo   = document.getElementById("gasto-fijo-select");
   const campoTarjeta      = document.getElementById("campo-tarjeta");
   const selectTarjeta     = document.getElementById("tarjeta-select");
-
+  const formTransaccion   = document.getElementById("form-transaccion");
+  const filtroTexto       = document.getElementById("filtro-texto");
+  const filtroFecha       = document.getElementById("filtro-fecha");
+  const btnLimpiarFiltros = document.getElementById("btn-limpiar-filtros");
   const tablaTransaccionesBody = document.querySelector("#tabla-transacciones tbody");
-  const tablaFijosBody         = document.querySelector("#tabla-fijos tbody");
-  const tablaCategoriasBody    = document.querySelector("#tabla-categorias tbody");
-  const tablaTarjetasBody      = document.querySelector("#tabla-tarjetas tbody");
-  const tablaHistorialObjetivosBody = document.querySelector("#tabla-historial-objetivos tbody");
 
+  formTransaccion.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const tipo = document.getElementById("tipo").value;
+    const categoriaVal = selectCategoria.value;
+    const origen = selectOrigen.value;
+    const valor = parseNumeroLocal(document.getElementById("valor").value || "0");
+    const fecha = document.getElementById("data").value;
+    const descripcion = document.getElementById("descripcion").value.trim();
+
+    if (!tipo || !categoriaVal || !valor || !fecha) return;
+
+    let gastoFijoId = null;
+    if (tipo === "salida" && categoriaVal === "__gasto_fijo__") {
+      if (!selectGastoFijo.value) {
+        alert("Selecciona qué gasto fijo deseas pagar.");
+        return;
+      }
+      gastoFijoId = selectGastoFijo.value;
+    }
+
+    let tarjetaId = null;
+    let origenFinal = null;
+    if (tipo === "salida") {
+      if (origen === "tarjeta") {
+        if (!selectTarjeta.value) {
+          alert("Selecciona la tarjeta utilizada.");
+          return;
+        }
+        origenFinal = "tarjeta";
+        tarjetaId = selectTarjeta.value;
+      } else {
+        origenFinal = "normal";
+      }
+    }
+
+    let catIdParaDb = (categoriaVal === "__gasto_fijo__") ? null : categoriaVal;
+
+    loading(true);
+    try {
+      const mutation = `mutation AddTrans($tipo: String!, $catId: uuid, $gfId: uuid, $tId: uuid, $orig: String, $val: numeric!, $fecha: date!, $desc: String, $uid: uuid!) {
+        insert_transacciones_one(object: {
+          tipo: $tipo, categoria_id: $catId, gasto_fijo_id: $gfId, tarjeta_id: $tId, origen: $orig, valor: $val, fecha: $fecha, descripcion: $desc, user_id: $uid
+        }) { id }
+      }`;
+      await nhost.graphql.request(mutation, {
+        tipo, catId: catIdParaDb, gfId: gastoFijoId, tId: tarjetaId, orig: origenFinal, val: valor, fecha, desc: descripcion, uid: usuarioActual.id
+      });
+
+      document.getElementById("valor").value = "";
+      document.getElementById("descripcion").value = "";
+
+      await cargarDatosDelServidor();
+      actualizarObjetivo();
+    } catch(err) { console.error(err); alert("Error agregando transacción"); loading(false); }
+  });
+
+  async function eliminarTransaccion(id) {
+    if(!confirm("¿Eliminar esta transacción?")) return;
+    loading(true);
+    try {
+      await nhost.graphql.request(`mutation DelTrans($id: uuid!) { delete_transacciones_by_pk(id: $id) { id } }`, { id });
+      await cargarDatosDelServidor();
+      actualizarObjetivo();
+    } catch(err) { console.error(err); loading(false); }
+  }
+
+  function actualizarCampoGastoFijo() {
+    const tipo = document.getElementById("tipo").value;
+    const esSalida = tipo === "salida";
+    const esGastoFijoCategoria = esSalida && selectCategoria.value === "__gasto_fijo__";
+    if (esGastoFijoCategoria) {
+      campoGastoFijo.classList.remove("hidden");
+    } else {
+      campoGastoFijo.classList.add("hidden");
+    }
+  }
+
+  function actualizarCampoOrigenYTarjeta() {
+    const tipo = document.getElementById("tipo").value;
+    if (tipo === "salida") {
+      campoOrigen.classList.remove("hidden");
+      if (selectOrigen.value === "tarjeta") {
+        campoTarjeta.classList.remove("hidden");
+      } else {
+        campoTarjeta.classList.add("hidden");
+      }
+    } else {
+      campoOrigen.classList.add("hidden");
+      campoTarjeta.classList.add("hidden");
+    }
+  }
+
+  // --- ESTADÍSTICAS E CHARTS ---
   const statEntradas    = document.getElementById("stat-entradas");
   const statSalidas     = document.getElementById("stat-salidas");
   const statSaldo       = document.getElementById("stat-saldo");
@@ -1533,31 +1706,8 @@
   const objAhorradoSpan  = document.getElementById("obj-ahorrado");
   const objRestanteSpan  = document.getElementById("obj-restante");
   const objTexto         = document.getElementById("obj-texto");
-
-  const filtroTexto       = document.getElementById("filtro-texto");
-  const filtroFecha       = document.getElementById("filtro-fecha");
-  const btnLimpiarFiltros = document.getElementById("btn-limpiar-filtros");
-
-  const selectReporteMes        = document.getElementById("reporte-mes");
-  const btnReporteMesActual     = document.getElementById("reporte-mes-actual");
-  const repEntradas             = document.getElementById("rep-entradas");
-  const repSalidas              = document.getElementById("rep-salidas");
-  const repSaldo                = document.getElementById("rep-saldo");
-  const repSaldoTexto           = document.getElementById("rep-saldo-texto");
-  const reporteTablaCategorias  = document.querySelector("#reporte-tabla-categorias tbody");
-
-  const formPerfil        = document.getElementById("form-perfil");
-  const perfilEdadInput   = document.getElementById("perfil-edad");
-  const perfilSexoInput   = document.getElementById("perfil-sexo");
-  const perfilPaisInput   = document.getElementById("perfil-pais");
-  const perfilMetaInput   = document.getElementById("perfil-meta");
-  const perfilIngresoInput= document.getElementById("perfil-ingreso");
-  const perfilMonedaInput = document.getElementById("perfil-moneda");
-  const perfilObjetivoNombreInput = document.getElementById("perfil-objetivo-nombre");
-  const perfilObjetivoValorInput  = document.getElementById("perfil-objetivo-valor");
-  const perfilMensaje     = document.getElementById("perfil-mensaje");
-  const perfilAnalisis    = document.getElementById("perfil-analisis");
-  const resetObjetivoBtn  = document.getElementById("perfil-objetivo-reset");
+  const perfilMensaje    = document.getElementById("perfil-mensaje");
+  const perfilAnalisis   = document.getElementById("perfil-analisis");
 
   function dibujarGraficoMeta(porcentajeUsado) {
     const canvas = document.getElementById("meta-chart");
@@ -1647,16 +1797,237 @@
     ctx.fill();
   }
 
-  function rellenarPerfil() {
-    if (!usuarioActual) return;
-    perfilEdadInput.value          = edadUsuario || "";
-    perfilSexoInput.value          = sexoUsuario || "";
-    perfilPaisInput.value          = paisUsuario || "";
-    perfilMetaInput.value          = metaMensualUsuario || "";
-    perfilIngresoInput.value       = ingresoMensualUsuario || "";
-    perfilMonedaInput.value        = monedaUsuario || "";
-    perfilObjetivoNombreInput.value= objetivoNombre || "";
-    perfilObjetivoValorInput.value = objetivoValor || "";
+  // FUNÇÕES DE PREENCHIMENTO DA UI
+  
+  function rellenarSelectCategorias() {
+    selectCategoria.innerHTML = "";
+    const tipo = document.getElementById("tipo").value;
+
+    if (tipo === "salida" && fijosLocal.length > 0) {
+      const optGF = document.createElement("option");
+      optGF.value = "__gasto_fijo__";
+      optGF.textContent = "Gastos fijos";
+      selectCategoria.appendChild(optGF);
+    }
+
+    categoriasLocal.forEach(cat => {
+      if (cat.grupo !== tipo) return;
+      const opt = document.createElement("option");
+      opt.value = cat.id;
+      opt.textContent = cat.nome;
+      selectCategoria.appendChild(opt);
+    });
+  }
+
+  function rellenarTablaCategorias() {
+    const tbody = document.querySelector("#tabla-categorias tbody");
+    tbody.innerHTML = "";
+    categoriasLocal.forEach(cat => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${cat.nome}</td>
+        <td>${cat.grupo === "entrada" ? "Entrada" : "Salida"}</td>
+        <td></td>`;
+      
+      const tdAcc = tr.lastElementChild;
+      const btnDel = document.createElement("button");
+      btnDel.textContent = "Eliminar";
+      btnDel.className = "btn-icon btn-icon-danger";
+      btnDel.addEventListener("click", () => eliminarCategoria(cat.id));
+      tdAcc.appendChild(btnDel);
+      
+      tbody.appendChild(tr);
+    });
+  }
+
+  function rellenarTablaFijos() {
+    const tbody = document.querySelector("#tabla-fijos tbody");
+    tbody.innerHTML = "";
+    const anioMesActual = obtenerAnioMesActual();
+
+    fijosLocal.forEach(f => {
+      const estado = estadoFijoParaMes(f, anioMesActual);
+      const tr = document.createElement("tr");
+      if (estado.claseFila) tr.classList.add(estado.claseFila);
+
+      tr.innerHTML = `
+        <td>${f.descripcion}</td>
+        <td>${formatearMoneda(f.valor)}</td>
+        <td>Día ${f.vencimiento}</td>
+        <td><span class="badge-estado ${estado.badgeClase}">${estado.texto}</span></td>
+        <td></td>
+      `;
+      
+      const tdAcc = tr.lastElementChild;
+      const btnDel = document.createElement("button");
+      btnDel.textContent = "Eliminar";
+      btnDel.className = "btn-icon btn-icon-danger";
+      btnDel.addEventListener("click", () => eliminarFijo(f.id));
+      tdAcc.appendChild(btnDel);
+
+      tbody.appendChild(tr);
+    });
+    rellenarSelectGastosFijos();
+  }
+  
+  function rellenarSelectGastosFijos() {
+    selectGastoFijo.innerHTML = "";
+    fijosLocal.forEach(f => {
+      const opt = document.createElement("option");
+      opt.value = f.id;
+      opt.textContent = `${f.descripcion} (${formatearMoneda(f.valor)})`;
+      selectGastoFijo.appendChild(opt);
+    });
+  }
+
+  function rellenarTablaTarjetas() {
+    const tbody = document.querySelector("#tabla-tarjetas tbody");
+    tbody.innerHTML = "";
+    tarjetasLocal.forEach(t => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${t.alias || ""}</td>
+        <td>${t.digitos || ""}</td>
+        <td>${t.banco || ""}</td>
+        <td></td>
+      `;
+      
+      const tdAcc = tr.lastElementChild;
+      const btnDel = document.createElement("button");
+      btnDel.textContent = "Eliminar";
+      btnDel.className = "btn-icon btn-icon-danger";
+      btnDel.addEventListener("click", () => eliminarTarjeta(t.id));
+      tdAcc.appendChild(btnDel);
+
+      tbody.appendChild(tr);
+    });
+    rellenarSelectTarjetas();
+  }
+  
+  function rellenarSelectTarjetas() {
+    selectTarjeta.innerHTML = "";
+    tarjetasLocal.forEach(t => {
+      const opt = document.createElement("option");
+      opt.value = t.id;
+      opt.textContent = `${t.alias || ""} (${t.digitos || ""})`;
+      selectTarjeta.appendChild(opt);
+    });
+  }
+
+  function rellenarTablaTransacciones() {
+    const tbody = document.querySelector("#tabla-transacciones tbody");
+    tbody.innerHTML = "";
+    const anioMesActual = obtenerAnioMesActual();
+    let lista = transaccionesLocal.filter(t => t.fecha.startsWith(anioMesActual));
+
+    const textoFiltro = (filtroTexto.value || "").trim().toLowerCase();
+    const fechaFiltro = (filtroFecha.value || "").trim();
+
+    if (textoFiltro) lista = lista.filter(t => (t.descripcion || "").toLowerCase().includes(textoFiltro));
+    if (fechaFiltro) lista = lista.filter(t => t.fecha === fechaFiltro);
+
+    lista.sort((a, b) => (a.fecha < b.fecha ? 1 : -1));
+
+    lista.forEach(t => {
+      const tr = document.createElement("tr");
+
+      let catNombre = "-";
+      if (t.categoriaId === null && t.gastoFijoId) {
+         const gf = fijosLocal.find(x => x.id === t.gastoFijoId);
+         catNombre = "Gasto fijo" + (gf ? ` - ${gf.descripcion}` : "");
+      } else {
+         const c = categoriasLocal.find(x => x.id === t.categoriaId);
+         catNombre = c ? c.nome : "-";
+      }
+
+      let origenTexto = "-";
+      if (t.tipo === "salida") {
+          if(t.origen === "tarjeta" && t.tarjetaId) {
+             const tar = tarjetasLocal.find(x => x.id === t.tarjetaId);
+             origenTexto = "Tarjeta" + (tar ? ` - ${tar.alias}` : "");
+          } else {
+             origenTexto = "Normal";
+          }
+      }
+
+      tr.innerHTML = `
+        <td>${t.fecha}</td>
+        <td><span class="tag ${t.tipo}">${t.tipo}</span></td>
+        <td>${catNombre}</td>
+        <td>${origenTexto}</td>
+        <td>${t.descripcion || ""}</td>
+        <td>${formatearMoneda(t.valor)}</td>
+        <td></td>
+      `;
+
+      const tdAcc = tr.lastElementChild;
+      const btnDel = document.createElement("button");
+      btnDel.textContent = "Eliminar";
+      btnDel.className = "btn-icon btn-icon-danger";
+      btnDel.addEventListener("click", () => eliminarTransaccion(t.id));
+      tdAcc.appendChild(btnDel);
+      
+      tbody.appendChild(tr);
+    });
+  }
+  
+  function calcularAhorroTotal() {
+    let totalEntradas = 0;
+    let totalSalidas = 0;
+    transaccionesLocal.forEach(t => {
+      if (t.tipo === "entrada") totalEntradas += t.valor;
+      else if (t.tipo === "salida") totalSalidas += t.valor;
+    });
+    const ahorro = totalEntradas - totalSalidas;
+    return ahorro > 0 ? ahorro : 0;
+  }
+
+  function actualizarObjetivo() {
+    if (!objetivoNombre || !objetivoValor || objetivoValor <= 0) {
+      objNombreSpan.textContent = "Sin objetivo definido";
+      objMetaSpan.textContent = "-";
+      objAhorradoSpan.textContent = formatearMoneda(0);
+      objRestanteSpan.textContent = formatearMoneda(0);
+      objTexto.textContent = "Define un objetivo en el Perfil para comenzar a seguir tu ahorro.";
+      dibujarGraficoObjetivo(0);
+      rellenarHistorialObjetivos();
+      return;
+    }
+
+    const ahorroTotal = calcularAhorroTotal();
+    let ahorroObjetivo = ahorroTotal - objetivoAhorroBase;
+    if (ahorroObjetivo < 0) ahorroObjetivo = 0;
+
+    // Check for completion and save async if newly completed
+    if (!objetivoCompletado && ahorroObjetivo >= objetivoValor) {
+      objetivoCompletado = true;
+      const hoy = new Date().toISOString().slice(0, 10);
+      objetivosHistorial.push({
+        nombre: objetivoNombre,
+        valorMeta: objetivoValor,
+        ahorroFinal: ahorroObjetivo,
+        fechaInicio: objetivoFechaInicio || "",
+        fechaConclusion: hoy
+      });
+      guardarPerfilEnServidor();
+    }
+
+    const porcentaje = objetivoValor > 0 ? (ahorroObjetivo / objetivoValor) * 100 : 0;
+    const restante = objetivoValor - ahorroObjetivo;
+
+    objNombreSpan.textContent = objetivoNombre;
+    objMetaSpan.textContent = formatearMoneda(objetivoValor);
+    objAhorradoSpan.textContent = formatearMoneda(ahorroObjetivo);
+    objRestanteSpan.textContent = formatearMoneda(restante > 0 ? restante : 0);
+
+    if (restante <= 0 && objetivoValor > 0) {
+      objTexto.textContent = "¡Objetivo alcanzado o superado!";
+    } else {
+      objTexto.textContent = `Has avanzado aproximadamente ${porcentaje.toFixed(1)}% de este objetivo.`;
+    }
+
+    dibujarGraficoObjetivo(porcentaje);
+    rellenarHistorialObjetivos();
   }
 
   function analisisLatam() {
@@ -1698,713 +2069,15 @@
 
     let mensaje;
     if (ratio < 70) {
-      mensaje =
-        `Tu meta está por debajo del gasto promedio estimado para una persona de tu edad en ${nombrePais[pais]} ` +
-        `en términos per cápita aproximados. Puede ser positivo si tu objetivo es ahorrar, pero revisa si no está demasiado restrictiva.`;
+      mensaje = `Tu meta está por debajo del gasto promedio estimado para una persona de tu edad en ${nombrePais[pais]} en términos per cápita aproximados. Puede ser positivo se seu objetivo é poupar, mas verifique se não está muito restritiva.`;
     } else if (ratio <= 120) {
-      mensaje =
-        `Tu meta está en un rango razonable comparado con un gasto promedio estimado para tu perfil en ${nombrePais[pais]}. ` +
-        `Si además consigues ahorrar una parte, estás en un buen camino.`;
+      mensaje = `Tu meta está em um intervalo razoável comparado com um gasto médio estimado para seu perfil em ${nombrePais[pais]}. Se além disso consegue poupar uma parte, está em um bom caminho.`;
     } else {
-      mensaje =
-        `Tu meta de gasto está por encima del nivel promedio estimado para tu edad en ${nombrePais[pais]}. ` +
-        `No es necesariamente malo, pero vale la pena revisar ingresos, deudas y objetivos de ahorro.`;
+      mensaje = `Tu meta de gasto está acima do nível médio estimado para sua idade em ${nombrePais[pais]}. Não é necessariamente ruim, mas vale a pena revisar receitas, dívidas e objetivos de poupança.`;
     }
 
     const refTexto = formatearMoneda(referencia);
-    perfilAnalisis.textContent =
-      mensaje + ` Referencia aproximada utilizada: ${refTexto}. ` +
-      "Cálculo aproximado y solo orientativo, no es una recomendación financiera oficial.";
-  }
-
-  // NOVO: carregar perfil do servidor (Hasura) após login
-  async function cargarPerfilServidor() {
-    try {
-      const { data, error } = await nhost.graphql.request(`
-        query GetPerfil {
-          perfil_financiero {
-            edad
-            sexo
-            pais
-            moneda
-            meta_mensual
-            ingreso_mensual
-            objetivo_nombre
-            objetivo_valor
-            objetivo_ahorro_base
-            objetivo_fecha_inicio
-            objetivo_completado
-            mostro_modal_categorias
-            updated_at
-          }
-        }
-      `);
-
-      if (error) {
-        console.error("Error GraphQL al cargar perfil:", error);
-        return;
-      }
-
-      const filas = data?.perfil_financiero || [];
-      if (filas.length === 0) {
-        // Este usuario todavía no tiene perfil en la base, deja los valores locales vacíos
-        return;
-      }
-
-      const p = filas[0];
-
-      metaMensualUsuario       = Number(p.meta_mensual ?? 0);
-      ingresoMensualUsuario    = Number(p.ingreso_mensual ?? 0);
-      edadUsuario              = p.edad ?? null;
-      sexoUsuario              = p.sexo || "";
-      paisUsuario              = p.pais || "";
-      monedaUsuario            = p.moneda || monedaPorDefectoParaPais(paisUsuario) || "USD";
-      objetivoNombre           = p.objetivo_nombre || "";
-      objetivoValor            = Number(p.objetivo_valor ?? 0);
-      objetivoAhorroBase       = Number(p.objetivo_ahorro_base ?? 0);
-      objetivoFechaInicio      = p.objetivo_fecha_inicio || null;
-      objetivoCompletado       = !!p.objetivo_completado;
-      yaMostroModalCategorias  = !!p.mostro_modal_categorias;
-
-      // Atualiza UI com os dados do servidor
-      rellenarPerfil();
-      actualizarResumen();
-      analisisLatam();
-      actualizarObjetivo();
-    } catch (e) {
-      console.error("Error al cargar perfil desde el servidor:", e);
-    }
-  }
-
-  // NOVO: guardar perfil no servidor (Hasura) ao salvar
-  async function guardarPerfilEnServidor() {
-    try {
-      const { data, error } = await nhost.graphql.request(`
-        mutation UpsertPerfil(
-          $edad: Int,
-          $sexo: String,
-          $pais: String,
-          $moneda: String,
-          $meta_mensual: numeric,
-          $ingreso_mensual: numeric,
-          $objetivo_nombre: String,
-          $objetivo_valor: numeric,
-          $objetivo_ahorro_base: numeric,
-          $objetivo_fecha_inicio: date,
-          $objetivo_completado: Boolean,
-          $mostro_modal_categorias: Boolean
-        ) {
-          insert_perfil_financiero_one(
-            object: {
-              edad: $edad,
-              sexo: $sexo,
-              pais: $pais,
-              moneda: $moneda,
-              meta_mensual: $meta_mensual,
-              ingreso_mensual: $ingreso_mensual,
-              objetivo_nombre: $objetivo_nombre,
-              objetivo_valor: $objetivo_valor,
-              objetivo_ahorro_base: $objetivo_ahorro_base,
-              objetivo_fecha_inicio: $objetivo_fecha_inicio,
-              objetivo_completado: $objetivo_completado,
-              mostro_modal_categorias: $mostro_modal_categorias
-            },
-            on_conflict: {
-              constraint: perfil_financiero_pkey,
-              update_columns: [
-                edad,
-                sexo,
-                pais,
-                moneda,
-                meta_mensual,
-                ingreso_mensual,
-                objetivo_nombre,
-                objetivo_valor,
-                objetivo_ahorro_base,
-                objetivo_fecha_inicio,
-                objetivo_completado,
-                mostro_modal_categorias,
-                updated_at
-              ]
-            }
-          ) {
-            user_id
-          }
-        }
-      `, {
-        edad:        edadUsuario,
-        sexo:        sexoUsuario || null,
-        pais:        paisUsuario || null,
-        moneda:      monedaUsuario || null,
-        meta_mensual:        metaMensualUsuario || null,
-        ingreso_mensual:     ingresoMensualUsuario || null,
-        objetivo_nombre:     objetivoNombre || null,
-        objetivo_valor:      objetivoValor || null,
-        objetivo_ahorro_base: objetivoAhorroBase || null,
-        objetivo_fecha_inicio: objetivoFechaInicio || null,
-        objetivo_completado:  objetivoCompletado,
-        mostro_modal_categorias: yaMostroModalCategorias
-      });
-
-      if (error) {
-        console.error("Error GraphQL al guardar perfil:", error);
-        perfilMensaje.textContent = "Perfil guardado localmente, pero falló al sincronizar con el servidor.";
-        return;
-      }
-
-      perfilMensaje.textContent = "Perfil guardado y sincronizado con el servidor.";
-      setTimeout(() => { perfilMensaje.textContent = ""; }, 3000);
-    } catch (e) {
-      console.error("Error de red al guardar perfil:", e);
-      perfilMensaje.textContent = "Perfil guardado localmente, pero hubo un error de red al sincronizar.";
-    }
-  }
-
-  formPerfil.addEventListener("submit", (e) => {
-    e.preventDefault();
-
-    const viejoNombre = objetivoNombre || "";
-    const viejoValor  = objetivoValor || 0;
-    const ahorroTotal = calcularAhorroTotal();
-
-    edadUsuario           = parseInt(perfilEdadInput.value || "0", 10) || null;
-    sexoUsuario           = perfilSexoInput.value || "";
-    paisUsuario           = perfilPaisInput.value || "";
-    metaMensualUsuario    = parseNumeroLocal(perfilMetaInput.value || "0");
-    ingresoMensualUsuario = parseNumeroLocal(perfilIngresoInput.value || "0");
-
-    const nuevoNombre = perfilObjetivoNombreInput.value.trim();
-    const nuevoValor  = parseNumeroLocal(perfilObjetivoValorInput.value || "0");
-
-    const cambioObjetivo = (nuevoNombre !== viejoNombre) || (nuevoValor !== viejoValor);
-
-    if (cambioObjetivo && nuevoNombre && nuevoValor > 0) {
-      objetivoNombre      = nuevoNombre;
-      objetivoValor       = nuevoValor;
-      objetivoAhorroBase  = ahorroTotal;
-      objetivoFechaInicio = new Date().toISOString().slice(0, 10);
-      objetivoCompletado  = false;
-    } else {
-      objetivoNombre = nuevoNombre;
-      objetivoValor  = nuevoValor;
-      if (!nuevoNombre || nuevoValor <= 0) {
-        objetivoAhorroBase  = 0;
-        objetivoFechaInicio = null;
-        objetivoCompletado  = false;
-      }
-    }
-
-    let monedaSel = perfilMonedaInput.value;
-    if (!monedaSel) {
-      monedaSel = monedaPorDefectoParaPais(paisUsuario) || "USD";
-    }
-    monedaUsuario = monedaSel;
-
-    // Continua salvando local como backup
-    guardarLocal();
-    rellenarPerfil();
-    actualizarResumen();
-    analisisLatam();
-    actualizarObjetivo();
-
-    // Mensagem imediata para o usuário
-    perfilMensaje.textContent = "Perfil guardado localmente. Sincronizando con el servidor...";
-
-    // Dispara a sincronização com o Hasura
-    guardarPerfilEnServidor();
-  });
-
-  perfilPaisInput.addEventListener("change", () => {
-    const m = monedaPorDefectoParaPais(perfilPaisInput.value);
-    if (m) {
-      monedaUsuario = m;
-      perfilMonedaInput.value = m;
-      guardarLocal();
-      actualizarResumen();
-      analisisLatam();
-      actualizarObjetivo();
-    }
-  });
-
-  perfilMonedaInput.addEventListener("change", () => {
-    monedaUsuario = perfilMonedaInput.value || "USD";
-    guardarLocal();
-    actualizarResumen();
-    analisisLatam();
-    actualizarObjetivo();
-  });
-
-  resetObjetivoBtn.addEventListener("click", () => {
-    if (!objetivoNombre || !objetivoValor || objetivoValor <= 0) {
-      alert("Primero define un objetivo con nombre y valor en el formulario.");
-      return;
-    }
-    const ok = confirm("¿Seguro que quieres reiniciar el progreso de este objetivo? Esto no borra tus transacciones, solo reinicia el cálculo del ahorro para este objetivo.");
-    if (!ok) return;
-
-    const ahorroTotal = calcularAhorroTotal();
-    objetivoAhorroBase  = ahorroTotal;
-    objetivoFechaInicio = new Date().toISOString().slice(0, 10);
-    objetivoCompletado  = false;
-    guardarLocal();
-    actualizarObjetivo();
-  });
-
-  function siguienteId(lista) {
-    let max = 0;
-    lista.forEach(item => {
-      if (item.id && item.id > max) max = item.id;
-    });
-    return max + 1;
-  }
-
-  function inicializarInterfaz() {
-    rellenarSelectCategorias();
-    rellenarTablaCategorias();
-    rellenarTablaFijos();
-    rellenarSelectGastosFijos();
-    rellenarTablaTarjetas();
-    rellenarSelectTarjetas();
-    rellenarTablaTransacciones();
-    rellenarPerfil();
-    rellenarHistorialObjetivos();
-    actualizarResumen();
-    inicializarReporte();
-    analisisLatam();
-    actualizarObjetivo();
-    document.getElementById("data").valueAsDate = new Date();
-    actualizarCampoGastoFijo();
-    actualizarCampoOrigenYTarjeta();
-  }
-
-  function rellenarSelectCategorias() {
-    selectCategoria.innerHTML = "";
-    const tipo = document.getElementById("tipo").value;
-
-    if (tipo === "salida" && fijosLocal.length > 0) {
-      const optGF = document.createElement("option");
-      optGF.value = "__gasto_fijo__";
-      optGF.textContent = "Gastos fijos";
-      selectCategoria.appendChild(optGF);
-    }
-
-    categoriasLocal.forEach(cat => {
-      if (cat.grupo !== tipo) return;
-      const opt = document.createElement("option");
-      opt.value = String(cat.id);
-      opt.textContent = cat.nome;
-      selectCategoria.appendChild(opt);
-    });
-  }
-
-  function rellenarTablaCategorias() {
-    tablaCategoriasBody.innerHTML = "";
-    categoriasLocal.forEach(cat => {
-      const tr = document.createElement("tr");
-      const tdNombre = document.createElement("td");
-      tdNombre.textContent = cat.nome;
-      const tdGrupo = document.createElement("td");
-      tdGrupo.textContent = cat.grupo === "entrada" ? "Entrada" : "Salida";
-      const tdAcciones = document.createElement("td");
-      const btnDel = document.createElement("button");
-      btnDel.textContent = "Eliminar";
-      btnDel.className = "btn-icon btn-icon-danger";
-      btnDel.addEventListener("click", () => {
-        if (confirm("¿Eliminar esta categoría? Las transacciones existentes seguirán mostrando el nombre antiguo si ya lo guardaron.")) {
-          categoriasLocal = categoriasLocal.filter(c => c.id !== cat.id);
-          guardarLocal();
-          rellenarTablaCategorias();
-          rellenarSelectCategorias();
-        }
-      });
-      tdAcciones.appendChild(btnDel);
-      tr.appendChild(tdNombre);
-      tr.appendChild(tdGrupo);
-      tr.appendChild(tdAcciones);
-      tablaCategoriasBody.appendChild(tr);
-    });
-  }
-
-  function rellenarTablaTarjetas() {
-    tablaTarjetasBody.innerHTML = "";
-    tarjetasLocal.forEach(t => {
-      const tr = document.createElement("tr");
-      const tdAlias = document.createElement("td");
-      tdAlias.textContent = t.alias || "";
-      const tdDigitos = document.createElement("td");
-      tdDigitos.textContent = t.digitos || "";
-      const tdBanco = document.createElement("td");
-      tdBanco.textContent = t.banco || "";
-      const tdAcc = document.createElement("td");
-      const btnDel = document.createElement("button");
-      btnDel.textContent = "Eliminar";
-      btnDel.className = "btn-icon btn-icon-danger";
-      btnDel.addEventListener("click", () => {
-        if (confirm("¿Eliminar esta tarjeta?")) {
-          tarjetasLocal = tarjetasLocal.filter(x => x.id !== t.id);
-          guardarLocal();
-          rellenarTablaTarjetas();
-          rellenarSelectTarjetas();
-        }
-      });
-      tdAcc.appendChild(btnDel);
-      tr.appendChild(tdAlias);
-      tr.appendChild(tdDigitos);
-      tr.appendChild(tdBanco);
-      tr.appendChild(tdAcc);
-      tablaTarjetasBody.appendChild(tr);
-    });
-  }
-
-  function rellenarSelectTarjetas() {
-    selectTarjeta.innerHTML = "";
-    tarjetasLocal.forEach(t => {
-      const opt = document.createElement("option");
-      opt.value = String(t.id);
-      opt.textContent = `${t.alias || ""} (${t.digitos || ""})`;
-      selectTarjeta.appendChild(opt);
-    });
-  }
-
-  function rellenarSelectGastosFijos() {
-    selectGastoFijo.innerHTML = "";
-    fijosLocal.forEach(f => {
-      const opt = document.createElement("option");
-      opt.value = String(f.id);
-      opt.textContent = `${f.descripcion} (${formatearMoneda(f.valor)})`;
-      selectGastoFijo.appendChild(opt);
-    });
-  }
-
-  function estadoFijoParaMes(fijo, anioMesActual) {
-    const hoy = new Date();
-    const diaHoy = hoy.getDate();
-    const venc = fijo.vencimiento;
-    const mesInicio = fijo.mesInicio || obtenerAnioMesActual();
-
-    if (anioMesActual < mesInicio) {
-      return {
-        claseFila: "",
-        badgeClase: "badge-normal",
-        texto: "Aún no aplica este mes",
-        restante: fijo.valor,
-        totalPagado: 0
-      };
-    }
-
-    const transMes = filtrarMesActual(transaccionesLocal, "fecha");
-    let totalPagado = 0;
-    transMes.forEach(t => {
-      if (t.tipo === "salida" && t.gastoFijoId === fijo.id) {
-        totalPagado += t.valor;
-      }
-    });
-    const restante = Math.max(0, fijo.valor - totalPagado);
-    const pagoCompleto = totalPagado >= (fijo.valor - 0.01);
-
-    if (pagoCompleto) {
-      return {
-        claseFila: "fijo-verde",
-        badgeClase: "badge-verde",
-        texto: "Pagado completamente este mes",
-        restante: 0,
-        totalPagado
-      };
-    }
-
-    const faltanteTexto = restante > 0
-      ? `Falta ${formatearMoneda(restante)}`
-      : "";
-
-    if (totalPagado > 0 && !pagoCompleto) {
-      if (diaHoy >= venc) {
-        return {
-          claseFila: "fijo-rojo",
-          badgeClase: "badge-rojo",
-          texto: `Pago parcial (${formatearMoneda(totalPagado)} de ${formatearMoneda(fijo.valor)}). ${faltanteTexto}`,
-          restante,
-          totalPagado
-        };
-      } else if (diaHoy >= venc - 7) {
-        return {
-          claseFila: "fijo-amarillo",
-          badgeClase: "badge-amarillo",
-          texto: `Pago parcial (${formatearMoneda(totalPagado)} de ${formatearMoneda(fijo.valor)}). ${faltanteTexto}`,
-          restante,
-          totalPagado
-        };
-      } else {
-        return {
-          claseFila: "",
-          badgeClase: "badge-normal",
-          texto: `Pago parcial (${formatearMoneda(totalPagado)} de ${formatearMoneda(fijo.valor)}). ${faltanteTexto}`,
-          restante,
-          totalPagado
-        };
-      }
-    }
-
-    if (diaHoy < venc - 7) {
-      return {
-        claseFila: "",
-        badgeClase: "badge-normal",
-        texto: "Pendiente",
-        restante,
-        totalPagado
-      };
-    } else if (diaHoy >= venc - 7 && diaHoy < venc) {
-      return {
-        claseFila: "fijo-amarillo",
-        badgeClase: "badge-amarillo",
-        texto: "Cerca del vencimiento",
-        restante,
-        totalPagado
-      };
-    } else {
-      return {
-        claseFila: "fijo-rojo",
-        badgeClase: "badge-rojo",
-        texto: "Vencido / día de vencimiento sin pago",
-        restante,
-        totalPagado
-      };
-    }
-  }
-
-  function rellenarTablaFijos() {
-    tablaFijosBody.innerHTML = "";
-    const anioMesActual = obtenerAnioMesActual();
-
-    fijosLocal.forEach(f => {
-      const estado = estadoFijoParaMes(f, anioMesActual);
-      const tr = document.createElement("tr");
-      if (estado.claseFila) tr.classList.add(estado.claseFila);
-
-      const tdDesc = document.createElement("td");
-      tdDesc.textContent = f.descripcion;
-
-      const tdValor = document.createElement("td");
-      tdValor.textContent = formatearMoneda(f.valor);
-
-      const tdVenc = document.createElement("td");
-      tdVenc.textContent = `Día ${f.vencimiento}`;
-
-      const tdEstado = document.createElement("td");
-      const badge = document.createElement("span");
-      badge.className = "badge-estado " + estado.badgeClase;
-      badge.textContent = estado.texto;
-      tdEstado.appendChild(badge);
-
-      const tdAcc = document.createElement("td");
-      const btnDel = document.createElement("button");
-      btnDel.textContent = "Eliminar";
-      btnDel.className = "btn-icon btn-icon-danger";
-      btnDel.addEventListener("click", () => {
-        if (confirm("¿Eliminar este gasto fijo? Las transacciones ya registradas que lo usan no se eliminan.")) {
-          fijosLocal = fijosLocal.filter(x => x.id !== f.id);
-          guardarLocal();
-          rellenarTablaFijos();
-          rellenarSelectGastosFijos();
-          rellenarTablaTransacciones();
-          actualizarResumen();
-          inicializarReporte();
-        }
-      });
-      tdAcc.appendChild(btnDel);
-
-      tr.appendChild(tdDesc);
-      tr.appendChild(tdValor);
-      tr.appendChild(tdVenc);
-      tr.appendChild(tdEstado);
-      tr.appendChild(tdAcc);
-      tablaFijosBody.appendChild(tr);
-    });
-  }
-
-  function obtenerNombreCategoriaPorId(id) {
-    const cat = categoriasLocal.find(c => String(c.id) === String(id));
-    return cat ? cat.nome : "";
-  }
-
-  function obterDescripcionFijoPorId(id) {
-    const f = fijosLocal.find(x => x.id === id);
-    return f ? f.descripcion : "";
-  }
-
-  function obtenerDescripcionFijoPorId(id) {
-    const f = fijosLocal.find(x => x.id === id);
-    return f ? f.descripcion : "";
-  }
-
-  function obtenerTarjetaTextoPorId(id) {
-    const t = tarjetasLocal.find(x => x.id === id);
-    if (!t) return "";
-    return `${t.alias || ""} (${t.digitos || ""})`;
-  }
-
-  function rellenarTablaTransacciones() {
-    tablaTransaccionesBody.innerHTML = "";
-    const anioMesActual = obtenerAnioMesActual();
-    let lista = transaccionesLocal.filter(t => t.fecha.startsWith(anioMesActual));
-
-    const textoFiltro = (filtroTexto.value || "").trim().toLowerCase();
-    const fechaFiltro = (filtroFecha.value || "").trim();
-
-    if (textoFiltro) {
-      lista = lista.filter(t =>
-        (t.descripcion || "").toLowerCase().includes(textoFiltro)
-      );
-    }
-
-    if (fechaFiltro) {
-      lista = lista.filter(t => t.fecha === fechaFiltro);
-    }
-
-    lista.sort((a, b) => (a.fecha < b.fecha ? 1 : -1));
-
-    lista.forEach(t => {
-      const tr = document.createElement("tr");
-
-      const tdFecha = document.createElement("td");
-      tdFecha.textContent = t.fecha;
-
-      const tdTipo = document.createElement("td");
-      const tag = document.createElement("span");
-      tag.className = "tag " + t.tipo;
-      tag.textContent = t.tipo;
-      tdTipo.appendChild(tag);
-
-      const tdCat = document.createElement("td");
-      if (t.categoriaId === "__gasto_fijo__" && t.gastoFijoId) {
-        tdCat.textContent = "Gasto fijo - " + obtenerDescripcionFijoPorId(t.gastoFijoId);
-      } else {
-        tdCat.textContent = obtenerNombreCategoriaPorId(t.categoriaId) || "-";
-      }
-
-      const tdOrigen = document.createElement("td");
-      if (t.tipo === "salida") {
-        if (t.origen === "tarjeta" && t.tarjetaId) {
-          tdOrigen.textContent = "Tarjeta - " + obtenerTarjetaTextoPorId(t.tarjetaId);
-        } else {
-          tdOrigen.textContent = "Normal";
-        }
-      } else {
-        tdOrigen.textContent = "-";
-      }
-
-      const tdDesc = document.createElement("td");
-      tdDesc.textContent = t.descripcion || "";
-
-      const tdValor = document.createElement("td");
-      tdValor.textContent = formatearMoneda(t.valor);
-
-      const tdAcc = document.createElement("td");
-      const btnDel = document.createElement("button");
-      btnDel.textContent = "Eliminar";
-      btnDel.className = "btn-icon btn-icon-danger";
-      btnDel.addEventListener("click", () => {
-        if (confirm("¿Eliminar esta transacción?")) {
-          transaccionesLocal = transaccionesLocal.filter(x => x.id !== t.id);
-          guardarLocal();
-          rellenarTablaTransacciones();
-          rellenarTablaFijos();
-          actualizarResumen();
-          inicializarReporte();
-          actualizarObjetivo();
-        }
-      });
-      tdAcc.appendChild(btnDel);
-
-      tr.appendChild(tdFecha);
-      tr.appendChild(tdTipo);
-      tr.appendChild(tdCat);
-      tr.appendChild(tdOrigen);
-      tr.appendChild(tdDesc);
-      tr.appendChild(tdValor);
-      tr.appendChild(tdAcc);
-      tablaTransaccionesBody.appendChild(tr);
-    });
-  }
-
-  function calcularAhorroTotal() {
-    let totalEntradas = 0;
-    let totalSalidas = 0;
-    transaccionesLocal.forEach(t => {
-      if (t.tipo === "entrada") totalEntradas += t.valor;
-      else if (t.tipo === "salida") totalSalidas += t.valor;
-    });
-    const ahorro = totalEntradas - totalSalidas;
-    return ahorro > 0 ? ahorro : 0;
-  }
-
-  function actualizarObjetivo() {
-    if (!objetivoNombre || !objetivoValor || objetivoValor <= 0) {
-      objNombreSpan.textContent = "Sin objetivo definido";
-      objMetaSpan.textContent = "-";
-      objAhorradoSpan.textContent = formatearMoneda(0);
-      objRestanteSpan.textContent = formatearMoneda(0);
-      objTexto.textContent = "Define un objetivo en el Perfil para comenzar a seguir tu ahorro.";
-      dibujarGraficoObjetivo(0);
-      rellenarHistorialObjetivos();
-      return;
-    }
-
-    const ahorroTotal = calcularAhorroTotal();
-    let ahorroObjetivo = ahorroTotal - objetivoAhorroBase;
-    if (ahorroObjetivo < 0) ahorroObjetivo = 0;
-
-    if (!objetivoCompletado && ahorroObjetivo >= objetivoValor) {
-      objetivoCompletado = true;
-      const hoy = new Date().toISOString().slice(0, 10);
-      objetivosHistorial.push({
-        nombre: objetivoNombre,
-        valorMeta: objetivoValor,
-        ahorroFinal: ahorroObjetivo,
-        fechaInicio: objetivoFechaInicio || "",
-        fechaConclusion: hoy
-      });
-      guardarLocal();
-    }
-
-    const porcentaje = objetivoValor > 0 ? (ahorroObjetivo / objetivoValor) * 100 : 0;
-    const restante = objetivoValor - ahorroObjetivo;
-
-    objNombreSpan.textContent = objetivoNombre;
-    objMetaSpan.textContent = formatearMoneda(objetivoValor);
-    objAhorradoSpan.textContent = formatearMoneda(ahorroObjetivo);
-    objRestanteSpan.textContent = formatearMoneda(restante > 0 ? restante : 0);
-
-    if (restante <= 0 && objetivoValor > 0) {
-      objTexto.textContent = "¡Objetivo alcanzado o superado! Considera registrar un nuevo objetivo o reiniciar el progreso.";
-    } else {
-      objTexto.textContent = `Has avanzado aproximadamente ${porcentaje.toFixed(1)}% de este objetivo.`;
-    }
-
-    dibujarGraficoObjetivo(porcentaje);
-    rellenarHistorialObjetivos();
-  }
-
-  function rellenarHistorialObjetivos() {
-    tablaHistorialObjetivosBody.innerHTML = "";
-    objetivosHistorial.forEach(o => {
-      const tr = document.createElement("tr");
-      const tdNom = document.createElement("td");
-      tdNom.textContent = o.nombre || "";
-      const tdMeta = document.createElement("td");
-      tdMeta.textContent = formatearMoneda(o.valorMeta || 0);
-      const tdFinal = document.createElement("td");
-      tdFinal.textContent = formatearMoneda(o.ahorroFinal || 0);
-      const tdIni = document.createElement("td");
-      tdIni.textContent = o.fechaInicio || "";
-      const tdConc = document.createElement("td");
-      tdConc.textContent = o.fechaConclusion || "";
-      tr.appendChild(tdNom);
-      tr.appendChild(tdMeta);
-      tr.appendChild(tdFinal);
-      tr.appendChild(tdIni);
-      tr.appendChild(tdConc);
-      tablaHistorialObjetivosBody.appendChild(tr);
-    });
+    perfilAnalisis.textContent = mensaje + ` Referência aproximada utilizada: ${refTexto}. Cálculo aproximado e apenas orientativo, não é uma recomendação financeira oficial.`;
   }
 
   function actualizarResumen() {
@@ -2583,172 +2256,9 @@
     });
   }
 
-  selectReporteMes.addEventListener("change", actualizarReporte);
-  btnReporteMesActual.addEventListener("click", () => {
-    const actual = obtenerAnioMesActual();
-    selectReporteMes.value = actual;
-    actualizarReporte();
-  });
-
-  const formCategoria = document.getElementById("form-categoria");
-  formCategoria.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const nome = document.getElementById("cat-nome").value.trim();
-    const grupo = document.getElementById("cat-grupo").value;
-    if (!nome) return;
-    const id = nextCategoriaId();
-    categoriasLocal.push({ id, nome, grupo });
-    guardarLocal();
-    document.getElementById("cat-nome").value = "";
-    rellenarTablaCategorias();
-    rellenarSelectCategorias();
-    mostrarModalCategoriasSiCorresponde();
-  });
-
-  function nextCategoriaId() {
-    let max = 0;
-    categoriasLocal.forEach(c => { if (c.id > max) max = c.id; });
-    return max + 1;
-  }
-
-  const formFijo = document.getElementById("form-fijo");
-  formFijo.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const descripcion = document.getElementById("fijo-descripcion").value.trim();
-    const valor = parseNumeroLocal(document.getElementById("fijo-valor").value || "0");
-    const vencimiento = parseInt(document.getElementById("fijo-vencimiento").value || "0", 10);
-    if (!descripcion || !valor || !vencimiento) return;
-
-    const id = siguienteId(fijosLocal);
-    const mesActual = obtenerAnioMesActual();
-    const mesInicio = siguienteAnioMes(mesActual);
-
-    fijosLocal.push({
-      id,
-      descripcion,
-      valor,
-      vencimiento,
-      mesInicio
-    });
-
-    guardarLocal();
-    document.getElementById("fijo-descripcion").value = "";
-    document.getElementById("fijo-valor").value = "";
-    document.getElementById("fijo-vencimiento").value = "";
-    rellenarTablaFijos();
-    rellenarSelectGastosFijos();
-    actualizarResumen();
-  });
-
-  const formTarjeta = document.getElementById("form-tarjeta");
-  formTarjeta.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const alias = document.getElementById("tarjeta-alias").value.trim();
-    const digitos = document.getElementById("tarjeta-digitos").value.trim();
-    const banco = document.getElementById("tarjeta-banco").value.trim();
-    if (!alias && !digitos) return;
-
-    const id = siguienteId(tarjetasLocal);
-    tarjetasLocal.push({ id, alias, digitos, banco });
-    guardarLocal();
-
-    document.getElementById("tarjeta-alias").value = "";
-    document.getElementById("tarjeta-digitos").value = "";
-    document.getElementById("tarjeta-banco").value = "";
-    rellenarTablaTarjetas();
-    rellenarSelectTarjetas();
-  });
-
-  const formTransaccion = document.getElementById("form-transaccion");
-  formTransaccion.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const tipo = document.getElementById("tipo").value;
-    const categoriaVal = selectCategoria.value;
-    const origen = selectOrigen.value;
-    const valor = parseNumeroLocal(document.getElementById("valor").value || "0");
-    const fecha = document.getElementById("data").value;
-    const descripcion = document.getElementById("descripcion").value.trim();
-
-    if (!tipo || !categoriaVal || !valor || !fecha) return;
-
-    let gastoFijoId = null;
-    if (tipo === "salida" && categoriaVal === "__gasto_fijo__") {
-      if (!selectGastoFijo.value) {
-        alert("Selecciona qué gasto fijo deseas pagar.");
-        return;
-      }
-      gastoFijoId = parseInt(selectGastoFijo.value, 10);
-    }
-
-    let tarjetaId = null;
-    let origenFinal = null;
-    if (tipo === "salida") {
-      if (origen === "tarjeta") {
-        if (!selectTarjeta.value) {
-          alert("Selecciona la tarjeta utilizada.");
-          return;
-        }
-        origenFinal = "tarjeta";
-        tarjetaId = parseInt(selectTarjeta.value, 10);
-      } else {
-        origenFinal = "normal";
-      }
-    }
-
-    const id = siguienteId(transaccionesLocal);
-    const trans = {
-      id,
-      tipo,
-      categoriaId: categoriaVal,
-      gastoFijoId,
-      origen: origenFinal,
-      tarjetaId,
-      valor,
-      fecha,
-      descripcion
-    };
-    transaccionesLocal.push(trans);
-    guardarLocal();
-
-    document.getElementById("valor").value = "";
-    document.getElementById("descripcion").value = "";
-
-    rellenarTablaTransacciones();
-    rellenarTablaFijos();
-    actualizarResumen();
-    inicializarReporte();
-    actualizarObjetivo();
-  });
-
-  function actualizarCampoGastoFijo() {
-    const tipo = document.getElementById("tipo").value;
-    const esSalida = tipo === "salida";
-    const esGastoFijoCategoria = esSalida && selectCategoria.value === "__gasto_fijo__";
-    if (esGastoFijoCategoria) {
-      campoGastoFijo.classList.remove("hidden");
-    } else {
-      campoGastoFijo.classList.add("hidden");
-    }
-  }
-
-  function actualizarCampoOrigenYTarjeta() {
-    const tipo = document.getElementById("tipo").value;
-    if (tipo === "salida") {
-      campoOrigen.classList.remove("hidden");
-      if (selectOrigen.value === "tarjeta") {
-        campoTarjeta.classList.remove("hidden");
-      } else {
-        campoTarjeta.classList.add("hidden");
-      }
-    } else {
-      campoOrigen.classList.add("hidden");
-      campoTarjeta.classList.add("hidden");
-    }
-  }
-
+  // --- EVENTS EXTRAS ---
   document.getElementById("tipo").addEventListener("change", () => {
     rellenarSelectCategorias();
-    atualizarCampoGastoFijo();
     actualizarCampoGastoFijo();
     actualizarCampoOrigenYTarjeta();
   });
@@ -2775,8 +2285,13 @@
     rellenarTablaTransacciones();
   });
 
-  window.addEventListener("load", () => {
-    // Siempre mostrar pantalla de login al recargar.
+  // Check auth at load
+  window.addEventListener("load", async () => {
+    const { session } = await nhost.auth.getSession();
+    if (session) {
+       usuarioActual = session.user;
+       abrirApp();
+    }
   });
 </script>
 </body>
