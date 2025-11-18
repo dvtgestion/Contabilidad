@@ -14,7 +14,7 @@
       color: #e5e7eb;
     }
 
-    /* INDICADOR DE CARREGAMENTO (NOVO - Para saber quando está salvando na nuvem) */
+    /* INDICADOR DE CARREGAMENTO */
     #loading-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -1070,7 +1070,7 @@
           <div class="card">
             <h3>Historial de objetivos de ahorro</h3>
             <p class="card-subtitle">
-              Aquí aparecen los objetivos que fueron completados (100% o más) y se guardan como concluidos.
+              Aquí aparecen los objetivos que foram completados (100% o mais) e são salvos como concluídos.
             </p>
             <div class="tabla-wrapper">
               <table id="tabla-historial-objetivos">
@@ -1098,12 +1098,12 @@
   <div class="card" style="max-width:420px; width:90%; text-align:left;">
     <h3>Primeros pasos</h3>
     <p class="card-subtitle">
-      Como acabas de crear tu cuenta, tus categorías están vacías.
+      Como acabas de criar sua conta, suas categorias estão vazias.
     </p>
     <p style="font-size:0.85rem; margin-top:0.5rem;">
-      1. En el menú lateral, entra en <strong>"Categorías y metas"</strong>.<br/>
-      2. Crea tus propias categorías (ej.: Mercado, Alquiler, Universidad, Salud, Ocio...).<br/>
-      3. Después, usa estas categorías al registrar tus transacciones.
+      1. No menu lateral, vá em <strong>"Categorías y metas"</strong>.<br/>
+      2. Crie suas próprias categorias (ex.: Mercado, Aluguel, Universidade, Saúde, Lazer...).<br/>
+      3. Depois, use essas categorias ao registrar suas transações.
     </p>
     <button type="button" class="primary" id="modal-categorias-ok" style="margin-top:0.75rem;">
       Entendido
@@ -1114,9 +1114,11 @@
 <script type="module">
   import { createClient } from 'https://unpkg.com/@nhost/nhost-js@4.1.0/dist/nhost-js.es.js';
 
+  // ⚠️ SUBSTITUA PELO SEU SUBDOMÍNIO REAL SE ESTE ESTIVER ERRADO
   const nhost = createClient({
     subdomain: 'cpmnrcipviprenstjcwg',
-    region: 'sa-east-1'
+    region: 'sa-east-1',
+    clientStorageType: 'localStorage' // Garante que funciona melhor em alguns browsers
   });
 
   window.nhost = nhost;
@@ -1228,7 +1230,15 @@
 
   // --- CARREGAR DADOS DO SERVIDOR ---
   async function cargarDatosDelServidor() {
-    if (!usuarioActual) return;
+    // Verificação extra do user_id
+    const user = nhost.auth.getUser();
+    if (!user) {
+      alert("Erro: Sessão perdida. Faça login novamente.");
+      window.location.reload();
+      return;
+    }
+    usuarioActual = user;
+
     loading(true);
     try {
       const query = `
@@ -1248,7 +1258,8 @@
       const { data, error } = await nhost.graphql.request(query);
       if (error) {
         console.error("Error fetching data:", error);
-        alert("Error sincronizando datos. Ver consola.");
+        // Mostra o erro real do GraphQL
+        alert("Erro ao carregar dados: " + (error[0]?.message || JSON.stringify(error)));
         loading(false);
         return;
       }
@@ -1299,6 +1310,7 @@
 
     } catch (e) {
       console.error(e);
+      alert("Erro de rede ou permissão: " + e.message);
     } finally {
       loading(false);
     }
@@ -1306,6 +1318,9 @@
 
   // --- SALVAR PERFIL NA NUVEM ---
   async function guardarPerfilEnServidor() {
+    const user = nhost.auth.getUser();
+    if (!user) return; // Segurança
+
     loading(true);
     try {
       const mutation = `
@@ -1322,7 +1337,7 @@
       
       const variables = {
         obj: {
-          user_id: usuarioActual.id,
+          user_id: user.id,
           edad: edadUsuario,
           sexo: sexoUsuario || null,
           pais: paisUsuario || null,
@@ -1339,12 +1354,14 @@
         }
       };
       
-      await nhost.graphql.request(mutation, variables);
+      const { error } = await nhost.graphql.request(mutation, variables);
+      if(error) throw new Error(JSON.stringify(error));
+
       perfilMensaje.textContent = "Guardado en la nube.";
       setTimeout(() => perfilMensaje.textContent="", 2000);
     } catch(e) {
       console.error("Error saving profile", e);
-      alert("Error guardando perfil.");
+      alert("Erro ao salvar perfil. Verifique se você está logado e se tem internet.\n" + e.message);
     } finally {
       loading(false);
     }
@@ -1400,6 +1417,7 @@
         const { session, error } = await nhost.auth.signUpEmailPassword({ email, password });
         if (error) {
           loginMessage.textContent = error.message || "Error al crear cuenta.";
+          alert("Erro Nhost: " + error.message);
           return;
         }
 
@@ -1411,7 +1429,8 @@
             abrirApp();
         } else {
             loginMessage.style.color = "#22c55e";
-            loginMessage.textContent = "Cuenta creada. Verifica tu email y luego inicia sesión.";
+            loginMessage.textContent = "Conta criada! Verifique seu email e faça login.";
+            alert("Conta criada com sucesso! Verifique seu email.");
             modoRegistro = false;
             loginSubmit.textContent = "Entrar";
             toggleText.textContent = "¿No tienes cuenta?";
@@ -1419,19 +1438,24 @@
             registerExtra.classList.add("hidden");
         }
       } catch (err) {
-        loginMessage.textContent = "Error de conexión.";
+        loginMessage.textContent = "Erro crítico (ver console)";
+        console.error(err);
+        alert("Erro crítico de conexão: " + err.message);
       }
     } else {
       try {
         const { session, error } = await nhost.auth.signInEmailPassword({ email, password });
         if (error) {
-          loginMessage.textContent = "Credenciales inválidas.";
+          loginMessage.textContent = "Credenciais inválidas.";
+          console.error("Login Error:", error);
           return;
         }
         usuarioActual = session.user;
-        abrirApp();
+        await abrirApp();
       } catch (err) {
-        loginMessage.textContent = "Error de conexión.";
+        loginMessage.textContent = "Erro crítico (ver console)";
+        console.error("Critical Login Error:", err);
+        alert("Erro crítico de login: " + err.message + "\nSe estiver usando 'file://', mude para Live Server.");
       }
     }
   });
@@ -1504,7 +1528,7 @@
       await nhost.graphql.request(mutation, { nome, grupo, uid: usuarioActual.id });
       document.getElementById("cat-nome").value = "";
       await cargarDatosDelServidor();
-    } catch(err) { console.error(err); alert("Error agregando categoría"); loading(false); }
+    } catch(err) { console.error(err); alert("Error agregando categoría: " + err.message); loading(false); }
   });
 
   async function eliminarCategoria(id) {
@@ -1537,7 +1561,7 @@
       document.getElementById("fijo-valor").value = "";
       document.getElementById("fijo-vencimiento").value = "";
       await cargarDatosDelServidor();
-    } catch(err) { console.error(err); alert("Error agregando gasto fijo"); loading(false); }
+    } catch(err) { console.error(err); alert("Error agregando gasto fijo: " + err.message); loading(false); }
   });
 
   async function eliminarFijo(id) {
@@ -1569,7 +1593,7 @@
       document.getElementById("tarjeta-digitos").value = "";
       document.getElementById("tarjeta-banco").value = "";
       await cargarDatosDelServidor();
-    } catch(err) { console.error(err); alert("Error agregando tarjeta"); loading(false); }
+    } catch(err) { console.error(err); alert("Error agregando tarjeta: " + err.message); loading(false); }
   });
 
   async function eliminarTarjeta(id) {
@@ -1648,7 +1672,7 @@
 
       await cargarDatosDelServidor();
       actualizarObjetivo();
-    } catch(err) { console.error(err); alert("Error agregando transacción"); loading(false); }
+    } catch(err) { console.error(err); alert("Error agregando transacción: " + err.message); loading(false); }
   });
 
   async function eliminarTransaccion(id) {
@@ -2290,7 +2314,7 @@
     const { session } = await nhost.auth.getSession();
     if (session) {
        usuarioActual = session.user;
-       abrirApp();
+       await abrirApp(); // Agora aguarda para pegar os dados
     }
   });
 </script>
