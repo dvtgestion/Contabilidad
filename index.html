@@ -1112,13 +1112,14 @@
 </div>
 
 <script type="module">
-  import { createClient } from 'https://unpkg.com/@nhost/nhost-js@4.1.0/dist/nhost-js.es.js';
+  // MUDANÇA 1: Usando a versão @latest para evitar bugs de versões antigas/beta
+  import { createClient } from 'https://unpkg.com/@nhost/nhost-js@latest/dist/nhost-js.es.js';
 
   // CONFIGURAÇÃO DO NHOST
   const nhost = createClient({
     subdomain: 'cpmnrcipviprenstjcwg',
-    region: 'sa-east-1',
-    clientStorageType: 'localStorage'
+    region: 'sa-east-1'
+    // MUDANÇA 2: Removi 'clientStorageType'. Deixe o Nhost escolher o melhor para o iPad.
   });
 
   window.nhost = nhost;
@@ -1234,7 +1235,7 @@
     }
 
     if (!user) {
-        console.warn("No user found. Redirecting to login.");
+        // Silencioso no load inicial
         document.getElementById("app").classList.add("hidden");
         document.getElementById("login-screen").classList.remove("hidden");
         return;
@@ -1292,6 +1293,11 @@
 
       inicializarInterfaz();
       mostrarModalCategoriasSiCorresponde();
+      
+      // Esconde login, mostra app
+      document.getElementById("login-screen").classList.add("hidden");
+      document.getElementById("app").classList.remove("hidden");
+
     } catch (e) {
       console.error("Exception loading data:", e);
     } finally {
@@ -1403,15 +1409,17 @@
           return;
         }
 
-        if (res.session && res.session.user) {
+        // Verifica se sessao veio
+        if (res.session) {
             usuarioActual = res.session.user;
             edadUsuario = parseInt(registerEdad.value || "0", 10) || null;
             metaMensualUsuario = parseNumeroLocal(registerMeta.value || "0");
             await guardarPerfilEnServidor();
             abrirApp();
         } else {
+            // Se não veio sessão no registro, pode ser verificação de email
             loginMessage.style.color = "#22c55e";
-            loginMessage.textContent = "Cuenta creada. Verifica tu email e inicia sesión.";
+            loginMessage.textContent = "Cuenta creada. Intenta iniciar sesión ahora.";
             modoRegistro = false;
             loginSubmit.textContent = "Entrar";
             toggleText.textContent = "¿No tienes cuenta?";
@@ -1423,62 +1431,64 @@
         console.error(err);
       }
     } else {
-      // LOGIN - LÓGICA CORRIGIDA AQUI
+      // LOGIN
       try {
         const res = await nhost.auth.signInEmailPassword({ email, password });
         
         if (res.error) {
-          loginMessage.textContent = "Credenciales inválidas o error de red.";
+          loginMessage.textContent = "Credenciales inválidas o error de conexión.";
           console.error("Login Error obj:", res.error);
           return;
         }
 
-        // Correção: Se o Nhost retornar o usuário, consideramos logado, mesmo se a sessão demorar a montar
-if (!res.session) {
-   console.warn("Aviso: Sessão nula recebida do Nhost.", res);
-   
-   // SE TIVER USUÁRIO, DEIXA ENTRAR!
-   if (res.user) {
-       console.log("Usuário detectado! Forçando entrada...");
-       usuarioActual = res.user;
-       await abrirApp(); // <--- AQUI ESTÁ O PULO DO GATO
-       return; 
-   }
+        if (!res.session) {
+           // DIAGNÓSTICO DE ERRO
+           console.warn("Sem sessão. Resposta completa:", res);
+           
+           // Se o usuário existe mas não tem sessão, pode ser verificação de email
+           if (res.needsEmailVerification) {
+              alert("DIAGNÓSTICO: Nhost diz que precisa verificar o email, mesmo você tendo desativado. Verifique se 'Require Email Verification' está mesmo OFF no painel.");
+              return;
+           }
 
-   // Só exibe erro se não tiver nem sessão nem usuário
-   loginMessage.textContent = "Login exitoso pero sin sesión. Verifica tu email.";
-   return;
-}
-
-        
-        if (!res.session.user) {
-           loginMessage.textContent = "Error: Sesión recibida sin datos de usuario.";
+           // Se não tem erro, não tem sessão e não pede verificação, é estranho
+           alert("DIAGNÓSTICO AVANÇADO:\nLogin OK, mas sem Sessão.\nUser ID: " + (res.user ? res.user.id : 'null') + "\nVerificação necessária: " + res.needsEmailVerification);
+           
+           loginMessage.textContent = "Login exitoso pero sin sesión.";
            return;
         }
 
+        // Se chegou aqui, sucesso!
         usuarioActual = res.session.user;
-        await abrirApp();
+        abrirApp();
 
       } catch (err) {
-        loginMessage.textContent = "Excepción al intentar login (Ver consola).";
+        loginMessage.textContent = "Excepción técnica (ver consola).";
         console.error("Critical Login Exception:", err);
+        alert("Erro Crítico JS: " + err.message);
       }
     }
   });
 
   async function abrirApp() {
-    loginScreen.classList.add("hidden");
-    app.classList.remove("hidden");
+    // Só tenta carregar se tiver usuário
+    if(!usuarioActual) return;
+    
+    // Muda a tela
+    document.getElementById("login-screen").classList.add("hidden");
+    document.getElementById("app").classList.remove("hidden");
+    
     await cargarDatosDelServidor();
   }
 
   document.getElementById("logout-btn").addEventListener("click", async () => {
     try { await nhost.auth.signOut(); } catch (e) {}
     usuarioActual = null;
-    app.classList.add("hidden");
-    loginScreen.classList.remove("hidden");
-    // Limpar local
+    // Limpa dados locais
     categoriasLocal=[]; transaccionesLocal=[]; fijosLocal=[]; tarjetasLocal=[];
+    // Troca tela
+    document.getElementById("app").classList.add("hidden");
+    document.getElementById("login-screen").classList.remove("hidden");
   });
 
   modalCategoriasOk.addEventListener("click", async () => {
