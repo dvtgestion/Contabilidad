@@ -14,7 +14,7 @@
       color: #e5e7eb;
     }
 
-    /* INDICADOR DE CARREGAMENTO */
+    /* INDICADOR DE CARREGAMENTO (NOVO) */
     #loading-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -1098,11 +1098,11 @@
   <div class="card" style="max-width:420px; width:90%; text-align:left;">
     <h3>Primeros pasos</h3>
     <p class="card-subtitle">
-      Como acabas de criar sua conta, suas categorias estão vazias.
+      Como acabas de crear tu cuenta, tus categorías están vacías.
     </p>
     <p style="font-size:0.85rem; margin-top:0.5rem;">
-      1. No menu lateral, vá em <strong>"Categorías y metas"</strong>.<br/>
-      2. Crie suas próprias categorias (ex.: Mercado, Aluguel, Universidade, Saúde, Lazer...).<br/>
+      1. En el menú lateral, entra en <strong>"Categorías y metas"</strong>.<br/>
+      2. Crea tus próprias categorias (ex.: Mercado, Aluguel, Universidade, Saúde, Lazer...).<br/>
       3. Depois, use essas categorias ao registrar suas transações.
     </p>
     <button type="button" class="primary" id="modal-categorias-ok" style="margin-top:0.75rem;">
@@ -1114,20 +1114,22 @@
 <script type="module">
   import { createClient } from 'https://unpkg.com/@nhost/nhost-js@4.1.0/dist/nhost-js.es.js';
 
-  // ⚠️ SUBSTITUA PELO SEU SUBDOMÍNIO REAL SE ESTE ESTIVER ERRADO
+  // CONFIGURAÇÃO DO NHOST
   const nhost = createClient({
     subdomain: 'cpmnrcipviprenstjcwg',
     region: 'sa-east-1',
-    clientStorageType: 'localStorage' // Garante que funciona melhor em alguns browsers
+    clientStorageType: 'localStorage'
   });
 
   window.nhost = nhost;
 
-  // --- UTILITARIOS ---
+  // --- UTILITÁRIOS VISUAIS ---
   function loading(show) {
     const el = document.getElementById('loading-overlay');
-    if (show) el.classList.remove('hidden');
-    else el.classList.add('hidden');
+    if (el) {
+      if (show) el.classList.remove('hidden');
+      else el.classList.add('hidden');
+    }
   }
 
   function monedaPorDefectoParaPais(pais) {
@@ -1158,7 +1160,6 @@
   function formatearMoneda(valor) {
     const currency = monedaUsuario || "USD";
     let locale = "en-US";
-
     switch (currency) {
       case "BRL": locale = "pt-BR"; break;
       case "BOB": locale = "es-BO"; break;
@@ -1168,7 +1169,6 @@
       case "EUR": locale = "es-ES"; break;
       default:    locale = "en-US";
     }
-
     try {
       return valor.toLocaleString(locale, { style: "currency", currency });
     } catch (e) {
@@ -1177,8 +1177,7 @@
   }
 
   function obtenerAnioMesActual() {
-    const hoy = new Date();
-    return hoy.toISOString().slice(0, 7);
+    return new Date().toISOString().slice(0, 7);
   }
 
   function filtrarMesActual(lista, campoFecha) {
@@ -1199,16 +1198,12 @@
     let anio = parseInt(anioStr, 10);
     let mes = parseInt(mesStr, 10);
     mes += 1;
-    if (mes === 13) {
-      mes = 1;
-      anio += 1;
-    }
+    if (mes === 13) { mes = 1; anio += 1; }
     return anio.toString().padStart(4, "0") + "-" + mes.toString().padStart(2, "0");
   }
 
-  // --- ESTADO GLOBAL (CACHE) ---
+  // --- ESTADO GLOBAL ---
   let usuarioActual = null;
-  
   let categoriasLocal = [];
   let transaccionesLocal = [];
   let fijosLocal = [];
@@ -1220,7 +1215,6 @@
   let sexoUsuario = "";
   let paisUsuario = "";
   let yaMostroModalCategorias = false;
-
   let objetivoNombre = "";
   let objetivoValor = 0;
   let objetivoAhorroBase = 0;
@@ -1228,16 +1222,25 @@
   let objetivoCompletado = false;
   let objetivosHistorial = [];
 
-  // --- CARREGAR DADOS DO SERVIDOR ---
+  // --- CARREGAR DADOS ---
   async function cargarDatosDelServidor() {
-    // Verificação extra do user_id
-    const user = nhost.auth.getUser();
+    // Tenta obter usuário da sessão atual
+    let user = nhost.auth.getUser();
+    
+    // Se não achou, tenta refresh
     if (!user) {
-      alert("Erro: Sessão perdida. Faça login novamente.");
-      window.location.reload();
-      return;
+        const session = await nhost.auth.getSession();
+        if (session) user = session.user;
+    }
+
+    if (!user) {
+        console.warn("No user found. Redirecting to login.");
+        document.getElementById("app").classList.add("hidden");
+        document.getElementById("login-screen").classList.remove("hidden");
+        return;
     }
     usuarioActual = user;
+    document.getElementById("user-email").textContent = usuarioActual.email;
 
     loading(true);
     try {
@@ -1257,69 +1260,49 @@
       `;
       const { data, error } = await nhost.graphql.request(query);
       if (error) {
-        console.error("Error fetching data:", error);
-        // Mostra o erro real do GraphQL
-        alert("Erro ao carregar dados: " + (error[0]?.message || JSON.stringify(error)));
+        console.error("GraphQL Error:", error);
         loading(false);
         return;
       }
 
-      // Mapear dados
       categoriasLocal = data.categorias || [];
-      
       fijosLocal = (data.gastos_fijos || []).map(f => ({
-        id: f.id,
-        descripcion: f.descripcion,
-        valor: Number(f.valor),
-        vencimiento: f.vencimiento,
-        mesInicio: f.mes_inicio
+        id: f.id, descripcion: f.descripcion, valor: Number(f.valor), vencimiento: f.vencimiento, mesInicio: f.mes_inicio
       }));
-
       tarjetasLocal = data.tarjetas || [];
-
       transaccionesLocal = (data.transacciones || []).map(t => ({
-        id: t.id,
-        tipo: t.tipo,
-        categoriaId: t.categoria_id,
-        gastoFijoId: t.gasto_fijo_id,
-        tarjetaId: t.tarjeta_id,
-        origen: t.origen,
-        valor: Number(t.valor),
-        fecha: t.fecha,
-        descripcion: t.descripcion
+        id: t.id, tipo: t.tipo, categoriaId: t.categoria_id, gastoFijoId: t.gasto_fijo_id, tarjetaId: t.tarjeta_id,
+        origen: t.origen, valor: Number(t.valor), fecha: t.fecha, descripcion: t.descripcion
       }));
 
-      // Perfil
       const p = (data.perfil_financiero && data.perfil_financiero[0]) || {};
-      metaMensualUsuario    = Number(p.meta_mensual || 0);
+      metaMensualUsuario = Number(p.meta_mensual || 0);
       ingresoMensualUsuario = Number(p.ingreso_mensual || 0);
-      edadUsuario           = p.edad || null;
-      sexoUsuario           = p.sexo || "";
-      paisUsuario           = p.pais || "";
-      monedaUsuario         = p.moneda || monedaPorDefectoParaPais(paisUsuario) || "USD";
-      objetivoNombre        = p.objetivo_nombre || "";
-      objetivoValor         = Number(p.objetivo_valor || 0);
-      objetivoAhorroBase    = Number(p.objetivo_ahorro_base || 0);
-      objetivoFechaInicio   = p.objetivo_fecha_inicio || null;
-      objetivoCompletado    = !!p.objetivo_completado;
+      edadUsuario = p.edad || null;
+      sexoUsuario = p.sexo || "";
+      paisUsuario = p.pais || "";
+      monedaUsuario = p.moneda || monedaPorDefectoParaPais(paisUsuario) || "USD";
+      objetivoNombre = p.objetivo_nombre || "";
+      objetivoValor = Number(p.objetivo_valor || 0);
+      objetivoAhorroBase = Number(p.objetivo_ahorro_base || 0);
+      objetivoFechaInicio = p.objetivo_fecha_inicio || null;
+      objetivoCompletado = !!p.objetivo_completado;
       yaMostroModalCategorias = !!p.mostro_modal_categorias;
-      objetivosHistorial    = p.objetivos_historial || [];
+      objetivosHistorial = p.objetivos_historial || [];
 
       inicializarInterfaz();
       mostrarModalCategoriasSiCorresponde();
-
     } catch (e) {
-      console.error(e);
-      alert("Erro de rede ou permissão: " + e.message);
+      console.error("Exception loading data:", e);
     } finally {
       loading(false);
     }
   }
 
-  // --- SALVAR PERFIL NA NUVEM ---
+  // --- SALVAR PERFIL ---
   async function guardarPerfilEnServidor() {
     const user = nhost.auth.getUser();
-    if (!user) return; // Segurança
+    if (!user) return;
 
     loading(true);
     try {
@@ -1334,7 +1317,6 @@
           ) { user_id }
         }
       `;
-      
       const variables = {
         obj: {
           user_id: user.id,
@@ -1353,37 +1335,37 @@
           objetivos_historial: objetivosHistorial
         }
       };
-      
       const { error } = await nhost.graphql.request(mutation, variables);
-      if(error) throw new Error(JSON.stringify(error));
-
-      perfilMensaje.textContent = "Guardado en la nube.";
-      setTimeout(() => perfilMensaje.textContent="", 2000);
+      if(error) throw error;
+      
+      const pm = document.getElementById("perfil-mensaje");
+      if(pm) {
+          pm.textContent = "Guardado en la nube.";
+          setTimeout(() => pm.textContent="", 2000);
+      }
     } catch(e) {
       console.error("Error saving profile", e);
-      alert("Erro ao salvar perfil. Verifique se você está logado e se tem internet.\n" + e.message);
     } finally {
       loading(false);
     }
   }
 
-  // --- LOGIN E REGISTRO ---
-  const loginScreen      = document.getElementById("login-screen");
-  const app              = document.getElementById("app");
-  const loginForm        = document.getElementById("login-form");
-  const loginEmail       = document.getElementById("login-email");
-  const loginPassword    = document.getElementById("login-password");
-  const loginSubmit      = document.getElementById("login-submit");
-  const toggleModeBtn    = document.getElementById("toggle-mode");
-  const toggleText       = document.getElementById("toggle-text");
-  const loginMessage     = document.getElementById("login-message");
-  const registerExtra    = document.getElementById("register-extra");
-  const registerEdad     = document.getElementById("register-edad");
-  const registerMeta     = document.getElementById("register-meta");
+  // --- LOGICA DE LOGIN SEGURA ---
+  const loginScreen = document.getElementById("login-screen");
+  const app = document.getElementById("app");
+  const loginForm = document.getElementById("login-form");
+  const loginEmail = document.getElementById("login-email");
+  const loginPassword = document.getElementById("login-password");
+  const loginSubmit = document.getElementById("login-submit");
+  const toggleModeBtn = document.getElementById("toggle-mode");
+  const toggleText = document.getElementById("toggle-text");
+  const loginMessage = document.getElementById("login-message");
+  const registerExtra = document.getElementById("register-extra");
+  const registerEdad = document.getElementById("register-edad");
+  const registerMeta = document.getElementById("register-meta");
 
-  const modalCategorias   = document.getElementById("modal-categorias");
+  const modalCategorias = document.getElementById("modal-categorias");
   const modalCategoriasOk = document.getElementById("modal-categorias-ok");
-
   let modoRegistro = false;
 
   toggleModeBtn.addEventListener("click", () => {
@@ -1400,7 +1382,6 @@
       registerExtra.classList.add("hidden");
     }
     loginMessage.textContent = "";
-    loginMessage.style.color = "#f97316";
   });
 
   loginForm.addEventListener("submit", async (e) => {
@@ -1413,24 +1394,24 @@
     loginMessage.textContent = "Procesando...";
 
     if (modoRegistro) {
+      // REGISTRO
       try {
-        const { session, error } = await nhost.auth.signUpEmailPassword({ email, password });
-        if (error) {
-          loginMessage.textContent = error.message || "Error al crear cuenta.";
-          alert("Erro Nhost: " + error.message);
+        const res = await nhost.auth.signUpEmailPassword({ email, password });
+        
+        if (res.error) {
+          loginMessage.textContent = res.error.message || "Error al crear cuenta.";
           return;
         }
 
-        if (session) {
-            usuarioActual = session.user;
+        if (res.session && res.session.user) {
+            usuarioActual = res.session.user;
             edadUsuario = parseInt(registerEdad.value || "0", 10) || null;
             metaMensualUsuario = parseNumeroLocal(registerMeta.value || "0");
             await guardarPerfilEnServidor();
             abrirApp();
         } else {
             loginMessage.style.color = "#22c55e";
-            loginMessage.textContent = "Conta criada! Verifique seu email e faça login.";
-            alert("Conta criada com sucesso! Verifique seu email.");
+            loginMessage.textContent = "Cuenta creada. Verifica tu email e inicia sesión.";
             modoRegistro = false;
             loginSubmit.textContent = "Entrar";
             toggleText.textContent = "¿No tienes cuenta?";
@@ -1438,42 +1419,53 @@
             registerExtra.classList.add("hidden");
         }
       } catch (err) {
-        loginMessage.textContent = "Erro crítico (ver console)";
+        loginMessage.textContent = "Error de red al registrar.";
         console.error(err);
-        alert("Erro crítico de conexão: " + err.message);
       }
     } else {
+      // LOGIN - LÓGICA CORRIGIDA AQUI
       try {
-        const { session, error } = await nhost.auth.signInEmailPassword({ email, password });
-        if (error) {
-          loginMessage.textContent = "Credenciais inválidas.";
-          console.error("Login Error:", error);
+        const res = await nhost.auth.signInEmailPassword({ email, password });
+        
+        if (res.error) {
+          loginMessage.textContent = "Credenciales inválidas o error de red.";
+          console.error("Login Error obj:", res.error);
           return;
         }
-        usuarioActual = session.user;
+
+        // Verificação defensiva para evitar o erro 'undefined is not an object'
+        if (!res.session) {
+           loginMessage.textContent = "Login exitoso pero sin sesión. Verifica tu email.";
+           return;
+        }
+        
+        if (!res.session.user) {
+           loginMessage.textContent = "Error: Sesión recibida sin datos de usuario.";
+           return;
+        }
+
+        usuarioActual = res.session.user;
         await abrirApp();
+
       } catch (err) {
-        loginMessage.textContent = "Erro crítico (ver console)";
-        console.error("Critical Login Error:", err);
-        alert("Erro crítico de login: " + err.message + "\nSe estiver usando 'file://', mude para Live Server.");
+        loginMessage.textContent = "Excepción al intentar login (Ver consola).";
+        console.error("Critical Login Exception:", err);
       }
     }
   });
 
   async function abrirApp() {
-    document.getElementById("user-email").textContent = usuarioActual.email;
     loginScreen.classList.add("hidden");
     app.classList.remove("hidden");
     await cargarDatosDelServidor();
   }
 
   document.getElementById("logout-btn").addEventListener("click", async () => {
-    try {
-      await nhost.auth.signOut();
-    } catch (e) { console.error(e); }
+    try { await nhost.auth.signOut(); } catch (e) {}
     usuarioActual = null;
     app.classList.add("hidden");
     loginScreen.classList.remove("hidden");
+    // Limpar local
     categoriasLocal=[]; transaccionesLocal=[]; fijosLocal=[]; tarjetasLocal=[];
   });
 
@@ -1491,248 +1483,537 @@
     }
   }
 
-  const sidebar    = document.getElementById("sidebar");
+  // --- MENUS E NAVEGAÇÃO ---
+  const sidebar = document.getElementById("sidebar");
   const menuToggle = document.getElementById("menu-toggle");
-
-  menuToggle.addEventListener("click", () => {
-    sidebar.classList.toggle("open");
-  });
-
+  menuToggle.addEventListener("click", () => sidebar.classList.toggle("open"));
   sidebar.addEventListener("click", (e) => {
     if (e.target.tagName !== "BUTTON") return;
     const seccion = e.target.getAttribute("data-section");
     if (!seccion) return;
-
     sidebar.querySelectorAll("button").forEach(btn => btn.classList.remove("active"));
     e.target.classList.add("active");
-
     document.querySelectorAll("main section").forEach(sec => sec.classList.add("hidden"));
     document.getElementById("section-" + seccion).classList.remove("hidden");
-
     sidebar.classList.remove("open");
   });
 
-  // --- LÓGICA DE CATEGORIAS (NUVEM) ---
+  // --- ACOES COM GRAPHQL (CATEGORIAS, FIJOS, ETC) ---
   const formCategoria = document.getElementById("form-categoria");
   formCategoria.addEventListener("submit", async (e) => {
     e.preventDefault();
     const nome = document.getElementById("cat-nome").value.trim();
     const grupo = document.getElementById("cat-grupo").value;
     if (!nome) return;
-
     loading(true);
     try {
-      const mutation = `mutation AddCat($nome: String!, $grupo: String!, $uid: uuid!) {
-        insert_categorias_one(object: {nome: $nome, grupo: $grupo, user_id: $uid}) { id }
-      }`;
-      await nhost.graphql.request(mutation, { nome, grupo, uid: usuarioActual.id });
+      await nhost.graphql.request(`mutation AddCat($n:String!,$g:String!,$u:uuid!){insert_categorias_one(object:{nome:$n,grupo:$g,user_id:$u}){id}}`, 
+      { n: nome, g: grupo, u: usuarioActual.id });
       document.getElementById("cat-nome").value = "";
       await cargarDatosDelServidor();
-    } catch(err) { console.error(err); alert("Error agregando categoría: " + err.message); loading(false); }
+    } catch(err) { console.error(err); alert("Error al guardar"); loading(false); }
   });
-
   async function eliminarCategoria(id) {
-    if(!confirm("¿Eliminar categoría?")) return;
+    if(!confirm("¿Eliminar?")) return;
     loading(true);
     try {
-      await nhost.graphql.request(`mutation DelCat($id: uuid!) { delete_categorias_by_pk(id: $id) { id } }`, { id });
+      await nhost.graphql.request(`mutation Del($id:uuid!){delete_categorias_by_pk(id:$id){id}}`, {id});
       await cargarDatosDelServidor();
-    } catch(err) { console.error(err); loading(false); }
+    } catch(e){console.error(e); loading(false);}
   }
 
-  // --- LÓGICA DE GASTOS FIJOS (NUVEM) ---
   const formFijo = document.getElementById("form-fijo");
   formFijo.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const descripcion = document.getElementById("fijo-descripcion").value.trim();
-    const valor = parseNumeroLocal(document.getElementById("fijo-valor").value || "0");
-    const vencimiento = parseInt(document.getElementById("fijo-vencimiento").value || "0", 10);
-    const mesInicio = siguienteAnioMes(obtenerAnioMesActual());
-    
-    if (!descripcion || !valor || !vencimiento) return;
-
+    const d=document.getElementById("fijo-descripcion").value.trim();
+    const v=parseNumeroLocal(document.getElementById("fijo-valor").value);
+    const ven=parseInt(document.getElementById("fijo-vencimiento").value);
+    if(!d||!v||!ven)return;
     loading(true);
     try {
-      const mutation = `mutation AddFijo($desc: String!, $val: numeric!, $venc: Int!, $mes: String!, $uid: uuid!) {
-        insert_gastos_fijos_one(object: {descripcion: $desc, valor: $val, vencimiento: $venc, mes_inicio: $mes, user_id: $uid}) { id }
-      }`;
-      await nhost.graphql.request(mutation, { desc: descripcion, val: valor, venc: vencimiento, mes: mesInicio, uid: usuarioActual.id });
-      document.getElementById("fijo-descripcion").value = "";
-      document.getElementById("fijo-valor").value = "";
-      document.getElementById("fijo-vencimiento").value = "";
-      await cargarDatosDelServidor();
-    } catch(err) { console.error(err); alert("Error agregando gasto fijo: " + err.message); loading(false); }
+       const m = siguienteAnioMes(obtenerAnioMesActual());
+       await nhost.graphql.request(`mutation AddF($d:String!,$v:numeric!,$ven:Int!,$m:String!,$u:uuid!){insert_gastos_fijos_one(object:{descripcion:$d,valor:$v,vencimiento:$ven,mes_inicio:$m,user_id:$u}){id}}`,
+       {d,v,ven,m,u:usuarioActual.id});
+       document.getElementById("form-fijo").reset();
+       await cargarDatosDelServidor();
+    } catch(e){console.error(e); alert("Error al guardar"); loading(false);}
   });
-
   async function eliminarFijo(id) {
-    if(!confirm("¿Eliminar gasto fijo?")) return;
-    loading(true);
-    try {
-      await nhost.graphql.request(`mutation DelFijo($id: uuid!) { delete_gastos_fijos_by_pk(id: $id) { id } }`, { id });
-      await cargarDatosDelServidor();
-    } catch(err) { console.error(err); loading(false); }
+      if(!confirm("¿Eliminar?")) return;
+      loading(true);
+      try {
+        await nhost.graphql.request(`mutation Del($id:uuid!){delete_gastos_fijos_by_pk(id:$id){id}}`, {id});
+        await cargarDatosDelServidor();
+      } catch(e){console.error(e); loading(false);}
   }
 
-  // --- LÓGICA DE CARTÕES (NUVEM) ---
   const formTarjeta = document.getElementById("form-tarjeta");
   formTarjeta.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const alias = document.getElementById("tarjeta-alias").value.trim();
-    const digitos = document.getElementById("tarjeta-digitos").value.trim();
-    const banco = document.getElementById("tarjeta-banco").value.trim();
-
-    if (!alias && !digitos) return;
-
-    loading(true);
-    try {
-      const mutation = `mutation AddCard($alias: String, $dig: String, $banco: String, $uid: uuid!) {
-        insert_tarjetas_one(object: {alias: $alias, digitos: $dig, banco: $banco, user_id: $uid}) { id }
-      }`;
-      await nhost.graphql.request(mutation, { alias, dig: digitos, banco, uid: usuarioActual.id });
-      document.getElementById("tarjeta-alias").value = "";
-      document.getElementById("tarjeta-digitos").value = "";
-      document.getElementById("tarjeta-banco").value = "";
-      await cargarDatosDelServidor();
-    } catch(err) { console.error(err); alert("Error agregando tarjeta: " + err.message); loading(false); }
+      e.preventDefault();
+      const a=document.getElementById("tarjeta-alias").value.trim();
+      const d=document.getElementById("tarjeta-digitos").value.trim();
+      const b=document.getElementById("tarjeta-banco").value.trim();
+      if(!a && !d) return;
+      loading(true);
+      try {
+          await nhost.graphql.request(`mutation AddT($a:String,$d:String,$b:String,$u:uuid!){insert_tarjetas_one(object:{alias:$a,digitos:$d,banco:$b,user_id:$u}){id}}`,
+          {a,d,b,u:usuarioActual.id});
+          document.getElementById("form-tarjeta").reset();
+          await cargarDatosDelServidor();
+      } catch(e){console.error(e); alert("Error al guardar"); loading(false);}
   });
-
   async function eliminarTarjeta(id) {
-    if(!confirm("¿Eliminar tarjeta?")) return;
-    loading(true);
-    try {
-      await nhost.graphql.request(`mutation DelCard($id: uuid!) { delete_tarjetas_by_pk(id: $id) { id } }`, { id });
-      await cargarDatosDelServidor();
-    } catch(err) { console.error(err); loading(false); }
+      if(!confirm("¿Eliminar?")) return;
+      loading(true);
+      try {
+        await nhost.graphql.request(`mutation Del($id:uuid!){delete_tarjetas_by_pk(id:$id){id}}`, {id});
+        await cargarDatosDelServidor();
+      } catch(e){console.error(e); loading(false);}
   }
 
-  // --- LÓGICA DE TRANSAÇÕES (NUVEM) ---
-  const selectCategoria   = document.getElementById("categoria");
-  const campoOrigen       = document.getElementById("campo-origen");
-  const selectOrigen      = document.getElementById("origen");
-  const campoGastoFijo    = document.getElementById("campo-gasto-fijo");
-  const selectGastoFijo   = document.getElementById("gasto-fijo-select");
-  const campoTarjeta      = document.getElementById("campo-tarjeta");
-  const selectTarjeta     = document.getElementById("tarjeta-select");
-  const formTransaccion   = document.getElementById("form-transaccion");
-  const filtroTexto       = document.getElementById("filtro-texto");
-  const filtroFecha       = document.getElementById("filtro-fecha");
-  const btnLimpiarFiltros = document.getElementById("btn-limpiar-filtros");
-  const tablaTransaccionesBody = document.querySelector("#tabla-transacciones tbody");
-
+  const formTransaccion = document.getElementById("form-transaccion");
   formTransaccion.addEventListener("submit", async (e) => {
-    e.preventDefault();
+      e.preventDefault();
+      const tipo = document.getElementById("tipo").value;
+      const catVal = document.getElementById("categoria").value;
+      const orig = document.getElementById("origen").value;
+      const val = parseNumeroLocal(document.getElementById("valor").value);
+      const fecha = document.getElementById("data").value;
+      const desc = document.getElementById("descripcion").value.trim();
+      
+      if(!tipo || !catVal || !val || !fecha) return;
+
+      let gfId = null;
+      if(tipo==="salida" && catVal==="__gasto_fijo__"){
+          gfId = document.getElementById("gasto-fijo-select").value;
+          if(!gfId) { alert("Seleccione gasto fijo"); return; }
+      }
+      let tId = null, origFinal = null;
+      if(tipo==="salida"){
+          if(orig==="tarjeta"){
+              tId = document.getElementById("tarjeta-select").value;
+              if(!tId) { alert("Seleccione tarjeta"); return; }
+              origFinal="tarjeta";
+          } else origFinal="normal";
+      }
+      
+      const catIdDB = (catVal === "__gasto_fijo__") ? null : catVal;
+      
+      loading(true);
+      try {
+          await nhost.graphql.request(`mutation AddTr($t:String!,$c:uuid,$g:uuid,$tar:uuid,$o:String,$v:numeric!,$f:date!,$d:String,$u:uuid!){
+              insert_transacciones_one(object:{tipo:$t,categoria_id:$c,gasto_fijo_id:$g,tarjeta_id:$tar,origen:$o,valor:$v,fecha:$f,descripcion:$d,user_id:$u}){id}
+          }`, {t:tipo, c:catIdDB, g:gfId, tar:tId, o:origFinal, v:val, f:fecha, d:desc, u:usuarioActual.id});
+          
+          document.getElementById("valor").value="";
+          document.getElementById("descripcion").value="";
+          await cargarDatosDelServidor();
+          actualizarObjetivo();
+      } catch(e){console.error(e); alert("Error al guardar"); loading(false);}
+  });
+  async function eliminarTransaccion(id) {
+      if(!confirm("¿Eliminar?")) return;
+      loading(true);
+      try {
+          await nhost.graphql.request(`mutation Del($id:uuid!){delete_transacciones_by_pk(id:$id){id}}`, {id});
+          await cargarDatosDelServidor();
+          actualizarObjetivo();
+      } catch(e){console.error(e); loading(false);}
+  }
+
+  // --- FUNCOES UI ---
+  function rellenarSelectCategorias() {
+    const sel = document.getElementById("categoria");
+    sel.innerHTML = "";
     const tipo = document.getElementById("tipo").value;
-    const categoriaVal = selectCategoria.value;
-    const origen = selectOrigen.value;
-    const valor = parseNumeroLocal(document.getElementById("valor").value || "0");
-    const fecha = document.getElementById("data").value;
-    const descripcion = document.getElementById("descripcion").value.trim();
-
-    if (!tipo || !categoriaVal || !valor || !fecha) return;
-
-    let gastoFijoId = null;
-    if (tipo === "salida" && categoriaVal === "__gasto_fijo__") {
-      if (!selectGastoFijo.value) {
-        alert("Selecciona qué gasto fijo deseas pagar.");
-        return;
-      }
-      gastoFijoId = selectGastoFijo.value;
+    if (tipo === "salida" && fijosLocal.length > 0) {
+      const opt = document.createElement("option"); opt.value = "__gasto_fijo__"; opt.textContent = "Gastos fijos"; sel.appendChild(opt);
     }
-
-    let tarjetaId = null;
-    let origenFinal = null;
-    if (tipo === "salida") {
-      if (origen === "tarjeta") {
-        if (!selectTarjeta.value) {
-          alert("Selecciona la tarjeta utilizada.");
-          return;
-        }
-        origenFinal = "tarjeta";
-        tarjetaId = selectTarjeta.value;
-      } else {
-        origenFinal = "normal";
-      }
-    }
-
-    let catIdParaDb = (categoriaVal === "__gasto_fijo__") ? null : categoriaVal;
-
-    loading(true);
-    try {
-      const mutation = `mutation AddTrans($tipo: String!, $catId: uuid, $gfId: uuid, $tId: uuid, $orig: String, $val: numeric!, $fecha: date!, $desc: String, $uid: uuid!) {
-        insert_transacciones_one(object: {
-          tipo: $tipo, categoria_id: $catId, gasto_fijo_id: $gfId, tarjeta_id: $tId, origen: $orig, valor: $val, fecha: $fecha, descripcion: $desc, user_id: $uid
-        }) { id }
-      }`;
-      await nhost.graphql.request(mutation, {
-        tipo, catId: catIdParaDb, gfId: gastoFijoId, tId: tarjetaId, orig: origenFinal, val: valor, fecha, desc: descripcion, uid: usuarioActual.id
+    categoriasLocal.forEach(c => {
+       if(c.grupo !== tipo) return;
+       const opt = document.createElement("option"); opt.value = c.id; opt.textContent = c.nome; sel.appendChild(opt);
+    });
+  }
+  function rellenarTablaCategorias() {
+      const tb = document.querySelector("#tabla-categorias tbody"); tb.innerHTML="";
+      categoriasLocal.forEach(c => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td>${c.nome}</td><td>${c.grupo === "entrada" ? "Entrada" : "Salida"}</td><td></td>`;
+          const btn = document.createElement("button"); btn.className="btn-icon btn-icon-danger"; btn.textContent="Eliminar"; btn.onclick = () => eliminarCategoria(c.id);
+          tr.lastElementChild.appendChild(btn);
+          tb.appendChild(tr);
       });
+  }
+  function rellenarSelectGastosFijos() {
+      const s = document.getElementById("gasto-fijo-select"); s.innerHTML="";
+      fijosLocal.forEach(f => {
+          const o = document.createElement("option"); o.value=f.id; o.textContent=`${f.descripcion} (${formatearMoneda(f.valor)})`; s.appendChild(o);
+      });
+  }
 
-      document.getElementById("valor").value = "";
-      document.getElementById("descripcion").value = "";
+  // Lógica de Estados dos Gastos Fixos (Cores)
+  function estadoFijoParaMes(fijo, anioMesActual) {
+    const hoy = new Date();
+    const diaHoy = hoy.getDate();
+    const venc = fijo.vencimiento;
+    const mesInicio = fijo.mesInicio || obtenerAnioMesActual();
 
-      await cargarDatosDelServidor();
+    if (anioMesActual < mesInicio) {
+      return { claseFila: "", badgeClase: "badge-normal", texto: "Aún no aplica este mes", restante: fijo.valor, totalPagado: 0 };
+    }
+
+    const transMes = filtrarMesActual(transaccionesLocal, "fecha");
+    let totalPagado = 0;
+    transMes.forEach(t => {
+      if (t.tipo === "salida" && t.gastoFijoId === fijo.id) {
+        totalPagado += t.valor;
+      }
+    });
+    const restante = Math.max(0, fijo.valor - totalPagado);
+    const pagoCompleto = totalPagado >= (fijo.valor - 0.01);
+
+    if (pagoCompleto) {
+      return { claseFila: "fijo-verde", badgeClase: "badge-verde", texto: "Pagado completamente este mes", restante: 0, totalPagado };
+    }
+
+    const faltanteTexto = restante > 0 ? `Falta ${formatearMoneda(restante)}` : "";
+
+    if (totalPagado > 0 && !pagoCompleto) {
+      if (diaHoy >= venc) {
+        return { claseFila: "fijo-rojo", badgeClase: "badge-rojo", texto: `Pago parcial (${formatearMoneda(totalPagado)} de ${formatearMoneda(fijo.valor)}). ${faltanteTexto}`, restante, totalPagado };
+      } else if (diaHoy >= venc - 7) {
+        return { claseFila: "fijo-amarillo", badgeClase: "badge-amarillo", texto: `Pago parcial (${formatearMoneda(totalPagado)} de ${formatearMoneda(fijo.valor)}). ${faltanteTexto}`, restante, totalPagado };
+      } else {
+        return { claseFila: "", badgeClase: "badge-normal", texto: `Pago parcial (${formatearMoneda(totalPagado)} de ${formatearMoneda(fijo.valor)}). ${faltanteTexto}`, restante, totalPagado };
+      }
+    }
+
+    if (diaHoy < venc - 7) {
+      return { claseFila: "", badgeClase: "badge-normal", texto: "Pendiente", restante, totalPagado };
+    } else if (diaHoy >= venc - 7 && diaHoy < venc) {
+      return { claseFila: "fijo-amarillo", badgeClase: "badge-amarillo", texto: "Cerca del vencimiento", restante, totalPagado };
+    } else {
+      return { claseFila: "fijo-rojo", badgeClase: "badge-rojo", texto: "Vencido / día de vencimiento sin pago", restante, totalPagado };
+    }
+  }
+
+  function rellenarTablaFijos() {
+      const tb = document.querySelector("#tabla-fijos tbody"); tb.innerHTML="";
+      const mes = obtenerAnioMesActual();
+      fijosLocal.forEach(f => {
+          const estado = estadoFijoParaMes(f, mes);
+          const tr = document.createElement("tr");
+          if (estado.claseFila) tr.classList.add(estado.claseFila);
+          tr.innerHTML = `<td>${f.descripcion}</td><td>${formatearMoneda(f.valor)}</td><td>Día ${f.vencimiento}</td>
+                          <td><span class="badge-estado ${estado.badgeClase}">${estado.texto}</span></td><td></td>`;
+          const btn = document.createElement("button"); btn.className="btn-icon btn-icon-danger"; btn.textContent="Eliminar"; btn.onclick=()=>eliminarFijo(f.id);
+          tr.lastElementChild.appendChild(btn);
+          tb.appendChild(tr);
+      });
+      rellenarSelectGastosFijos();
+  }
+  function rellenarSelectTarjetas() {
+      const s = document.getElementById("tarjeta-select"); s.innerHTML="";
+      tarjetasLocal.forEach(t => {
+          const o = document.createElement("option"); o.value=t.id; o.textContent=`${t.alias||""} ${t.digitos||""}`; s.appendChild(o);
+      });
+  }
+  function rellenarTablaTarjetas() {
+      const tb = document.querySelector("#tabla-tarjetas tbody"); tb.innerHTML="";
+      tarjetasLocal.forEach(t => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td>${t.alias || ""}</td><td>${t.digitos || ""}</td><td>${t.banco || ""}</td><td></td>`;
+          const btn = document.createElement("button"); btn.className="btn-icon btn-icon-danger"; btn.textContent="Eliminar"; btn.onclick=()=>eliminarTarjeta(t.id);
+          tr.lastElementChild.appendChild(btn);
+          tb.appendChild(tr);
+      });
+      rellenarSelectTarjetas();
+  }
+  
+  function obtenerDescripcionFijoPorId(id) {
+    const f = fijosLocal.find(x => x.id === id);
+    return f ? f.descripcion : "";
+  }
+  function obtenerNombreCategoriaPorId(id) {
+    const c = categoriasLocal.find(x => x.id === id);
+    return c ? c.nome : "";
+  }
+  function obtenerTarjetaTextoPorId(id) {
+    const t = tarjetasLocal.find(x => x.id === id);
+    return t ? `${t.alias || ""} (${t.digitos || ""})` : "";
+  }
+
+  function rellenarTablaTransacciones() {
+      const tb = document.querySelector("#tabla-transacciones tbody"); tb.innerHTML="";
+      const mes = obtenerAnioMesActual();
+      let l = transaccionesLocal.filter(t=>t.fecha.startsWith(mes));
+      const ft = document.getElementById("filtro-texto").value.toLowerCase();
+      const ff = document.getElementById("filtro-fecha").value;
+      if(ft) l = l.filter(t=>(t.descripcion||"").toLowerCase().includes(ft));
+      if(ff) l = l.filter(t=>t.fecha===ff);
+      l.sort((a,b) => a.fecha<b.fecha?1:-1);
+      
+      l.forEach(t => {
+          const tr = document.createElement("tr");
+          
+          let catNombre = "-";
+          if (t.categoriaId === null && t.gastoFijoId) {
+             catNombre = "Gasto fijo - " + obtenerDescripcionFijoPorId(t.gastoFijoId);
+          } else {
+             catNombre = obtenerNombreCategoriaPorId(t.categoriaId) || "-";
+          }
+
+          let origenTexto = "-";
+          if (t.tipo === "salida") {
+              if(t.origen === "tarjeta" && t.tarjetaId) {
+                 origenTexto = "Tarjeta - " + obtenerTarjetaTextoPorId(t.tarjetaId);
+              } else {
+                 origenTexto = "Normal";
+              }
+          }
+
+          tr.innerHTML = `<td>${t.fecha}</td><td><span class="tag ${t.tipo}">${t.tipo}</span></td><td>${catNombre}</td><td>${origenTexto}</td><td>${t.descripcion||""}</td><td>${formatearMoneda(t.valor)}</td><td></td>`;
+          const btn = document.createElement("button"); btn.className="btn-icon btn-icon-danger"; btn.textContent="Eliminar"; btn.onclick=()=>eliminarTransaccion(t.id);
+          tr.lastElementChild.appendChild(btn);
+          tb.appendChild(tr);
+      });
+  }
+  
+  function inicializarInterfaz() {
+      rellenarSelectCategorias();
+      rellenarTablaCategorias();
+      rellenarTablaFijos();
+      rellenarTablaTarjetas();
+      rellenarTablaTransacciones();
+      rellenarPerfil();
+      rellenarHistorialObjetivos();
+      actualizarResumen();
+      analisisLatam();
       actualizarObjetivo();
-    } catch(err) { console.error(err); alert("Error agregando transacción: " + err.message); loading(false); }
+      actualizarCampoGastoFijo();
+      actualizarCampoOrigenYTarjeta();
+      inicializarReporte();
+  }
+  
+  // Listeners
+  document.getElementById("tipo").addEventListener("change", ()=>{rellenarSelectCategorias();actualizarCampoGastoFijo();actualizarCampoOrigenYTarjeta();});
+  document.getElementById("categoria").addEventListener("change", actualizarCampoGastoFijo);
+  document.getElementById("origen").addEventListener("change", actualizarCampoOrigenYTarjeta);
+  document.getElementById("filtro-texto").addEventListener("input", rellenarTablaTransacciones);
+  document.getElementById("filtro-fecha").addEventListener("change", rellenarTablaTransacciones);
+  document.getElementById("btn-limpiar-filtros").addEventListener("click", ()=>{document.getElementById("filtro-texto").value="";document.getElementById("filtro-fecha").value="";rellenarTablaTransacciones();});
+  
+  window.addEventListener("load", async () => {
+      // Tenta recuperar sessão persistente
+      const session = await nhost.auth.getSession();
+      if(session && session.user) {
+          usuarioActual = session.user;
+          abrirApp();
+      }
   });
 
-  async function eliminarTransaccion(id) {
-    if(!confirm("¿Eliminar esta transacción?")) return;
-    loading(true);
-    try {
-      await nhost.graphql.request(`mutation DelTrans($id: uuid!) { delete_transacciones_by_pk(id: $id) { id } }`, { id });
-      await cargarDatosDelServidor();
-      actualizarObjetivo();
-    } catch(err) { console.error(err); loading(false); }
+  function rellenarPerfil() {
+      if(!usuarioActual) return;
+      document.getElementById("perfil-edad").value = edadUsuario||"";
+      document.getElementById("perfil-meta").value = metaMensualUsuario||"";
+      document.getElementById("perfil-ingreso").value = ingresoMensualUsuario||"";
+      document.getElementById("perfil-sexo").value = sexoUsuario||"";
+      document.getElementById("perfil-pais").value = paisUsuario||"";
+      document.getElementById("perfil-moneda").value = monedaUsuario||"";
+      document.getElementById("perfil-objetivo-nombre").value = objetivoNombre||"";
+      document.getElementById("perfil-objetivo-valor").value = objetivoValor||"";
+  }
+
+  function actualizarResumen() {
+    const transMes = filtrarMesActual(transaccionesLocal, "fecha");
+    let totalEntradas = 0;
+    let totalSalidas = 0;
+    let totalSalidasFijos = 0;
+    let totalSalidasOtros = 0;
+
+    transMes.forEach(t => {
+      if (t.tipo === "entrada") {
+        totalEntradas += t.valor;
+      } else if (t.tipo === "salida") {
+        totalSalidas += t.valor;
+        if (t.gastoFijoId) totalSalidasFijos += t.valor;
+        else totalSalidasOtros += t.valor;
+      }
+    });
+
+    const saldo = totalEntradas - totalSalidas;
+
+    document.getElementById("stat-entradas").textContent = formatearMoneda(totalEntradas);
+    document.getElementById("stat-salidas").textContent = formatearMoneda(totalSalidas);
+    document.getElementById("stat-saldo").textContent = formatearMoneda(saldo);
+
+    const saldoTexto = document.getElementById("stat-saldo-texto");
+    if (saldo > 0) saldoTexto.textContent = "Estás con saldo positivo este mes.";
+    else if (saldo < 0) saldoTexto.textContent = "Estás gastando más de lo que entra este mes.";
+    else saldoTexto.textContent = "Saldo neutro por ahora.";
+
+    let pctFijos = 0;
+    let pctOtros = 0;
+    const totalSalidasMes = totalSalidasFijos + totalSalidasOtros;
+    if (totalSalidasMes > 0) {
+      pctFijos = (totalSalidasFijos / totalSalidasMes) * 100;
+      pctOtros = (totalSalidasOtros / totalSalidasMes) * 100;
+    }
+
+    document.getElementById("stat-lazer").textContent = pctFijos.toFixed(1) + "%";
+    document.getElementById("stat-essenciais").textContent = pctOtros.toFixed(1) + "%";
+    document.getElementById("barra-lazer").style.width = pctFijos + "%";
+    document.getElementById("barra-essencial").style.width = pctOtros + "%";
+
+    // Charts meta
+    if(metaMensualUsuario > 0) {
+        const uso = (totalSalidas/metaMensualUsuario)*100;
+        dibujarGraficoMeta(uso);
+        const hoy = new Date();
+        const anioMes = obtenerAnioMesActual().split("-");
+        const diasMes = new Date(parseInt(anioMes[0]), parseInt(anioMes[1]), 0).getDate();
+        const gastoPromedioDia = totalSalidas / (hoy.getDate() || 1);
+        const metaPorDia = metaMensualUsuario / diasMes;
+        
+        let txt = `Has usado ${uso.toFixed(1)}% de tu meta mensual. `;
+        if (gastoPromedioDia > metaPorDia) txt += "Tu gasto promedio diario está por encima de lo ideal.";
+        else txt += "Tu gasto promedio diario está dentro de lo ideal.";
+        
+        document.getElementById("stat-meta-uso").textContent = txt;
+    } else {
+        dibujarGraficoMeta(0);
+        document.getElementById("stat-meta-uso").textContent = "Define una meta mensual en Perfil.";
+    }
+
+    if (ingresoMensualUsuario > 0) {
+      const ratio = (totalSalidas / ingresoMensualUsuario) * 100;
+      let msg = `Tus salidas representan aproximadamente ${ratio.toFixed(1)}% de tu ingreso mensual declarado. `;
+      if (ratio < 50) msg += "Nivel saludable de gasto frente al ingreso.";
+      else if (ratio <= 80) msg += "Nivel moderado. Está relativamente equilibrado.";
+      else msg += "Alerta: tus gastos están muy cerca o por encima de tu ingreso mensual.";
+      document.getElementById("stat-ingreso-alerta").textContent = msg;
+    } else {
+      document.getElementById("stat-ingreso-alerta").textContent = "Informa tu ingreso mensual en Perfil para ver la relación gasto/ingreso.";
+    }
+  }
+
+  function actualizarObjetivo() {
+      if(!objetivoNombre || !objetivoValor || objetivoValor <= 0) {
+        document.getElementById("obj-nombre").textContent = "Sin objetivo definido";
+        document.getElementById("obj-meta").textContent = "-";
+        document.getElementById("obj-ahorrado").textContent = formatearMoneda(0);
+        document.getElementById("obj-restante").textContent = formatearMoneda(0);
+        document.getElementById("obj-texto").textContent = "Define un objetivo en Perfil.";
+        dibujarGraficoObjetivo(0);
+        rellenarHistorialObjetivos();
+        return;
+      }
+
+      const ahorroTotal = calcularAhorroTotal();
+      let ahorroObjetivo = ahorroTotal - objetivoAhorroBase;
+      if (ahorroObjetivo < 0) ahorroObjetivo = 0;
+      
+      // Check completion
+      if (!objetivoCompletado && ahorroObjetivo >= objetivoValor) {
+         objetivoCompletado = true;
+         const hoy = new Date().toISOString().slice(0,10);
+         objetivosHistorial.push({ nombre: objetivoNombre, valorMeta: objetivoValor, ahorroFinal: ahorroObjetivo, fechaInicio: objetivoFechaInicio, fechaConclusion: hoy });
+         guardarPerfilEnServidor();
+      }
+      
+      const pct = (ahorroObjetivo/objetivoValor)*100;
+      const restante = objetivoValor - ahorroObjetivo;
+
+      document.getElementById("obj-nombre").textContent = objetivoNombre;
+      document.getElementById("obj-meta").textContent = formatearMoneda(objetivoValor);
+      document.getElementById("obj-ahorrado").textContent = formatearMoneda(ahorroObjetivo);
+      document.getElementById("obj-restante").textContent = formatearMoneda(restante > 0 ? restante : 0);
+      
+      if (restante <= 0) document.getElementById("obj-texto").textContent = "¡Objetivo alcanzado!";
+      else document.getElementById("obj-texto").textContent = `Has avanzado ${pct.toFixed(1)}%`;
+      
+      dibujarGraficoObjetivo(pct);
+      rellenarHistorialObjetivos();
+  }
+
+  function rellenarHistorialObjetivos() {
+    const tb = document.querySelector("#tabla-historial-objetivos tbody"); tb.innerHTML = "";
+    objetivosHistorial.forEach(o => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${o.nombre}</td><td>${formatearMoneda(o.valorMeta)}</td><td>${formatearMoneda(o.ahorroFinal)}</td><td>${o.fechaInicio}</td><td>${o.fechaConclusion}</td>`;
+      tb.appendChild(tr);
+    });
+  }
+
+  function calcularAhorroTotal() {
+     let e=0, s=0;
+     transaccionesLocal.forEach(t => { if(t.tipo==="entrada") e+=t.valor; else s+=t.valor; });
+     return Math.max(0, e-s);
+  }
+
+  function analisisLatam() {
+    const edad = parseInt(perfilEdadInput.value || "0", 10) || 0;
+    const pais = perfilPaisInput.value;
+    if (!metaMensualUsuario || metaMensualUsuario <= 0 || !pais || !edad) {
+      perfilAnalisis.textContent = "Para ver el análisis comparativo, completa país, edad y una meta mensual de gasto.";
+      return;
+    }
+    const base = { bo: 1500, br: 3000, ar: 250000, cl: 400000, mx: 9000, otro: 700 };
+    const nombrePais = { bo: "Bolivia", br: "Brasil", ar: "Argentina", cl: "Chile", mx: "México", otro: "otro país de LATAM" };
+    const basePais = base[pais] || base.otro;
+    let factorEdad = 1;
+    if (edad < 25) factorEdad = 0.85; else if (edad < 36) factorEdad = 1.0; else if (edad < 51) factorEdad = 1.1; else factorEdad = 0.95;
+    const referencia = basePais * factorEdad;
+    const ratio = referencia > 0 ? (metaMensualUsuario / referencia) * 100 : 0;
+    let mensaje;
+    if (ratio < 70) mensaje = `Tu meta está por debajo del gasto promedio estimado para una persona de tu edad en ${nombrePais[pais]}.`;
+    else if (ratio <= 120) mensaje = `Tu meta está en un rango razonable comparado con un gasto promedio estimado para tu perfil en ${nombrePais[pais]}.`;
+    else mensaje = `Tu meta de gasto está por encima del nivel promedio estimado para tu edad en ${nombrePais[pais]}.`;
+    const refTexto = formatearMoneda(referencia);
+    perfilAnalisis.textContent = mensaje + ` Referencia aprox: ${refTexto}. Cálculo orientativo.`;
   }
 
   function actualizarCampoGastoFijo() {
-    const tipo = document.getElementById("tipo").value;
-    const esSalida = tipo === "salida";
-    const esGastoFijoCategoria = esSalida && selectCategoria.value === "__gasto_fijo__";
-    if (esGastoFijoCategoria) {
-      campoGastoFijo.classList.remove("hidden");
-    } else {
-      campoGastoFijo.classList.add("hidden");
-    }
+      const t = document.getElementById("tipo").value;
+      const c = document.getElementById("categoria").value;
+      const el = document.getElementById("campo-gasto-fijo");
+      if(el) el.classList.toggle("hidden", !(t==="salida" && c==="__gasto_fijo__"));
   }
-
   function actualizarCampoOrigenYTarjeta() {
-    const tipo = document.getElementById("tipo").value;
-    if (tipo === "salida") {
-      campoOrigen.classList.remove("hidden");
-      if (selectOrigen.value === "tarjeta") {
-        campoTarjeta.classList.remove("hidden");
+      const t = document.getElementById("tipo").value;
+      const o = document.getElementById("origen").value;
+      const divO = document.getElementById("campo-origen");
+      const divT = document.getElementById("campo-tarjeta");
+      if(t==="salida") {
+          divO.classList.remove("hidden");
+          divT.classList.toggle("hidden", o!=="tarjeta");
       } else {
-        campoTarjeta.classList.add("hidden");
+          divO.classList.add("hidden");
+          divT.classList.add("hidden");
       }
-    } else {
-      campoOrigen.classList.add("hidden");
-      campoTarjeta.classList.add("hidden");
-    }
   }
 
-  // --- ESTADÍSTICAS E CHARTS ---
-  const statEntradas    = document.getElementById("stat-entradas");
-  const statSalidas     = document.getElementById("stat-salidas");
-  const statSaldo       = document.getElementById("stat-saldo");
-  const statSaldoTexto  = document.getElementById("stat-saldo-texto");
-  const statLazer       = document.getElementById("stat-lazer");
-  const statEssenciais  = document.getElementById("stat-essenciais");
-  const statOutras      = document.getElementById("stat-outras");
-  const barraLazer      = document.getElementById("barra-lazer");
-  const barraEssencial  = document.getElementById("barra-essencial");
-  const barraOutras     = document.getElementById("barra-outras");
-  const statMetaUso     = document.getElementById("stat-meta-uso");
-  const statIngresoAlerta = document.getElementById("stat-ingreso-alerta");
+  function inicializarReporte() {
+    const mesesSet = new Set();
+    transaccionesLocal.forEach(t => { if (t.fecha && t.fecha.length >= 7) mesesSet.add(t.fecha.slice(0, 7)); });
+    if (mesesSet.size === 0) mesesSet.add(obtenerAnioMesActual());
+    const meses = Array.from(mesesSet).sort();
+    const sel = document.getElementById("reporte-mes"); sel.innerHTML = "";
+    meses.forEach(m => {
+      const opt = document.createElement("option"); opt.value = m; opt.textContent = nombreMes(m); sel.appendChild(opt);
+    });
+    const actual = obtenerAnioMesActual();
+    if (meses.includes(actual)) sel.value = actual;
+    actualizarReporte();
+  }
+  
+  document.getElementById("reporte-mes").addEventListener("change", actualizarReporte);
+  document.getElementById("reporte-mes-actual").addEventListener("click", () => {
+     document.getElementById("reporte-mes").value = obtenerAnioMesActual();
+     actualizarReporte();
+  });
 
-  const objNombreSpan    = document.getElementById("obj-nombre");
-  const objMetaSpan      = document.getElementById("obj-meta");
-  const objAhorradoSpan  = document.getElementById("obj-ahorrado");
-  const objRestanteSpan  = document.getElementById("obj-restante");
-  const objTexto         = document.getElementById("obj-texto");
-  const perfilMensaje    = document.getElementById("perfil-mensaje");
-  const perfilAnalisis   = document.getElementById("perfil-analisis");
-
+  // Funcoes graficas
   function dibujarGraficoMeta(porcentajeUsado) {
     const canvas = document.getElementById("meta-chart");
     if (!canvas) return;
@@ -1743,25 +2024,20 @@
     const cy = h / 2;
     const radio = Math.min(w, h) / 2 - 10;
     const innerRadio = radio * 0.6;
-
     ctx.clearRect(0, 0, w, h);
-
     ctx.beginPath();
     ctx.arc(cx, cy, radio, 0, Math.PI * 2);
     ctx.fillStyle = "#111827";
     ctx.fill();
-
     const clamped = Math.max(0, Math.min(porcentajeUsado, 200)) / 100;
     const inicio = -Math.PI / 2;
     const fin = inicio + Math.PI * 2 * clamped;
-
     ctx.beginPath();
     ctx.moveTo(cx, cy);
     ctx.arc(cx, cy, radio, inicio, fin);
     ctx.closePath();
     ctx.fillStyle = "#22c55e";
     ctx.fill();
-
     if (clamped < 1) {
       ctx.beginPath();
       ctx.moveTo(cx, cy);
@@ -1770,7 +2046,6 @@
       ctx.fillStyle = "#4b5563";
       ctx.fill();
     }
-
     ctx.beginPath();
     ctx.arc(cx, cy, innerRadio, 0, Math.PI * 2);
     ctx.fillStyle = "#020617";
@@ -1787,25 +2062,20 @@
     const cy = h / 2;
     const radio = Math.min(w, h) / 2 - 10;
     const innerRadio = radio * 0.6;
-
     ctx.clearRect(0, 0, w, h);
-
     ctx.beginPath();
     ctx.arc(cx, cy, radio, 0, Math.PI * 2);
     ctx.fillStyle = "#111827";
     ctx.fill();
-
     const clamped = Math.max(0, Math.min(porcentaje, 200)) / 100;
     const inicio = -Math.PI / 2;
     const fin = inicio + Math.PI * 2 * clamped;
-
     ctx.beginPath();
     ctx.moveTo(cx, cy);
     ctx.arc(cx, cy, radio, inicio, fin);
     ctx.closePath();
     ctx.fillStyle = "#0ea5e9";
     ctx.fill();
-
     if (clamped < 1) {
       ctx.beginPath();
       ctx.moveTo(cx, cy);
@@ -1814,509 +2084,12 @@
       ctx.fillStyle = "#4b5563";
       ctx.fill();
     }
-
     ctx.beginPath();
     ctx.arc(cx, cy, innerRadio, 0, Math.PI * 2);
     ctx.fillStyle = "#020617";
     ctx.fill();
   }
 
-  // FUNÇÕES DE PREENCHIMENTO DA UI
-  
-  function rellenarSelectCategorias() {
-    selectCategoria.innerHTML = "";
-    const tipo = document.getElementById("tipo").value;
-
-    if (tipo === "salida" && fijosLocal.length > 0) {
-      const optGF = document.createElement("option");
-      optGF.value = "__gasto_fijo__";
-      optGF.textContent = "Gastos fijos";
-      selectCategoria.appendChild(optGF);
-    }
-
-    categoriasLocal.forEach(cat => {
-      if (cat.grupo !== tipo) return;
-      const opt = document.createElement("option");
-      opt.value = cat.id;
-      opt.textContent = cat.nome;
-      selectCategoria.appendChild(opt);
-    });
-  }
-
-  function rellenarTablaCategorias() {
-    const tbody = document.querySelector("#tabla-categorias tbody");
-    tbody.innerHTML = "";
-    categoriasLocal.forEach(cat => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${cat.nome}</td>
-        <td>${cat.grupo === "entrada" ? "Entrada" : "Salida"}</td>
-        <td></td>`;
-      
-      const tdAcc = tr.lastElementChild;
-      const btnDel = document.createElement("button");
-      btnDel.textContent = "Eliminar";
-      btnDel.className = "btn-icon btn-icon-danger";
-      btnDel.addEventListener("click", () => eliminarCategoria(cat.id));
-      tdAcc.appendChild(btnDel);
-      
-      tbody.appendChild(tr);
-    });
-  }
-
-  function rellenarTablaFijos() {
-    const tbody = document.querySelector("#tabla-fijos tbody");
-    tbody.innerHTML = "";
-    const anioMesActual = obtenerAnioMesActual();
-
-    fijosLocal.forEach(f => {
-      const estado = estadoFijoParaMes(f, anioMesActual);
-      const tr = document.createElement("tr");
-      if (estado.claseFila) tr.classList.add(estado.claseFila);
-
-      tr.innerHTML = `
-        <td>${f.descripcion}</td>
-        <td>${formatearMoneda(f.valor)}</td>
-        <td>Día ${f.vencimiento}</td>
-        <td><span class="badge-estado ${estado.badgeClase}">${estado.texto}</span></td>
-        <td></td>
-      `;
-      
-      const tdAcc = tr.lastElementChild;
-      const btnDel = document.createElement("button");
-      btnDel.textContent = "Eliminar";
-      btnDel.className = "btn-icon btn-icon-danger";
-      btnDel.addEventListener("click", () => eliminarFijo(f.id));
-      tdAcc.appendChild(btnDel);
-
-      tbody.appendChild(tr);
-    });
-    rellenarSelectGastosFijos();
-  }
-  
-  function rellenarSelectGastosFijos() {
-    selectGastoFijo.innerHTML = "";
-    fijosLocal.forEach(f => {
-      const opt = document.createElement("option");
-      opt.value = f.id;
-      opt.textContent = `${f.descripcion} (${formatearMoneda(f.valor)})`;
-      selectGastoFijo.appendChild(opt);
-    });
-  }
-
-  function rellenarTablaTarjetas() {
-    const tbody = document.querySelector("#tabla-tarjetas tbody");
-    tbody.innerHTML = "";
-    tarjetasLocal.forEach(t => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${t.alias || ""}</td>
-        <td>${t.digitos || ""}</td>
-        <td>${t.banco || ""}</td>
-        <td></td>
-      `;
-      
-      const tdAcc = tr.lastElementChild;
-      const btnDel = document.createElement("button");
-      btnDel.textContent = "Eliminar";
-      btnDel.className = "btn-icon btn-icon-danger";
-      btnDel.addEventListener("click", () => eliminarTarjeta(t.id));
-      tdAcc.appendChild(btnDel);
-
-      tbody.appendChild(tr);
-    });
-    rellenarSelectTarjetas();
-  }
-  
-  function rellenarSelectTarjetas() {
-    selectTarjeta.innerHTML = "";
-    tarjetasLocal.forEach(t => {
-      const opt = document.createElement("option");
-      opt.value = t.id;
-      opt.textContent = `${t.alias || ""} (${t.digitos || ""})`;
-      selectTarjeta.appendChild(opt);
-    });
-  }
-
-  function rellenarTablaTransacciones() {
-    const tbody = document.querySelector("#tabla-transacciones tbody");
-    tbody.innerHTML = "";
-    const anioMesActual = obtenerAnioMesActual();
-    let lista = transaccionesLocal.filter(t => t.fecha.startsWith(anioMesActual));
-
-    const textoFiltro = (filtroTexto.value || "").trim().toLowerCase();
-    const fechaFiltro = (filtroFecha.value || "").trim();
-
-    if (textoFiltro) lista = lista.filter(t => (t.descripcion || "").toLowerCase().includes(textoFiltro));
-    if (fechaFiltro) lista = lista.filter(t => t.fecha === fechaFiltro);
-
-    lista.sort((a, b) => (a.fecha < b.fecha ? 1 : -1));
-
-    lista.forEach(t => {
-      const tr = document.createElement("tr");
-
-      let catNombre = "-";
-      if (t.categoriaId === null && t.gastoFijoId) {
-         const gf = fijosLocal.find(x => x.id === t.gastoFijoId);
-         catNombre = "Gasto fijo" + (gf ? ` - ${gf.descripcion}` : "");
-      } else {
-         const c = categoriasLocal.find(x => x.id === t.categoriaId);
-         catNombre = c ? c.nome : "-";
-      }
-
-      let origenTexto = "-";
-      if (t.tipo === "salida") {
-          if(t.origen === "tarjeta" && t.tarjetaId) {
-             const tar = tarjetasLocal.find(x => x.id === t.tarjetaId);
-             origenTexto = "Tarjeta" + (tar ? ` - ${tar.alias}` : "");
-          } else {
-             origenTexto = "Normal";
-          }
-      }
-
-      tr.innerHTML = `
-        <td>${t.fecha}</td>
-        <td><span class="tag ${t.tipo}">${t.tipo}</span></td>
-        <td>${catNombre}</td>
-        <td>${origenTexto}</td>
-        <td>${t.descripcion || ""}</td>
-        <td>${formatearMoneda(t.valor)}</td>
-        <td></td>
-      `;
-
-      const tdAcc = tr.lastElementChild;
-      const btnDel = document.createElement("button");
-      btnDel.textContent = "Eliminar";
-      btnDel.className = "btn-icon btn-icon-danger";
-      btnDel.addEventListener("click", () => eliminarTransaccion(t.id));
-      tdAcc.appendChild(btnDel);
-      
-      tbody.appendChild(tr);
-    });
-  }
-  
-  function calcularAhorroTotal() {
-    let totalEntradas = 0;
-    let totalSalidas = 0;
-    transaccionesLocal.forEach(t => {
-      if (t.tipo === "entrada") totalEntradas += t.valor;
-      else if (t.tipo === "salida") totalSalidas += t.valor;
-    });
-    const ahorro = totalEntradas - totalSalidas;
-    return ahorro > 0 ? ahorro : 0;
-  }
-
-  function actualizarObjetivo() {
-    if (!objetivoNombre || !objetivoValor || objetivoValor <= 0) {
-      objNombreSpan.textContent = "Sin objetivo definido";
-      objMetaSpan.textContent = "-";
-      objAhorradoSpan.textContent = formatearMoneda(0);
-      objRestanteSpan.textContent = formatearMoneda(0);
-      objTexto.textContent = "Define un objetivo en el Perfil para comenzar a seguir tu ahorro.";
-      dibujarGraficoObjetivo(0);
-      rellenarHistorialObjetivos();
-      return;
-    }
-
-    const ahorroTotal = calcularAhorroTotal();
-    let ahorroObjetivo = ahorroTotal - objetivoAhorroBase;
-    if (ahorroObjetivo < 0) ahorroObjetivo = 0;
-
-    // Check for completion and save async if newly completed
-    if (!objetivoCompletado && ahorroObjetivo >= objetivoValor) {
-      objetivoCompletado = true;
-      const hoy = new Date().toISOString().slice(0, 10);
-      objetivosHistorial.push({
-        nombre: objetivoNombre,
-        valorMeta: objetivoValor,
-        ahorroFinal: ahorroObjetivo,
-        fechaInicio: objetivoFechaInicio || "",
-        fechaConclusion: hoy
-      });
-      guardarPerfilEnServidor();
-    }
-
-    const porcentaje = objetivoValor > 0 ? (ahorroObjetivo / objetivoValor) * 100 : 0;
-    const restante = objetivoValor - ahorroObjetivo;
-
-    objNombreSpan.textContent = objetivoNombre;
-    objMetaSpan.textContent = formatearMoneda(objetivoValor);
-    objAhorradoSpan.textContent = formatearMoneda(ahorroObjetivo);
-    objRestanteSpan.textContent = formatearMoneda(restante > 0 ? restante : 0);
-
-    if (restante <= 0 && objetivoValor > 0) {
-      objTexto.textContent = "¡Objetivo alcanzado o superado!";
-    } else {
-      objTexto.textContent = `Has avanzado aproximadamente ${porcentaje.toFixed(1)}% de este objetivo.`;
-    }
-
-    dibujarGraficoObjetivo(porcentaje);
-    rellenarHistorialObjetivos();
-  }
-
-  function analisisLatam() {
-    const edad = parseInt(perfilEdadInput.value || "0", 10) || 0;
-    const pais = perfilPaisInput.value;
-    if (!metaMensualUsuario || metaMensualUsuario <= 0 || !pais || !edad) {
-      perfilAnalisis.textContent = "Para ver el análisis comparativo, completa país, edad y una meta mensual de gasto.";
-      return;
-    }
-
-    const base = {
-      bo: 1500,
-      br: 3000,
-      ar: 250000,
-      cl: 400000,
-      mx: 9000,
-      otro: 700
-    };
-
-    const nombrePais = {
-      bo: "Bolivia",
-      br: "Brasil",
-      ar: "Argentina",
-      cl: "Chile",
-      mx: "México",
-      otro: "otro país de LATAM"
-    };
-
-    const basePais = base[pais] || base.otro;
-
-    let factorEdad = 1;
-    if (edad < 25) factorEdad = 0.85;
-    else if (edad < 36) factorEdad = 1.0;
-    else if (edad < 51) factorEdad = 1.1;
-    else factorEdad = 0.95;
-
-    const referencia = basePais * factorEdad;
-    const ratio = referencia > 0 ? (metaMensualUsuario / referencia) * 100 : 0;
-
-    let mensaje;
-    if (ratio < 70) {
-      mensaje = `Tu meta está por debajo del gasto promedio estimado para una persona de tu edad en ${nombrePais[pais]} en términos per cápita aproximados. Puede ser positivo se seu objetivo é poupar, mas verifique se não está muito restritiva.`;
-    } else if (ratio <= 120) {
-      mensaje = `Tu meta está em um intervalo razoável comparado com um gasto médio estimado para seu perfil em ${nombrePais[pais]}. Se além disso consegue poupar uma parte, está em um bom caminho.`;
-    } else {
-      mensaje = `Tu meta de gasto está acima do nível médio estimado para sua idade em ${nombrePais[pais]}. Não é necessariamente ruim, mas vale a pena revisar receitas, dívidas e objetivos de poupança.`;
-    }
-
-    const refTexto = formatearMoneda(referencia);
-    perfilAnalisis.textContent = mensaje + ` Referência aproximada utilizada: ${refTexto}. Cálculo aproximado e apenas orientativo, não é uma recomendação financeira oficial.`;
-  }
-
-  function actualizarResumen() {
-    const transMes = filtrarMesActual(transaccionesLocal, "fecha");
-    let totalEntradas = 0;
-    let totalSalidas = 0;
-
-    let totalSalidasFijos = 0;
-    let totalSalidasOtros = 0;
-
-    transMes.forEach(t => {
-      if (t.tipo === "entrada") {
-        totalEntradas += t.valor;
-      } else if (t.tipo === "salida") {
-        totalSalidas += t.valor;
-        if (t.gastoFijoId) totalSalidasFijos += t.valor;
-        else totalSalidasOtros += t.valor;
-      }
-    });
-
-    const saldo = totalEntradas - totalSalidas;
-
-    statEntradas.textContent = formatearMoneda(totalEntradas);
-    statSalidas.textContent  = formatearMoneda(totalSalidas);
-    statSaldo.textContent    = formatearMoneda(saldo);
-
-    if (saldo > 0) {
-      statSaldoTexto.textContent = "Estás con saldo positivo este mes.";
-    } else if (saldo < 0) {
-      statSaldoTexto.textContent = "Estás gastando más de lo que entra este mes.";
-    } else {
-      statSaldoTexto.textContent = "Saldo neutro por ahora.";
-    }
-
-    let pctFijos = 0;
-    let pctOtros = 0;
-    const totalSalidasMes = totalSalidasFijos + totalSalidasOtros;
-    if (totalSalidasMes > 0) {
-      pctFijos = (totalSalidasFijos / totalSalidasMes) * 100;
-      pctOtros = (totalSalidasOtros / totalSalidasMes) * 100;
-    }
-
-    statLazer.textContent      = pctFijos.toFixed(1) + "%";
-    statEssenciais.textContent = pctOtros.toFixed(1) + "%";
-    statOutras.textContent     = "0%";
-
-    barraLazer.style.width     = pctFijos + "%";
-    barraEssencial.style.width = pctOtros + "%";
-    barraOutras.style.width    = "0%";
-
-    if (metaMensualUsuario > 0) {
-      const uso = (totalSalidas / metaMensualUsuario) * 100;
-      const hoy = new Date();
-      const anioMes = obtenerAnioMesActual().split("-");
-      const anio = parseInt(anioMes[0], 10);
-      const mes  = parseInt(anioMes[1], 10);
-      const diasMes = new Date(anio, mes, 0).getDate();
-      const diaHoy = hoy.getDate();
-      const gastoPromedioDia = totalSalidas / (diaHoy || 1);
-      const metaPorDia = metaMensualUsuario / diasMes;
-
-      let texto = `Has usado ${uso.toFixed(1)}% de tu meta mensual de gasto. `;
-      if (gastoPromedioDia > metaPorDia) {
-        texto += "Tu gasto promedio diario está por encima de lo ideal para cumplir la meta.";
-      } else {
-        texto += "Tu gasto promedio diario está dentro o por debajo de lo ideal para cumplir la meta.";
-      }
-      statMetaUso.textContent = texto;
-      dibujarGraficoMeta(uso);
-    } else {
-      statMetaUso.textContent = "Define una meta mensual de gasto en Perfil para ver tu uso en porcentaje.";
-      dibujarGraficoMeta(0);
-    }
-
-    if (ingresoMensualUsuario > 0) {
-      const ratio = (totalSalidas / ingresoMensualUsuario) * 100;
-      let msg = `Tus salidas representan aproximadamente ${ratio.toFixed(1)}% de tu ingreso mensual declarado. `;
-      if (ratio < 50) {
-        msg += "Nivel saludable de gasto frente al ingreso.";
-      } else if (ratio <= 80) {
-        msg += "Nivel moderado. Está relativamente equilibrado.";
-      } else {
-        msg += "Alerta: tus gastos están muy cerca o por encima de tu ingreso mensual.";
-      }
-      statIngresoAlerta.textContent = msg;
-    } else {
-      statIngresoAlerta.textContent = "Informa tu ingreso mensual en Perfil para ver la relación gasto/ingreso.";
-    }
-  }
-
-  function inicializarReporte() {
-    const mesesSet = new Set();
-    transaccionesLocal.forEach(t => {
-      if (t.fecha && t.fecha.length >= 7) {
-        mesesSet.add(t.fecha.slice(0, 7));
-      }
-    });
-
-    if (mesesSet.size === 0) {
-      mesesSet.add(obtenerAnioMesActual());
-    }
-
-    const meses = Array.from(mesesSet).sort();
-    selectReporteMes.innerHTML = "";
-    meses.forEach(m => {
-      const opt = document.createElement("option");
-      opt.value = m;
-      opt.textContent = nombreMes(m);
-      selectReporteMes.appendChild(opt);
-    });
-
-    const actual = obtenerAnioMesActual();
-    if (meses.includes(actual)) {
-      selectReporteMes.value = actual;
-    }
-
-    actualizarReporte();
-  }
-
-  function actualizarReporte() {
-    const mesSel = selectReporteMes.value || obtenerAnioMesActual();
-    const transMes = transaccionesLocal.filter(t => t.fecha.startsWith(mesSel));
-    let totalEntradas = 0;
-    let totalSalidas = 0;
-
-    const porCategoria = {};
-
-    transMes.forEach(t => {
-      if (t.tipo === "entrada") {
-        totalEntradas += t.valor;
-      } else if (t.tipo === "salida") {
-        totalSalidas += t.valor;
-        let nombreCat;
-        let tipoCat;
-        if (t.categoriaId === "__gasto_fijo__" && t.gastoFijoId) {
-          nombreCat = "Gasto fijo - " + (obtenerDescripcionFijoPorId(t.gastoFijoId) || "");
-          tipoCat = "Gasto fijo";
-        } else {
-          nombreCat = obtenerNombreCategoriaPorId(t.categoriaId) || "Sin categoría";
-          tipoCat = "Normal";
-        }
-        const clave = nombreCat + "||" + tipoCat;
-        if (!porCategoria[clave]) porCategoria[clave] = 0;
-        porCategoria[clave] += t.valor;
-      }
-    });
-
-    repEntradas.textContent = formatearMoneda(totalEntradas);
-    repSalidas.textContent  = formatearMoneda(totalSalidas);
-    const saldo = totalEntradas - totalSalidas;
-    repSaldo.textContent = formatearMoneda(saldo);
-    if (saldo > 0) repSaldoTexto.textContent = "Mes con saldo positivo.";
-    else if (saldo < 0) repSaldoTexto.textContent = "Mes con saldo negativo.";
-    else repSaldoTexto.textContent = "Saldo neutro.";
-
-    reporteTablaCategorias.innerHTML = "";
-    const claves = Object.keys(porCategoria);
-    claves.forEach(cl => {
-      const [nombreCat, tipoCat] = cl.split("||");
-      const valor = porCategoria[cl];
-      const pct = totalSalidas > 0 ? (valor / totalSalidas) * 100 : 0;
-      const tr = document.createElement("tr");
-      const tdNom = document.createElement("td");
-      tdNom.textContent = nombreCat;
-      const tdTipo = document.createElement("td");
-      tdTipo.textContent = tipoCat;
-      const tdTot = document.createElement("td");
-      tdTot.textContent = formatearMoneda(valor);
-      const tdPct = document.createElement("td");
-      tdPct.textContent = pct.toFixed(1) + "%";
-      tr.appendChild(tdNom);
-      tr.appendChild(tdTipo);
-      tr.appendChild(tdTot);
-      tr.appendChild(tdPct);
-      reporteTablaCategorias.appendChild(tr);
-    });
-  }
-
-  // --- EVENTS EXTRAS ---
-  document.getElementById("tipo").addEventListener("change", () => {
-    rellenarSelectCategorias();
-    actualizarCampoGastoFijo();
-    actualizarCampoOrigenYTarjeta();
-  });
-
-  selectCategoria.addEventListener("change", () => {
-    actualizarCampoGastoFijo();
-  });
-
-  selectOrigen.addEventListener("change", () => {
-    actualizarCampoOrigenYTarjeta();
-  });
-
-  filtroTexto.addEventListener("input", () => {
-    rellenarTablaTransacciones();
-  });
-
-  filtroFecha.addEventListener("change", () => {
-    rellenarTablaTransacciones();
-  });
-
-  btnLimpiarFiltros.addEventListener("click", () => {
-    filtroTexto.value = "";
-    filtroFecha.value = "";
-    rellenarTablaTransacciones();
-  });
-
-  // Check auth at load
-  window.addEventListener("load", async () => {
-    const { session } = await nhost.auth.getSession();
-    if (session) {
-       usuarioActual = session.user;
-       await abrirApp(); // Agora aguarda para pegar os dados
-    }
-  });
 </script>
 </body>
 </html>
