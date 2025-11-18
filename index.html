@@ -1112,15 +1112,15 @@
 </div>
 
 <script type="module">
-  // AJUSTE CRÍTICO PARA IPAD: Usando esm.sh para garantir módulo ES compatível
-  import { createClient } from 'https://esm.sh/@nhost/nhost-js@latest';
+  // VOLTANDO PARA UNPKG (Compatível com seu iPad)
+  import { createClient } from 'https://unpkg.com/@nhost/nhost-js@latest/dist/nhost-js.es.js';
 
   // CONFIGURAÇÃO DO NHOST
   const nhost = createClient({
     subdomain: 'cpmnrcipviprenstjcwg',
     region: 'sa-east-1',
-    // REATIVADO: localStorage é mais seguro para evitar bloqueio de cookies no Safari/iPad
-    clientStorageType: 'localStorage' 
+    // MANTENDO LOCALSTORAGE (Resolve o problema de Sessão Nula)
+    clientStorageType: 'localStorage'
   });
 
   window.nhost = nhost;
@@ -1413,7 +1413,7 @@
             await guardarPerfilEnServidor();
             abrirApp();
         } else {
-            // Se registro ok mas sem sessao, pode ser verificação
+            // Se registro ok mas sem sessao
             loginMessage.style.color = "#22c55e";
             loginMessage.textContent = "Cuenta creada. Intenta iniciar sesión ahora.";
             modoRegistro = false;
@@ -1439,9 +1439,11 @@
 
         if (!res.session) {
            console.warn("Sem sessão. Resposta completa:", res);
-           // Mantenho o alerta para diagnóstico se persistir
-           alert("ERRO DE CORS DETECTADO:\nO Nhost recusou enviar a sessão para este endereço.\n\nSOLUÇÃO:\nVá no painel Nhost > Authentication > Allowed Redirect URLs e adicione:\n" + window.location.href);
-           loginMessage.textContent = "Erro: Bloqueio de segurança (CORS).";
+           if (res.needsEmailVerification) {
+               loginMessage.textContent = "Verifique seu e-mail para ativar a conta.";
+           } else {
+               loginMessage.textContent = "Erro de sessão. Verifique as URLs no painel Nhost.";
+           }
            return;
         }
 
@@ -1451,7 +1453,6 @@
       } catch (err) {
         loginMessage.textContent = "Excepción técnica (ver consola).";
         console.error("Critical Login Exception:", err);
-        alert("Erro Crítico JS: " + err.message);
       }
     }
   });
