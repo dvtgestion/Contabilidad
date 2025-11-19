@@ -598,7 +598,7 @@
  <button data-section="fijos">Gastos fijos</button>
  <button data-section="tarjetas">Tarjetas</button>
  <button data-section="reportes">Reporte mensual</button>
- <!-- CAMBIO SOLICITADO: RENOMBRADO A "Categorías" -->
+ <!-- CAMBIO SOLICITADO: SOLO CATEGORIAS -->
  <button data-section="categorias">Categorías</button>
  <button data-section="perfil">Perfil</button>
 </nav>
@@ -677,13 +677,12 @@
        </div>
      </div>
 
-     <!-- NUEVA TARJETA VIAJERO EN EL TIEMPO (ALTURA REDUCIDA) -->
+     <!-- NUEVA TARJETA VIAJERO EN EL TIEMPO (ALTURA REDUCIDA A 160px) -->
      <div class="card">
          <h3>Proyección Financiera (Viajero en el Tiempo)</h3>
          <p class="card-subtitle">Línea continua: Tu saldo real. Línea punteada: Tu futuro estimado si sigues gastando igual.</p>
          <div style="width:100%; overflow-x:auto; margin-top:1rem;">
-             <!-- CAMBIO: ALTURA REDUCIDA A 180px -->
-             <canvas id="chart-time-travel" width="600" height="180" style="min-width:100%;"></canvas>
+             <canvas id="chart-time-travel" width="600" height="160" style="min-width:100%;"></canvas>
          </div>
       </div>
 
@@ -1076,15 +1075,15 @@
 <div class="card" style="max-width:420px; width:90%; text-align:left;">
 <h3>Primeros pasos</h3>
 <p class="card-subtitle">
- Como acabas de crear tu cuenta, tus categorías están vacías.
+Como acabas de crear tu cuenta, tus categorías están vacías.
 </p>
 <p style="font-size:0.85rem; margin-top:0.5rem;">
- 1. En el menú lateral, entra en <strong>"Categorías y metas"</strong>.<br/>
- 2. Crea tus propias categorías (ej.: Mercado, Alquiler, Universidad, Salud...).<br/>
- 3. Después, usa esas categorías al registrar tus transacciones.
+1. En el menú lateral, entra en <strong>"Categorías y metas"</strong>.<br/>
+2. Crea tus propias categorías (ej.: Mercado, Alquiler, Universidad, Salud...).<br/>
+3. Después, usa esas categorías al registrar tus transacciones.
 </p>
 <button type="button" class="primary" id="modal-categorias-ok" style="margin-top:0.75rem;">
- Entendido
+Entendido
 </button>
 </div>
 </div>
@@ -1092,20 +1091,20 @@
 <!-- MODAL SIMULADOR AHORRO (NUEVO) -->
 <div id="modal-simulador" class="modal hidden">
 <div class="card" style="max-width:420px; width:90%;">
- <h3>🔮 Simulador de Ahorro</h3>
- <p class="card-subtitle">"¿Qué pasaría si corto un gasto mensual?"</p>
- 
- <div style="margin-top:1rem;">
-   <label style="margin-bottom:0.5rem;">Monto mensual que podrías ahorrar extra:</label>
-   <input type="number" id="simulador-monto" placeholder="Ej: 100 (Cenas fuera, suscripciones...)" style="margin-bottom:1rem;" />
-   <div id="simulador-resultado" style="padding:1rem; background:#0f172a; border-radius:8px; margin-bottom:1rem; font-size:0.9rem; color:#94a3b8;">
-     Ingresa un monto para ver el impacto en tu objetivo.
-   </div>
-   <div style="display:flex; gap:0.5rem; justify-content:flex-end;">
-     <button type="button" class="btn-icon" id="btn-cerrar-simulador">Cerrar</button>
-     <button type="button" class="primary" id="btn-calcular-simulacion">Calcular</button>
-   </div>
- </div>
+<h3>🔮 Simulador de Ahorro</h3>
+<p class="card-subtitle">"¿Qué pasaría si corto un gasto mensual?"</p>
+
+<div style="margin-top:1rem;">
+  <label style="margin-bottom:0.5rem;">Monto mensual que podrías ahorrar extra:</label>
+  <input type="number" id="simulador-monto" placeholder="Ej: 100 (Cenas fuera, suscripciones...)" style="margin-bottom:1rem;" />
+  <div id="simulador-resultado" style="padding:1rem; background:#0f172a; border-radius:8px; margin-bottom:1rem; font-size:0.9rem; color:#94a3b8;">
+    Ingresa un monto para ver el impacto en tu objetivo.
+  </div>
+  <div style="display:flex; gap:0.5rem; justify-content:flex-end;">
+    <button type="button" class="btn-icon" id="btn-cerrar-simulador">Cerrar</button>
+    <button type="button" class="primary" id="btn-calcular-simulacion">Calcular</button>
+  </div>
+</div>
 </div>
 </div>
 
@@ -1156,20 +1155,20 @@ const db = getFirestore(app);
 function loading(show) {
 const el = document.getElementById('loading-overlay');
 if (el) {
- if (show) el.classList.remove('hidden');
- else el.classList.add('hidden');
+if (show) el.classList.remove('hidden');
+else el.classList.add('hidden');
 }
 }
 
 function monedaPorDefectoParaPais(pais) {
 switch (pais) {
- case "bo": return "BOB";
- case "br": return "BRL";
- case "ar": return "ARS";
- case "cl": return "CLP";
- case "mx": return "MXN";
- case "otro": return "USD";
- default: return "USD";
+case "bo": return "BOB";
+case "br": return "BRL";
+case "ar": return "ARS";
+case "cl": return "CLP";
+case "mx": return "MXN";
+case "otro": return "USD";
+default: return "USD";
 }
 }
 
@@ -1190,18 +1189,18 @@ function formatearMoneda(valor) {
 const currency = monedaUsuario || "USD";
 let locale = "en-US";
 switch (currency) {
- case "BRL": locale = "pt-BR"; break;
- case "BOB": locale = "es-BO"; break;
- case "ARS": locale = "es-AR"; break;
- case "CLP": locale = "es-CL"; break;
- case "MXN": locale = "es-MX"; break;
- case "EUR": locale = "es-ES"; break;
- default:    locale = "en-US";
+case "BRL": locale = "pt-BR"; break;
+case "BOB": locale = "es-BO"; break;
+case "ARS": locale = "es-AR"; break;
+case "CLP": locale = "es-CL"; break;
+case "MXN": locale = "es-MX"; break;
+case "EUR": locale = "es-ES"; break;
+default:    locale = "en-US";
 }
 try {
- return valor.toLocaleString(locale, { style: "currency", currency });
+return valor.toLocaleString(locale, { style: "currency", currency });
 } catch (e) {
- return valor.toFixed(2);
+return valor.toFixed(2);
 }
 }
 
@@ -1259,114 +1258,114 @@ let unsubs = [];
 // AUTENTICACIÓN (onAuthStateChanged)
 // ----------------------------------------------------------------------
 onAuthStateChanged(auth, (user) => {
- if (user) {
-     // LOGIN EXITOSO
-     usuarioActual = user;
-     document.getElementById("user-email").textContent = user.email;
-     document.getElementById("login-screen").classList.add("hidden");
-     document.getElementById("app").classList.remove("hidden");
- 
-     // Carregar Dados (Listeners em tempo real)
-     iniciarListeners(user.uid);
- } else {
-     // LOGOUT
-     usuarioActual = null;
- 
-     // Limpar dados locais
-     categoriasLocal = []; transaccionesLocal = []; fijosLocal = []; tarjetasLocal = [];
- 
-     // Cancelar listeners
-     unsubs.forEach(u => u());
-     unsubs = [];
- 
-     document.getElementById("app").classList.add("hidden");
-     document.getElementById("login-screen").classList.remove("hidden");
- }
+if (user) {
+    // LOGIN EXITOSO
+    usuarioActual = user;
+    document.getElementById("user-email").textContent = user.email;
+    document.getElementById("login-screen").classList.add("hidden");
+    document.getElementById("app").classList.remove("hidden");
+
+    // Carregar Dados (Listeners em tempo real)
+    iniciarListeners(user.uid);
+} else {
+    // LOGOUT
+    usuarioActual = null;
+
+    // Limpar dados locais
+    categoriasLocal = []; transaccionesLocal = []; fijosLocal = []; tarjetasLocal = [];
+
+    // Cancelar listeners
+    unsubs.forEach(u => u());
+    unsubs = [];
+
+    document.getElementById("app").classList.add("hidden");
+    document.getElementById("login-screen").classList.remove("hidden");
+}
 });
 
 // ----------------------------------------------------------------------
 // CARGA DE DATOS (FIRESTORE REALTIME)
 // ----------------------------------------------------------------------
 function iniciarListeners(uid) {
- loading(true);
+loading(true);
 
- // 1. Categorias
- const qCat = query(collection(db, "categorias"), where("uid", "==", uid));
- const unsubCat = onSnapshot(qCat, (snapshot) => {
-     categoriasLocal = [];
-     snapshot.forEach(doc => {
-         categoriasLocal.push({ id: doc.id, ...doc.data() });
-     });
-     // Quando carrega categorias, atualiza a UI dependente
-     inicializarInterfaz();
-     mostrarModalCategoriasSiCorresponde();
- });
- unsubs.push(unsubCat);
+// 1. Categorias
+const qCat = query(collection(db, "categorias"), where("uid", "==", uid));
+const unsubCat = onSnapshot(qCat, (snapshot) => {
+    categoriasLocal = [];
+    snapshot.forEach(doc => {
+        categoriasLocal.push({ id: doc.id, ...doc.data() });
+    });
+    // Quando carrega categorias, atualiza a UI dependente
+    inicializarInterfaz();
+    mostrarModalCategoriasSiCorresponde();
+});
+unsubs.push(unsubCat);
 
- // 2. Transacciones
- const qTrans = query(collection(db, "transacciones"), where("uid", "==", uid));
- const unsubTrans = onSnapshot(qTrans, (snapshot) => {
-     transaccionesLocal = [];
-     snapshot.forEach(doc => {
-         transaccionesLocal.push({ id: doc.id, ...doc.data() });
-     });
-     inicializarInterfaz();
- });
- unsubs.push(unsubTrans);
+// 2. Transacciones
+const qTrans = query(collection(db, "transacciones"), where("uid", "==", uid));
+const unsubTrans = onSnapshot(qTrans, (snapshot) => {
+    transaccionesLocal = [];
+    snapshot.forEach(doc => {
+        transaccionesLocal.push({ id: doc.id, ...doc.data() });
+    });
+    inicializarInterfaz();
+});
+unsubs.push(unsubTrans);
 
- // 3. Gastos Fijos
- const qFijos = query(collection(db, "gastos_fijos"), where("uid", "==", uid));
- const unsubFijos = onSnapshot(qFijos, (snapshot) => {
-     fijosLocal = [];
-     snapshot.forEach(doc => {
-         fijosLocal.push({ id: doc.id, ...doc.data() });
-     });
-     inicializarInterfaz();
- });
- unsubs.push(unsubFijos);
+// 3. Gastos Fijos
+const qFijos = query(collection(db, "gastos_fijos"), where("uid", "==", uid));
+const unsubFijos = onSnapshot(qFijos, (snapshot) => {
+    fijosLocal = [];
+    snapshot.forEach(doc => {
+        fijosLocal.push({ id: doc.id, ...doc.data() });
+    });
+    inicializarInterfaz();
+});
+unsubs.push(unsubFijos);
 
- // 4. Tarjetas
- const qTarj = query(collection(db, "tarjetas"), where("uid", "==", uid));
- const unsubTarj = onSnapshot(qTarj, (snapshot) => {
-     tarjetasLocal = [];
-     snapshot.forEach(doc => {
-         tarjetasLocal.push({ id: doc.id, ...doc.data() });
-     });
-     inicializarInterfaz();
- });
- unsubs.push(unsubTarj);
+// 4. Tarjetas
+const qTarj = query(collection(db, "tarjetas"), where("uid", "==", uid));
+const unsubTarj = onSnapshot(qTarj, (snapshot) => {
+    tarjetasLocal = [];
+    snapshot.forEach(doc => {
+        tarjetasLocal.push({ id: doc.id, ...doc.data() });
+    });
+    inicializarInterfaz();
+});
+unsubs.push(unsubTarj);
 
- // 5. Perfil (Documento Único)
- const docRef = doc(db, "perfil", uid);
- const unsubPerfil = onSnapshot(docRef, (docSnap) => {
-     if (docSnap.exists()) {
-         const p = docSnap.data();
-         edadUsuario = p.edad;
-         sexoUsuario = p.sexo;
-         paisUsuario = p.pais;
-         monedaUsuario = p.moneda;
-         metaMensualUsuario = p.meta_mensual || 0;
-         ingresoMensualUsuario = p.ingreso_mensual || 0;
-         objetivoNombre = p.objetivo_nombre;
-         objetivoValor = p.objetivo_valor || 0;
-         objetivoAhorroBase = p.objetivo_ahorro_base || 0;
-         objetivoFechaInicio = p.objetivo_fecha_inicio;
-         objetivoCompletado = p.objetivo_completado;
-         yaMostroModalCategorias = p.mostro_modal_categorias;
-         objetivosHistorial = p.objetivos_historial || [];
-     
-         // Se moeda não definida, tenta deduzir
-         if(!monedaUsuario && paisUsuario) {
-              monedaUsuario = monedaPorDefectoParaPais(paisUsuario);
-         }
-     } else {
-         // Se não existe perfil, cria vazio na memória
-         yaMostroModalCategorias = false;
-     }
-     inicializarInterfaz();
-     loading(false); // Fim do carregamento inicial
- });
- unsubs.push(unsubPerfil);
+// 5. Perfil (Documento Único)
+const docRef = doc(db, "perfil", uid);
+const unsubPerfil = onSnapshot(docRef, (docSnap) => {
+    if (docSnap.exists()) {
+        const p = docSnap.data();
+        edadUsuario = p.edad;
+        sexoUsuario = p.sexo;
+        paisUsuario = p.pais;
+        monedaUsuario = p.moneda;
+        metaMensualUsuario = p.meta_mensual || 0;
+        ingresoMensualUsuario = p.ingreso_mensual || 0;
+        objetivoNombre = p.objetivo_nombre;
+        objetivoValor = p.objetivo_valor || 0;
+        objetivoAhorroBase = p.objetivo_ahorro_base || 0;
+        objetivoFechaInicio = p.objetivo_fecha_inicio;
+        objetivoCompletado = p.objetivo_completado;
+        yaMostroModalCategorias = p.mostro_modal_categorias;
+        objetivosHistorial = p.objetivos_historial || [];
+   
+        // Se moeda não definida, tenta deduzir
+        if(!monedaUsuario && paisUsuario) {
+             monedaUsuario = monedaPorDefectoParaPais(paisUsuario);
+        }
+    } else {
+        // Se não existe perfil, cria vazio na memória
+        yaMostroModalCategorias = false;
+    }
+    inicializarInterfaz();
+    loading(false); // Fim do carregamento inicial
+});
+unsubs.push(unsubPerfil);
 }
 
 // ----------------------------------------------------------------------
@@ -1386,46 +1385,46 @@ let modoRegistro = false;
 toggleModeBtn.addEventListener("click", () => {
 modoRegistro = !modoRegistro;
 if (modoRegistro) {
- loginSubmit.textContent = "Crear cuenta";
- toggleText.textContent = "¿Ya tienes cuenta?";
- toggleModeBtn.textContent = "Entrar";
- registerExtra.classList.remove("hidden");
+loginSubmit.textContent = "Crear cuenta";
+toggleText.textContent = "¿Ya tienes cuenta?";
+toggleModeBtn.textContent = "Entrar";
+registerExtra.classList.remove("hidden");
 } else {
- loginSubmit.textContent = "Entrar";
- toggleText.textContent = "¿No tienes cuenta?";
- toggleModeBtn.textContent = "Crear cuenta";
- registerExtra.classList.add("hidden");
+loginSubmit.textContent = "Entrar";
+toggleText.textContent = "¿No tienes cuenta?";
+toggleModeBtn.textContent = "Crear cuenta";
+registerExtra.classList.add("hidden");
 }
 loginMessage.textContent = "";
 });
 
 loginForm.addEventListener("submit", async (e) => {
- e.preventDefault();
- const email = loginEmail.value;
- const pass = loginPassword.value;
+e.preventDefault();
+const email = loginEmail.value;
+const pass = loginPassword.value;
 
- loginMessage.style.color = "#f97316";
- loginMessage.textContent = "Procesando...";
+loginMessage.style.color = "#f97316";
+loginMessage.textContent = "Procesando...";
 
- try {
-     if (modoRegistro) {
-         await createUserWithEmailAndPassword(auth, email, pass);
-         // Perfil será criado vazio automaticamente na lógica
-     } else {
-         await signInWithEmailAndPassword(auth, email, pass);
-     }
- } catch (error) {
-     console.error(error);
-     let msg = error.message;
-     if(error.code === 'auth/invalid-credential') msg = "Credenciales incorrectas.";
-     if(error.code === 'auth/email-already-in-use') msg = "Email ya registrado.";
-     if(error.code === 'auth/weak-password') msg = "Contraseña muy débil.";
-     loginMessage.textContent = msg;
- }
+try {
+    if (modoRegistro) {
+        await createUserWithEmailAndPassword(auth, email, pass);
+        // Perfil será criado vazio automaticamente na lógica
+    } else {
+        await signInWithEmailAndPassword(auth, email, pass);
+    }
+} catch (error) {
+    console.error(error);
+    let msg = error.message;
+    if(error.code === 'auth/invalid-credential') msg = "Credenciales incorrectas.";
+    if(error.code === 'auth/email-already-in-use') msg = "Email ya registrado.";
+    if(error.code === 'auth/weak-password') msg = "Contraseña muy débil.";
+    loginMessage.textContent = msg;
+}
 });
 
 document.getElementById("logout-btn").addEventListener("click", () => {
- signOut(auth);
+signOut(auth);
 });
 
 // ----------------------------------------------------------------------
@@ -1434,146 +1433,146 @@ document.getElementById("logout-btn").addEventListener("click", () => {
 
 // Salvar Perfil (Debounced ou direto)
 async function guardarPerfilEnServidor() {
- if (!usuarioActual) return;
- try {
-     const dados = {
-         uid: usuarioActual.uid,
-         edad: edadUsuario,
-         sexo: sexoUsuario,
-         pais: paisUsuario,
-         moneda: monedaUsuario,
-         meta_mensual: metaMensualUsuario,
-         ingreso_mensual: ingresoMensualUsuario,
-         objetivo_nombre: objetivoNombre,
-         objetivo_valor: objetivoValor,
-         objetivo_ahorro_base: objetivoAhorroBase,
-         objetivo_fecha_inicio: objetivoFechaInicio,
-         objetivo_completado: objetivoCompletado,
-         mostro_modal_categorias: yaMostroModalCategorias,
-         objetivos_historial: objetivosHistorial
-     };
-     // setDoc com merge para atualizar ou criar
-     await setDoc(doc(db, "perfil", usuarioActual.uid), dados, { merge: true });
- 
-     const pm = document.getElementById("perfil-mensaje");
-     if(pm) { pm.textContent = "Guardado."; setTimeout(()=>pm.textContent="", 1500); }
- } catch (e) { console.error("Error al guardar perfil", e); }
+if (!usuarioActual) return;
+try {
+    const dados = {
+        uid: usuarioActual.uid,
+        edad: edadUsuario,
+        sexo: sexoUsuario,
+        pais: paisUsuario,
+        moneda: monedaUsuario,
+        meta_mensual: metaMensualUsuario,
+        ingreso_mensual: ingresoMensualUsuario,
+        objetivo_nombre: objetivoNombre,
+        objetivo_valor: objetivoValor,
+        objetivo_ahorro_base: objetivoAhorroBase,
+        objetivo_fecha_inicio: objetivoFechaInicio,
+        objetivo_completado: objetivoCompletado,
+        mostro_modal_categorias: yaMostroModalCategorias,
+        objetivos_historial: objetivosHistorial
+    };
+    // setDoc com merge para atualizar ou criar
+    await setDoc(doc(db, "perfil", usuarioActual.uid), dados, { merge: true });
+
+    const pm = document.getElementById("perfil-mensaje");
+    if(pm) { pm.textContent = "Guardado."; setTimeout(()=>pm.textContent="", 1500); }
+} catch (e) { console.error("Error al guardar perfil", e); }
 }
 
 // Categorias
 const formCategoria = document.getElementById("form-categoria");
 formCategoria.addEventListener("submit", async (e) => {
- e.preventDefault();
- const nome = document.getElementById("cat-nome").value.trim();
- const grupo = document.getElementById("cat-grupo").value;
- if(!nome) return;
+e.preventDefault();
+const nome = document.getElementById("cat-nome").value.trim();
+const grupo = document.getElementById("cat-grupo").value;
+if(!nome) return;
 
- loading(true);
- try {
-     await addDoc(collection(db, "categorias"), {
-         uid: usuarioActual.uid,
-         nome,
-         grupo,
-         createdAt: serverTimestamp()
-     });
-     document.getElementById("cat-nome").value = "";
- } catch(e){ console.error(e); alert("Error"); }
- loading(false);
+loading(true);
+try {
+    await addDoc(collection(db, "categorias"), {
+        uid: usuarioActual.uid,
+        nome,
+        grupo,
+        createdAt: serverTimestamp()
+    });
+    document.getElementById("cat-nome").value = "";
+} catch(e){ console.error(e); alert("Error"); }
+loading(false);
 });
 window.eliminarCategoria = async (id) => {
- if(!confirm("¿Eliminar?")) return;
- await deleteDoc(doc(db, "categorias", id));
+if(!confirm("¿Eliminar?")) return;
+await deleteDoc(doc(db, "categorias", id));
 };
 
 // Gastos Fijos
 const formFijo = document.getElementById("form-fijo");
 formFijo.addEventListener("submit", async (e) => {
- e.preventDefault();
- const d=document.getElementById("fijo-descripcion").value.trim();
- const v=parseNumeroLocal(document.getElementById("fijo-valor").value);
- const ven=parseInt(document.getElementById("fijo-vencimiento").value);
+e.preventDefault();
+const d=document.getElementById("fijo-descripcion").value.trim();
+const v=parseNumeroLocal(document.getElementById("fijo-valor").value);
+const ven=parseInt(document.getElementById("fijo-vencimiento").value);
 
- loading(true);
- try {
-     await addDoc(collection(db, "gastos_fijos"), {
-         uid: usuarioActual.uid,
-         descripcion: d,
-         valor: v,
-         vencimiento: ven,
-         mes_inicio: siguienteAnioMes(obtenerAnioMesActual())
-     });
-     formFijo.reset();
- } catch(e){ console.error(e); }
- loading(false);
+loading(true);
+try {
+    await addDoc(collection(db, "gastos_fijos"), {
+        uid: usuarioActual.uid,
+        descripcion: d,
+        valor: v,
+        vencimiento: ven,
+        mes_inicio: siguienteAnioMes(obtenerAnioMesActual())
+    });
+    formFijo.reset();
+} catch(e){ console.error(e); }
+loading(false);
 });
 window.eliminarFijo = async (id) => await deleteDoc(doc(db, "gastos_fijos", id));
 
 // Tarjetas
 const formTarjeta = document.getElementById("form-tarjeta");
 formTarjeta.addEventListener("submit", async (e) => {
- e.preventDefault();
- const a=document.getElementById("tarjeta-alias").value;
- const d=document.getElementById("tarjeta-digitos").value;
- const b=document.getElementById("tarjeta-banco").value;
+e.preventDefault();
+const a=document.getElementById("tarjeta-alias").value;
+const d=document.getElementById("tarjeta-digitos").value;
+const b=document.getElementById("tarjeta-banco").value;
 
- loading(true);
- try {
-     await addDoc(collection(db, "tarjetas"), {
-         uid: usuarioActual.uid,
-         alias: a, digitos: d, banco: b
-     });
-     formTarjeta.reset();
- } catch(e){ console.error(e); }
- loading(false);
+loading(true);
+try {
+    await addDoc(collection(db, "tarjetas"), {
+        uid: usuarioActual.uid,
+        alias: a, digitos: d, banco: b
+    });
+    formTarjeta.reset();
+} catch(e){ console.error(e); }
+loading(false);
 });
 window.eliminarTarjeta = async (id) => await deleteDoc(doc(db, "tarjetas", id));
 
 // Transações
 const formTransaccion = document.getElementById("form-transaccion");
 formTransaccion.addEventListener("submit", async (e) => {
- e.preventDefault();
- const tipo = document.getElementById("tipo").value;
- const catVal = document.getElementById("categoria").value;
- const orig = document.getElementById("origen").value;
- const val = parseNumeroLocal(document.getElementById("valor").value);
- const fecha = document.getElementById("data").value;
- const desc = document.getElementById("descripcion").value.trim();
+e.preventDefault();
+const tipo = document.getElementById("tipo").value;
+const catVal = document.getElementById("categoria").value;
+const orig = document.getElementById("origen").value;
+const val = parseNumeroLocal(document.getElementById("valor").value);
+const fecha = document.getElementById("data").value;
+const desc = document.getElementById("descripcion").value.trim();
 
- let gfId = null;
- if(tipo==="salida" && catVal==="__gasto_fijo__"){
-     gfId = document.getElementById("gasto-fijo-select").value;
-     if(!gfId) { alert("Seleccione gasto fijo"); return; }
- }
- let tId = null, origFinal = null;
- if(tipo==="salida"){
-     if(orig==="tarjeta"){
-         tId = document.getElementById("tarjeta-select").value;
-         if(!tId) { alert("Seleccione tarjeta"); return; }
-         origFinal="tarjeta";
-     } else origFinal="efectivo"; // CAMBIO: NORMAL A EFECTIVO
- }
+let gfId = null;
+if(tipo==="salida" && catVal==="__gasto_fijo__"){
+    gfId = document.getElementById("gasto-fijo-select").value;
+    if(!gfId) { alert("Seleccione gasto fijo"); return; }
+}
+let tId = null, origFinal = null;
+if(tipo==="salida"){
+    if(orig==="tarjeta"){
+        tId = document.getElementById("tarjeta-select").value;
+        if(!tId) { alert("Seleccione tarjeta"); return; }
+        origFinal="tarjeta";
+    } else origFinal="efectivo"; // CAMBIO: NORMAL A EFECTIVO
+}
 
- const catIdDB = (catVal === "__gasto_fijo__") ? null : catVal;
+const catIdDB = (catVal === "__gasto_fijo__") ? null : catVal;
 
- loading(true);
- try {
-     await addDoc(collection(db, "transacciones"), {
-         uid: usuarioActual.uid,
-         tipo: tipo,
-         categoriaId: catIdDB,
-         gastoFijoId: gfId,
-         tarjetaId: tId,
-         origen: origFinal,
-         valor: val,
-         fecha: fecha,
-         descripcion: desc,
-         createdAt: serverTimestamp()
-     });
-     document.getElementById("valor").value="";
-     document.getElementById("descripcion").value="";
-     actualizarObjetivo(); // Recalcula localmente e salva se bater meta
- } catch(e){ console.error(e); alert("Error"); }
- loading(false);
+loading(true);
+try {
+    await addDoc(collection(db, "transacciones"), {
+        uid: usuarioActual.uid,
+        tipo: tipo,
+        categoriaId: catIdDB,
+        gastoFijoId: gfId,
+        tarjetaId: tId,
+        origen: origFinal,
+        valor: val,
+        fecha: fecha,
+        descripcion: desc,
+        createdAt: serverTimestamp()
+    });
+    document.getElementById("valor").value="";
+    document.getElementById("descripcion").value="";
+    actualizarObjetivo(); // Recalcula localmente e salva se bater meta
+} catch(e){ console.error(e); alert("Error"); }
+loading(false);
 });
 window.eliminarTransaccion = async (id) => await deleteDoc(doc(db, "transacciones", id));
 
@@ -1598,27 +1597,27 @@ await guardarPerfilEnServidor();
 
 function mostrarModalCategoriasSiCorresponde() {
 if (categoriasLocal.length === 0 && !yaMostroModalCategorias) {
- modalCategorias.classList.remove("hidden");
+modalCategorias.classList.remove("hidden");
 } else {
- modalCategorias.classList.add("hidden");
+modalCategorias.classList.add("hidden");
 }
 }
 
 function inicializarInterfaz() {
- rellenarSelectCategorias();
- rellenarTablaCategorias();
- rellenarTablaFijos();
- rellenarTablaTarjetas();
- rellenarTablaTransacciones();
- rellenarPerfil();
- rellenarHistorialObjetivos();
- actualizarResumen(); // INCLUYE SEMAFORO Y DISTRIBUCIÓN ESPECÍFICA
- analisisLatam();
- actualizarObjetivo(); // INCLUYE PROYECCION Y NUMEROS EN PIZZA
- dibujarGraficoViajeroTiempo(); // NUEVO
- actualizarCampoGastoFijo();
- actualizarCampoOrigenYTarjeta();
- inicializarReporte();
+rellenarSelectCategorias();
+rellenarTablaCategorias();
+rellenarTablaFijos();
+rellenarTablaTarjetas();
+rellenarTablaTransacciones();
+rellenarPerfil();
+rellenarHistorialObjetivos();
+actualizarResumen(); // INCLUYE SEMAFORO Y DISTRIBUCIÓN ESPECÍFICA
+analisisLatam();
+actualizarObjetivo(); // INCLUYE PROYECCION Y NUMEROS EN PIZZA
+dibujarGraficoViajeroTiempo(); // NUEVO
+actualizarCampoGastoFijo();
+actualizarCampoOrigenYTarjeta();
+inicializarReporte();
 }
 
 // UI Listeners
@@ -1645,37 +1644,37 @@ document.getElementById("btn-limpiar-filtros").addEventListener("click", ()=>{do
 
 // Salvar perfil ao submit do form
 document.getElementById("form-perfil").addEventListener("submit", async (e) => {
- e.preventDefault();
- edadUsuario = parseInt(document.getElementById("perfil-edad").value);
- sexoUsuario = document.getElementById("perfil-sexo").value;
- paisUsuario = document.getElementById("perfil-pais").value;
- metaMensualUsuario = parseNumeroLocal(document.getElementById("perfil-meta").value);
- ingresoMensualUsuario = parseNumeroLocal(document.getElementById("perfil-ingreso").value);
- monedaUsuario = document.getElementById("perfil-moneda").value;
- objetivoNombre = document.getElementById("perfil-objetivo-nombre").value;
+e.preventDefault();
+edadUsuario = parseInt(document.getElementById("perfil-edad").value);
+sexoUsuario = document.getElementById("perfil-sexo").value;
+paisUsuario = document.getElementById("perfil-pais").value;
+metaMensualUsuario = parseNumeroLocal(document.getElementById("perfil-meta").value);
+ingresoMensualUsuario = parseNumeroLocal(document.getElementById("perfil-ingreso").value);
+monedaUsuario = document.getElementById("perfil-moneda").value;
+objetivoNombre = document.getElementById("perfil-objetivo-nombre").value;
 
- // Lógica de resetar objetivo se mudar valor
- const novoValor = parseNumeroLocal(document.getElementById("perfil-objetivo-valor").value);
- if (novoValor !== objetivoValor && novoValor > 0) {
-     objetivoValor = novoValor;
-     // CAMBIO: NO RESETEAR AUTOMÁTICAMENTE
-     // objetivoAhorroBase = calcularAhorroTotal(); // Eliminado
-     // objetivoFechaInicio = ... // Eliminado
- } else {
-     objetivoValor = novoValor;
- }
+// Lógica de resetar objetivo se mudar valor
+const novoValor = parseNumeroLocal(document.getElementById("perfil-objetivo-valor").value);
+if (novoValor !== objetivoValor && novoValor > 0) {
+    objetivoValor = novoValor;
+    // CAMBIO: NO RESETEAR AUTOMÁTICAMENTE
+    // objetivoAhorroBase = calcularAhorroTotal(); // Eliminado
+    // objetivoFechaInicio = ... // Eliminado
+} else {
+    objetivoValor = novoValor;
+}
 
- await guardarPerfilEnServidor();
- inicializarInterfaz();
+await guardarPerfilEnServidor();
+inicializarInterfaz();
 });
 
 document.getElementById("perfil-objetivo-reset").addEventListener("click", async () => {
- if(!confirm("¿Reiniciar progreso?")) return;
- objetivoAhorroBase = calcularAhorroTotal();
- objetivoFechaInicio = new Date().toISOString().slice(0,10);
- objetivoCompletado = false;
- await guardarPerfilEnServidor();
- inicializarInterfaz();
+if(!confirm("¿Reiniciar progreso?")) return;
+objetivoAhorroBase = calcularAhorroTotal();
+objetivoFechaInicio = new Date().toISOString().slice(0,10);
+objetivoCompletado = false;
+await guardarPerfilEnServidor();
+inicializarInterfaz();
 });
 
 // --- LOGICA DEL SIMULADOR DE AHORRO ---
@@ -1684,143 +1683,143 @@ document.getElementById("btn-abrir-simulador").addEventListener("click", () => m
 document.getElementById("btn-cerrar-simulador").addEventListener("click", () => modalSim.classList.add("hidden"));
 
 document.getElementById("btn-calcular-simulacion").addEventListener("click", () => {
- const extra = parseNumeroLocal(document.getElementById("simulador-monto").value);
- const res = document.getElementById("simulador-resultado");
+const extra = parseNumeroLocal(document.getElementById("simulador-monto").value);
+const res = document.getElementById("simulador-resultado");
 
- if(extra <= 0) { res.textContent = "Ingresa un monto válido."; return; }
+if(extra <= 0) { res.textContent = "Ingresa un monto válido."; return; }
 
- // Recalcular estado actual
- let totE=0, totS=0;
- transaccionesLocal.forEach(t => { if(t.tipo==="entrada") totE+=t.valor; else totS+=t.valor; });
- const ahorroTotal = Math.max(0, totE - totS);
- let actual = ahorroTotal - objetivoAhorroBase;
- if(actual<0) actual=0;
- const restante = objetivoValor - actual;
+// Recalcular estado actual
+let totE=0, totS=0;
+transaccionesLocal.forEach(t => { if(t.tipo==="entrada") totE+=t.valor; else totS+=t.valor; });
+const ahorroTotal = Math.max(0, totE - totS);
+let actual = ahorroTotal - objetivoAhorroBase;
+if(actual<0) actual=0;
+const restante = objetivoValor - actual;
 
- if(restante <= 0) { res.textContent = "¡Ya cumpliste tu objetivo!"; return; }
+if(restante <= 0) { res.textContent = "¡Ya cumpliste tu objetivo!"; return; }
 
- // Ritmo actual del mes
- const mes = obtenerAnioMesActual();
- const transMes = transaccionesLocal.filter(t => t.fecha && t.fecha.startsWith(mes));
- let eM=0, sM=0;
- transMes.forEach(t => { if(t.tipo==="entrada") eM+=t.valor; else sM+=t.valor; });
- const flujoMes = Math.max(0, eM - sM);
- const dia = new Date().getDate();
- const ritmoBase = (flujoMes/dia)*30; // Ahorro/mes estimado
+// Ritmo actual del mes
+const mes = obtenerAnioMesActual();
+const transMes = transaccionesLocal.filter(t => t.fecha && t.fecha.startsWith(mes));
+let eM=0, sM=0;
+transMes.forEach(t => { if(t.tipo==="entrada") eM+=t.valor; else sM+=t.valor; });
+const flujoMes = Math.max(0, eM - sM);
+const dia = new Date().getDate();
+const ritmoBase = (flujoMes/dia)*30; // Ahorro/mes estimado
 
- // Escenarios
- const tiempoActual = ritmoBase > 0 ? (restante / ritmoBase) : 9999;
- const nuevoRitmo = ritmoBase + extra;
- const tiempoNuevo = restante / nuevoRitmo;
+// Escenarios
+const tiempoActual = ritmoBase > 0 ? (restante / ritmoBase) : 9999;
+const nuevoRitmo = ritmoBase + extra;
+const tiempoNuevo = restante / nuevoRitmo;
 
- // Días
- const diasAntes = Math.ceil(tiempoActual * 30);
- const diasDespues = Math.ceil(tiempoNuevo * 30);
- const ganancia = diasAntes - diasDespues;
+// Días
+const diasAntes = Math.ceil(tiempoActual * 30);
+const diasDespues = Math.ceil(tiempoNuevo * 30);
+const ganancia = diasAntes - diasDespues;
 
- if(ritmoBase <= 0) {
-     res.textContent = `Actualmente no ahorras. Con este corte, terminarías en ${diasDespues} días.`;
-     res.style.color = "#22c55e";
- } else {
-     res.innerHTML = `Ahorrarías <strong style="color:#fff">${diasDespues} días</strong> en total.<br>¡Terminarías <strong style="color:#22c55e">${ganancia} días antes</strong> que ahora!`;
-     res.style.color = "#94a3b8";
- }
+if(ritmoBase <= 0) {
+    res.textContent = `Actualmente no ahorras. Con este corte, terminarías en ${diasDespues} días.`;
+    res.style.color = "#22c55e";
+} else {
+    res.innerHTML = `Ahorrarías <strong style="color:#fff">${diasDespues} días</strong> en total.<br>¡Terminarías <strong style="color:#22c55e">${ganancia} días antes</strong> que ahora!`;
+    res.style.color = "#94a3b8";
+}
 });
 
 // --- LOGICA DEL GRÁFICO VIAJERO EN EL TIEMPO ---
 function dibujarGraficoViajeroTiempo() {
- const canvas = document.getElementById("chart-time-travel");
- if(!canvas) return;
- const ctx = canvas.getContext("2d");
- const w = canvas.width; const h = canvas.height;
+const canvas = document.getElementById("chart-time-travel");
+if(!canvas) return;
+const ctx = canvas.getContext("2d");
+const w = canvas.width; const h = canvas.height;
 
- ctx.clearRect(0,0,w,h);
+ctx.clearRect(0,0,w,h);
 
- const hoy = new Date();
- const meses = [];
- // Histórico de 3 meses atrás + 6 futuros
- for(let i=-2; i<=6; i++) {
-     const d = new Date(hoy.getFullYear(), hoy.getMonth() + i, 1);
-     meses.push({
-         label: d.toLocaleDateString("es-ES",{month:'short'}),
-         dateStr: d.toISOString().slice(0,7),
-         isFuture: i > 0
-     });
- }
+const hoy = new Date();
+const meses = [];
+// Histórico de 3 meses atrás + 6 futuros
+for(let i=-2; i<=6; i++) {
+    const d = new Date(hoy.getFullYear(), hoy.getMonth() + i, 1);
+    meses.push({
+        label: d.toLocaleDateString("es-ES",{month:'short'}),
+        dateStr: d.toISOString().slice(0,7),
+        isFuture: i > 0
+    });
+}
 
- let saldoAcumulado = 0;
- const primerMesMostrado = meses[0].dateStr;
- transaccionesLocal.forEach(t => {
-     if(t.fecha < primerMesMostrado + "-01") {
-         if(t.tipo==="entrada") saldoAcumulado += t.valor; else saldoAcumulado -= t.valor;
-     }
- });
+let saldoAcumulado = 0;
+const primerMesMostrado = meses[0].dateStr;
+transaccionesLocal.forEach(t => {
+    if(t.fecha < primerMesMostrado + "-01") {
+        if(t.tipo==="entrada") saldoAcumulado += t.valor; else saldoAcumulado -= t.valor;
+    }
+});
 
- const puntos = [];
- let tendenciaAhorro = 0;
- let mesesConDatos = 0;
+const puntos = [];
+let tendenciaAhorro = 0;
+let mesesConDatos = 0;
 
- meses.forEach(m => {
-     if(!m.isFuture) {
-         const trans = transaccionesLocal.filter(t => t.fecha && t.fecha.startsWith(m.dateStr));
-         let e=0, s=0;
-         trans.forEach(t => { if(t.tipo==="entrada") e+=t.valor; else s+=t.valor; });
-         saldoAcumulado += (e-s);
-         puntos.push({ val: saldoAcumulado, future: false, label: m.label });
-         tendenciaAhorro += (e-s);
-         mesesConDatos++;
-     } else {
-         const promedio = mesesConDatos > 0 ? (tendenciaAhorro / mesesConDatos) : 0;
-         saldoAcumulado += promedio;
-         puntos.push({ val: saldoAcumulado, future: true, label: m.label });
-     }
- });
+meses.forEach(m => {
+    if(!m.isFuture) {
+        const trans = transaccionesLocal.filter(t => t.fecha && t.fecha.startsWith(m.dateStr));
+        let e=0, s=0;
+        trans.forEach(t => { if(t.tipo==="entrada") e+=t.valor; else s+=t.valor; });
+        saldoAcumulado += (e-s);
+        puntos.push({ val: saldoAcumulado, future: false, label: m.label });
+        tendenciaAhorro += (e-s);
+        mesesConDatos++;
+    } else {
+        const promedio = mesesConDatos > 0 ? (tendenciaAhorro / mesesConDatos) : 0;
+        saldoAcumulado += promedio;
+        puntos.push({ val: saldoAcumulado, future: true, label: m.label });
+    }
+});
 
- const maxVal = Math.max(...puntos.map(p=>p.val)) * 1.1;
- const minVal = Math.min(0, ...puntos.map(p=>p.val));
- const range = maxVal - minVal || 100;
+const maxVal = Math.max(...puntos.map(p=>p.val)) * 1.1;
+const minVal = Math.min(0, ...puntos.map(p=>p.val));
+const range = maxVal - minVal || 100;
 
- const getX = (i) => 40 + (i * ((w-60) / (puntos.length-1)));
- const getY = (v) => h - 30 - ((v - minVal) / range) * (h - 60);
+const getX = (i) => 40 + (i * ((w-60) / (puntos.length-1)));
+const getY = (v) => h - 30 - ((v - minVal) / range) * (h - 60);
 
- // Ejes
- ctx.strokeStyle = "#334155"; ctx.lineWidth = 1;
- ctx.beginPath(); ctx.moveTo(40, 20); ctx.lineTo(40, h-30); ctx.lineTo(w-20, h-30); ctx.stroke();
+// Ejes
+ctx.strokeStyle = "#334155"; ctx.lineWidth = 1;
+ctx.beginPath(); ctx.moveTo(40, 20); ctx.lineTo(40, h-30); ctx.lineTo(w-20, h-30); ctx.stroke();
 
- // Línea
- ctx.lineWidth = 3;
- for(let i=0; i<puntos.length-1; i++) {
-     const p1 = puntos[i]; const p2 = puntos[i+1];
-     ctx.beginPath();
-     ctx.moveTo(getX(i), getY(p1.val));
-     ctx.lineTo(getX(i+1), getY(p2.val));
-   
-     if(p2.future) {
-         ctx.setLineDash([5, 5]);
-         ctx.strokeStyle = "#38bdf8";
-     } else {
-         ctx.setLineDash([]);
-         ctx.strokeStyle = "#22c55e";
-     }
-     ctx.stroke();
- }
- ctx.setLineDash([]);
+// Línea
+ctx.lineWidth = 3;
+for(let i=0; i<puntos.length-1; i++) {
+    const p1 = puntos[i]; const p2 = puntos[i+1];
+    ctx.beginPath();
+    ctx.moveTo(getX(i), getY(p1.val));
+    ctx.lineTo(getX(i+1), getY(p2.val));
+ 
+    if(p2.future) {
+        ctx.setLineDash([5, 5]);
+        ctx.strokeStyle = "#38bdf8";
+    } else {
+        ctx.setLineDash([]);
+        ctx.strokeStyle = "#22c55e";
+    }
+    ctx.stroke();
+}
+ctx.setLineDash([]);
 
- // Puntos
- puntos.forEach((p, i) => {
-     const x = getX(i); const y = getY(p.val);
-     ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI*2);
-     ctx.fillStyle = p.future ? "#38bdf8" : "#22c55e";
-     ctx.fill();
-   
-     ctx.fillStyle = "#94a3b8"; ctx.font = "10px sans-serif"; ctx.textAlign = "center";
-     ctx.fillText(p.label, x, h-10);
-   
-     if(i === puntos.length-1 || i === 2) {
-        ctx.fillStyle = "#e2e8f0";
-        ctx.fillText(formatearMoneda(p.val), x, y - 10);
-     }
- });
+// Puntos
+puntos.forEach((p, i) => {
+    const x = getX(i); const y = getY(p.val);
+    ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI*2);
+    ctx.fillStyle = p.future ? "#38bdf8" : "#22c55e";
+    ctx.fill();
+ 
+    ctx.fillStyle = "#94a3b8"; ctx.font = "10px sans-serif"; ctx.textAlign = "center";
+    ctx.fillText(p.label, x, h-10);
+ 
+    if(i === puntos.length-1 || i === 2) {
+       ctx.fillStyle = "#e2e8f0";
+       ctx.fillText(formatearMoneda(p.val), x, y - 10);
+    }
+});
 }
 
 // --- FUNÇÕES AUXILIARES DE UI (TABELAS E SELECTS) ---
@@ -1829,46 +1828,46 @@ const sel = document.getElementById("categoria");
 sel.innerHTML = "";
 const tipo = document.getElementById("tipo").value;
 if (tipo === "salida" && fijosLocal.length > 0) {
- const opt = document.createElement("option"); opt.value = "__gasto_fijo__"; opt.textContent = "Gastos fijos"; sel.appendChild(opt);
+const opt = document.createElement("option"); opt.value = "__gasto_fijo__"; opt.textContent = "Gastos fijos"; sel.appendChild(opt);
 }
 categoriasLocal.forEach(c => {
-  if(c.grupo !== tipo) return;
-  const opt = document.createElement("option"); opt.value = c.id; opt.textContent = c.nome; sel.appendChild(opt);
+ if(c.grupo !== tipo) return;
+ const opt = document.createElement("option"); opt.value = c.id; opt.textContent = c.nome; sel.appendChild(opt);
 });
 }
 
 function rellenarTablaCategorias() {
- const tb = document.querySelector("#tabla-categorias tbody"); tb.innerHTML="";
- categoriasLocal.forEach(c => {
-     const tr = document.createElement("tr");
-     tr.innerHTML = `<td>${c.nome}</td><td>${c.grupo === "entrada" ? "Entrada" : "Salida"}</td><td></td>`;
-     const btn = document.createElement("button"); btn.className="btn-icon btn-icon-danger"; btn.textContent="Eliminar"; btn.onclick = () => window.eliminarCategoria(c.id);
-     tr.lastElementChild.appendChild(btn);
-     tb.appendChild(tr);
- });
+const tb = document.querySelector("#tabla-categorias tbody"); tb.innerHTML="";
+categoriasLocal.forEach(c => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${c.nome}</td><td>${c.grupo === "entrada" ? "Entrada" : "Salida"}</td><td></td>`;
+    const btn = document.createElement("button"); btn.className="btn-icon btn-icon-danger"; btn.textContent="Eliminar"; btn.onclick = () => window.eliminarCategoria(c.id);
+    tr.lastElementChild.appendChild(btn);
+    tb.appendChild(tr);
+});
 }
 
 function rellenarSelectGastosFijos() {
- const s = document.getElementById("gasto-fijo-select"); s.innerHTML="";
- fijosLocal.forEach(f => {
-     const o = document.createElement("option"); o.value=f.id; o.textContent=`${f.descripcion} (${formatearMoneda(f.valor)})`; s.appendChild(o);
- });
+const s = document.getElementById("gasto-fijo-select"); s.innerHTML="";
+fijosLocal.forEach(f => {
+    const o = document.createElement("option"); o.value=f.id; o.textContent=`${f.descripcion} (${formatearMoneda(f.valor)})`; s.appendChild(o);
+});
 }
 
 function rellenarTablaFijos() {
- const tb = document.querySelector("#tabla-fijos tbody"); tb.innerHTML="";
- const mes = obtenerAnioMesActual();
- fijosLocal.forEach(f => {
-     const estado = estadoFijoParaMes(f, mes);
-     const tr = document.createElement("tr");
-     if (estado.claseFila) tr.classList.add(estado.claseFila);
-     tr.innerHTML = `<td>${f.descripcion}</td><td>${formatearMoneda(f.valor)}</td><td>Día ${f.vencimiento}</td>
-                     <td><span class="badge-estado ${estado.badgeClase}">${estado.texto}</span></td><td></td>`;
-     const btn = document.createElement("button"); btn.className="btn-icon btn-icon-danger"; btn.textContent="Eliminar"; btn.onclick=()=>window.eliminarFijo(f.id);
-     tr.lastElementChild.appendChild(btn);
-     tb.appendChild(tr);
- });
- rellenarSelectGastosFijos();
+const tb = document.querySelector("#tabla-fijos tbody"); tb.innerHTML="";
+const mes = obtenerAnioMesActual();
+fijosLocal.forEach(f => {
+    const estado = estadoFijoParaMes(f, mes);
+    const tr = document.createElement("tr");
+    if (estado.claseFila) tr.classList.add(estado.claseFila);
+    tr.innerHTML = `<td>${f.descripcion}</td><td>${formatearMoneda(f.valor)}</td><td>Día ${f.vencimiento}</td>
+                    <td><span class="badge-estado ${estado.badgeClase}">${estado.texto}</span></td><td></td>`;
+    const btn = document.createElement("button"); btn.className="btn-icon btn-icon-danger"; btn.textContent="Eliminar"; btn.onclick=()=>window.eliminarFijo(f.id);
+    tr.lastElementChild.appendChild(btn);
+    tb.appendChild(tr);
+});
+rellenarSelectGastosFijos();
 }
 
 function estadoFijoParaMes(fijo, anioMesActual) {
@@ -1878,27 +1877,27 @@ const venc = fijo.vencimiento;
 const mesInicio = fijo.mes_inicio || obtenerAnioMesActual(); // Adaptação: Firebase usa camelCase ou snake_case conforme salvo
 
 if (anioMesActual < mesInicio) {
- return { claseFila: "", badgeClase: "badge-normal", texto: "Aún no aplica este mes", restante: fijo.valor, totalPagado: 0 };
+return { claseFila: "", badgeClase: "badge-normal", texto: "Aún no aplica este mes", restante: fijo.valor, totalPagado: 0 };
 }
 
 const transMes = filtrarMesActual(transaccionesLocal, "fecha");
 let totalPagado = 0;
 transMes.forEach(t => {
- if (t.tipo === "salida" && t.gastoFijoId === fijo.id) {
-   totalPagado += t.valor;
- }
+if (t.tipo === "salida" && t.gastoFijoId === fijo.id) {
+  totalPagado += t.valor;
+}
 });
 const restante = Math.max(0, fijo.valor - totalPagado);
 const pagoCompleto = totalPagado >= (fijo.valor - 0.01);
 
 if (pagoCompleto) {
- return { claseFila: "fijo-verde", badgeClase: "badge-verde", texto: "Pagado completamente este mes", restante: 0, totalPagado };
+return { claseFila: "fijo-verde", badgeClase: "badge-verde", texto: "Pagado completamente este mes", restante: 0, totalPagado };
 }
 const faltanteTexto = restante > 0 ? `Falta ${formatearMoneda(restante)}` : "";
 if (totalPagado > 0 && !pagoCompleto) {
- if (diaHoy >= venc) return { claseFila: "fijo-rojo", badgeClase: "badge-rojo", texto: `Pago parcial. ${faltanteTexto}`, restante, totalPagado };
- else if (diaHoy >= venc - 7) return { claseFila: "fijo-amarillo", badgeClase: "badge-amarillo", texto: `Pago parcial. ${faltanteTexto}`, restante, totalPagado };
- else return { claseFila: "", badgeClase: "badge-normal", texto: `Pago parcial. ${faltanteTexto}`, restante, totalPagado };
+if (diaHoy >= venc) return { claseFila: "fijo-rojo", badgeClase: "badge-rojo", texto: `Pago parcial. ${faltanteTexto}`, restante, totalPagado };
+else if (diaHoy >= venc - 7) return { claseFila: "fijo-amarillo", badgeClase: "badge-amarillo", texto: `Pago parcial. ${faltanteTexto}`, restante, totalPagado };
+else return { claseFila: "", badgeClase: "badge-normal", texto: `Pago parcial. ${faltanteTexto}`, restante, totalPagado };
 }
 if (diaHoy < venc - 7) return { claseFila: "", badgeClase: "badge-normal", texto: "Pendiente", restante, totalPagado };
 else if (diaHoy >= venc - 7 && diaHoy < venc) return { claseFila: "fijo-amarillo", badgeClase: "badge-amarillo", texto: "Cerca del vencimiento", restante, totalPagado };
@@ -1906,57 +1905,57 @@ else return { claseFila: "fijo-rojo", badgeClase: "badge-rojo", texto: "Vencido"
 }
 
 function rellenarSelectTarjetas() {
- const s = document.getElementById("tarjeta-select"); s.innerHTML="";
- tarjetasLocal.forEach(t => {
-     const o = document.createElement("option"); o.value=t.id; o.textContent=`${t.alias||""} ${t.digitos||""}`; s.appendChild(o);
- });
+const s = document.getElementById("tarjeta-select"); s.innerHTML="";
+tarjetasLocal.forEach(t => {
+    const o = document.createElement("option"); o.value=t.id; o.textContent=`${t.alias||""} ${t.digitos||""}`; s.appendChild(o);
+});
 }
 function rellenarTablaTarjetas() {
- const tb = document.querySelector("#tabla-tarjetas tbody"); tb.innerHTML="";
- tarjetasLocal.forEach(t => {
-     const tr = document.createElement("tr");
-     tr.innerHTML = `<td>${t.alias || ""}</td><td>${t.digitos || ""}</td><td>${t.banco || ""}</td><td></td>`;
-     const btn = document.createElement("button"); btn.className="btn-icon btn-icon-danger"; btn.textContent="Eliminar"; btn.onclick=()=>window.eliminarTarjeta(t.id);
-     tr.lastElementChild.appendChild(btn);
-     tb.appendChild(tr);
- });
- rellenarSelectTarjetas();
+const tb = document.querySelector("#tabla-tarjetas tbody"); tb.innerHTML="";
+tarjetasLocal.forEach(t => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${t.alias || ""}</td><td>${t.digitos || ""}</td><td>${t.banco || ""}</td><td></td>`;
+    const btn = document.createElement("button"); btn.className="btn-icon btn-icon-danger"; btn.textContent="Eliminar"; btn.onclick=()=>window.eliminarTarjeta(t.id);
+    tr.lastElementChild.appendChild(btn);
+    tb.appendChild(tr);
+});
+rellenarSelectTarjetas();
 }
 
 function rellenarTablaTransacciones() {
- const tb = document.querySelector("#tabla-transacciones tbody"); tb.innerHTML="";
- const mes = obtenerAnioMesActual();
- // Filtrar localmente (já que pegamos tudo do user)
- let l = transaccionesLocal.filter(t=>t.fecha && t.fecha.startsWith(mes));
- const ft = document.getElementById("filtro-texto").value.toLowerCase();
- const ff = document.getElementById("filtro-fecha").value;
- if(ft) l = l.filter(t=>(t.descripcion||"").toLowerCase().includes(ft));
- if(ff) l = l.filter(t=>t.fecha===ff);
- l.sort((a,b) => a.fecha<b.fecha?1:-1);
+const tb = document.querySelector("#tabla-transacciones tbody"); tb.innerHTML="";
+const mes = obtenerAnioMesActual();
+// Filtrar localmente (já que pegamos tudo do user)
+let l = transaccionesLocal.filter(t=>t.fecha && t.fecha.startsWith(mes));
+const ft = document.getElementById("filtro-texto").value.toLowerCase();
+const ff = document.getElementById("filtro-fecha").value;
+if(ft) l = l.filter(t=>(t.descripcion||"").toLowerCase().includes(ft));
+if(ff) l = l.filter(t=>t.fecha===ff);
+l.sort((a,b) => a.fecha<b.fecha?1:-1);
 
- l.forEach(t => {
-     const tr = document.createElement("tr");
-     let catNombre = "-";
-     if (t.categoriaId === null && t.gastoFijoId) {
-        const f = fijosLocal.find(x => x.id === t.gastoFijoId);
-        catNombre = "Gasto fijo - " + (f ? f.descripcion : "");
-     } else {
-        const c = categoriasLocal.find(x => x.id === t.categoriaId);
-        catNombre = c ? c.nome : "-";
-     }
-     let origenTexto = "-";
-     if (t.tipo === "salida") {
-         if(t.origen === "tarjeta" && t.tarjetaId) {
-            const tar = tarjetasLocal.find(x => x.id === t.tarjetaId);
-            origenTexto = "Tarjeta - " + (tar ? `${tar.alias} (${tar.digitos})` : "");
-         } else origenTexto = "Efectivo"; // CAMBIADO A EFECTIVO
-     }
+l.forEach(t => {
+    const tr = document.createElement("tr");
+    let catNombre = "-";
+    if (t.categoriaId === null && t.gastoFijoId) {
+       const f = fijosLocal.find(x => x.id === t.gastoFijoId);
+       catNombre = "Gasto fijo - " + (f ? f.descripcion : "");
+    } else {
+       const c = categoriasLocal.find(x => x.id === t.categoriaId);
+       catNombre = c ? c.nome : "-";
+    }
+    let origenTexto = "-";
+    if (t.tipo === "salida") {
+        if(t.origen === "tarjeta" && t.tarjetaId) {
+           const tar = tarjetasLocal.find(x => x.id === t.tarjetaId);
+           origenTexto = "Tarjeta - " + (tar ? `${tar.alias} (${tar.digitos})` : "");
+        } else origenTexto = "Efectivo"; // CAMBIADO A EFECTIVO
+    }
 
-     tr.innerHTML = `<td>${t.fecha}</td><td><span class="tag ${t.tipo}">${t.tipo}</span></td><td>${catNombre}</td><td>${origenTexto}</td><td>${t.descripcion||""}</td><td>${formatearMoneda(t.valor)}</td><td></td>`;
-     const btn = document.createElement("button"); btn.className="btn-icon btn-icon-danger"; btn.textContent="Eliminar"; btn.onclick=()=>window.eliminarTransaccion(t.id);
-     tr.lastElementChild.appendChild(btn);
-     tb.appendChild(tr);
- });
+    tr.innerHTML = `<td>${t.fecha}</td><td><span class="tag ${t.tipo}">${t.tipo}</span></td><td>${catNombre}</td><td>${origenTexto}</td><td>${t.descripcion||""}</td><td>${formatearMoneda(t.valor)}</td><td></td>`;
+    const btn = document.createElement("button"); btn.className="btn-icon btn-icon-danger"; btn.textContent="Eliminar"; btn.onclick=()=>window.eliminarTransaccion(t.id);
+    tr.lastElementChild.appendChild(btn);
+    tb.appendChild(tr);
+});
 }
 
 function actualizarResumen() {
