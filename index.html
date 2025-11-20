@@ -1386,36 +1386,70 @@ let objetivosHistorial = [];
 let unsubs = [];
 
 // ----------------------------------------------------------------------
-// AUTENTICACIÓN (onAuthStateChanged)
 // ----------------------------------------------------------------------
-onAuthStateChanged(auth, (user) => {
-if (user) {
-   // LOGIN EXITOSO
-   usuarioActual = user;
-   document.getElementById("user-email").textContent = user.email;
-   document.getElementById("login-screen").classList.add("hidden");
-   document.getElementById("app").classList.remove("hidden");
+// AUTENTICACIÓN COM WHITELIST (SISTEMA DE SEGURANÇA)
+// ----------------------------------------------------------------------
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+     // O usuário logou no Firebase (email/senha corretos).
+     // AGORA: Vamos verificar se ele pagou (se está na Whitelist).
+     
+     // Mostra loading enquanto verifica
+     loading(true);
+     const loadingText = document.getElementById('loading-overlay');
+     if(loadingText) loadingText.textContent = "Verificando permissão...";
+     
+     try {
+         // Referência ao documento do email dele na coleção 'clientes_permitidos'
+         const docRef = doc(db, "clientes_permitidos", user.email); 
+         const docSnap = await getDoc(docRef);
 
-   // Carregar Dados (Listeners em tempo real)
-   iniciarListeners(user.uid);
-} else {
-   // LOGOUT
-   usuarioActual = null;
+         if (docSnap.exists()) {
+             // --- SUCESSO: ESTÁ NA LISTA ---
+             if(loadingText) loadingText.textContent = "Cargando datos...";
+             
+             usuarioActual = user;
+             document.getElementById("user-email").textContent = user.email;
+             document.getElementById("login-screen").classList.add("hidden");
+             document.getElementById("app").classList.remove("hidden");
 
-   // Limpar dados locais
-   categoriasLocal = []; transaccionesLocal = []; fijosLocal = []; tarjetasLocal = [];
+             // Inicia o app normalmente
+             iniciarListeners(user.uid);
+         } else {
+             // --- ERRO: NÃO ESTÁ NA LISTA ---
+             console.warn("Acesso negado: Email não está na whitelist.");
+             alert("🚫 ACESSO RESTRITO\n\nEste email não possui uma licença ativa.\nEntre em contato com o suporte para adquirir seu acesso.");
+             
+             // Desloga o usuário imediatamente
+             await signOut(auth);
+             loading(false);
+         }
+     } catch (error) {
+         console.error("Erro ao verificar whitelist:", error);
+         alert("Erro de conexão ao verificar sua licença. Tente novamente.");
+         await signOut(auth); // Por segurança, desloga se der erro
+         loading(false);
+     }
 
-   // Cancelar listeners
-   unsubs.forEach(u => u());
-   unsubs = [];
+  } else {
+     // --- LOGOUT / NINGUÉM LOGADO ---
+     usuarioActual = null;
 
-   document.getElementById("app").classList.add("hidden");
-   document.getElementById("login-screen").classList.remove("hidden");
-   
-   // Se não há usuário, ocultar loading
-   loading(false);
-}
+     // Limpar dados da memória
+     categoriasLocal = []; transaccionesLocal = []; fijosLocal = []; tarjetasLocal = [];
+
+     // Cancelar listeners ativos
+     unsubs.forEach(u => u());
+     unsubs = [];
+
+     // Alternar telas
+     document.getElementById("app").classList.add("hidden");
+     document.getElementById("login-screen").classList.remove("hidden");
+     
+     loading(false);
+  }
 });
+
 
 // ----------------------------------------------------------------------
 // CARGA DE DATOS (FIRESTORE REALTIME)
