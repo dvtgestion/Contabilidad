@@ -1289,7 +1289,8 @@ const db = getFirestore(app);
 // ===============================================================
 // SISTEMA DE IDIOMAS (i18n) - DICIONÁRIO COMPLETO
 // ===============================================================
-let currentLang = localStorage.getItem('app_lang') || 'es';
+let savedLang = localStorage.getItem('app_lang');
+let currentLang = (savedLang === 'es' || savedLang === 'pt') ? savedLang : 'es';
 
 const translations = {
     es: {
@@ -1480,16 +1481,22 @@ const translations = {
     }
 };
 
-// Função Principal de Troca de Idioma (VERSÃO CORRIGIDA E SEGURA)
+// Função Principal de Troca de Idioma (VERSÃO BLINDADA)
 function updateLanguage(lang) {
+    // Segurança extra: se chegar algo inválido, força espanhol
+    if (lang !== 'es' && lang !== 'pt') lang = 'es';
+    
     currentLang = lang;
-    localStorage.setItem('app_lang', lang);
+    try {
+        localStorage.setItem('app_lang', lang);
+    } catch (e) { console.warn("Sem acesso ao localStorage"); }
 
-    // 1. Atualiza textos estáticos (HTML)
+    // Atualiza textos estáticos (HTML)
     const elements = document.querySelectorAll('[data-i18n]');
     if (elements) {
         elements.forEach(el => {
             const key = el.getAttribute('data-i18n');
+            // Verifica se a tradução existe antes de tentar usar
             if (translations[lang] && translations[lang][key]) {
                 if(el.tagName === "INPUT" && el.hasAttribute("placeholder")) {
                     el.placeholder = translations[lang][key];
@@ -1500,21 +1507,22 @@ function updateLanguage(lang) {
         });
     }
 
-    // 2. Sincroniza os seletores (com verificação de segurança)
+    // Sincroniza os seletores
     const selLogin = document.getElementById("lang-select-login");
     const selApp = document.getElementById("lang-select-app");
     if(selLogin) selLogin.value = lang;
     if(selApp) selApp.value = lang;
     
-    // 3. ATUALIZAÇÃO SEGURA DOS GRÁFICOS
-    // Só tenta atualizar se as funções já estiverem carregadas na memória
+    // ATUALIZAÇÃO SEGURA DOS GRÁFICOS
+    // Só tenta atualizar se as funções já estiverem carregadas
     if (typeof actualizarResumen === "function") {
-        actualizarResumen();
+        try { actualizarResumen(); } catch(e) { console.error("Erro ao atualizar resumo", e); }
     }
     if (typeof actualizarObjetivo === "function") {
-        actualizarObjetivo();
+        try { actualizarObjetivo(); } catch(e) { console.error("Erro ao atualizar objetivo", e); }
     }
 }
+
 
 
 // --- UTILITÁRIOS VISUAIS ---
