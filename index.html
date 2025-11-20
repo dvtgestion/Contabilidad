@@ -10,14 +10,17 @@
 :root {
  /* Fundo Profundo */
  --bg-deep: #020617;
-
+ 
  /* Cores Prism (Neon Suave) */
  --primary-glow: #8b5cf6;  /* Violeta */
  --secondary-glow: #ec4899; /* Rosa */
  --accent-cyan: #06b6d4;   /* Ciano */
+ 
+ /* Textos */
  --text-primary: #f8fafc;
  --text-secondary: #94a3b8;
-
+ --text-muted: #64748b;
+ 
  /* Vidro */
  --glass-bg: rgba(255, 255, 255, 0.03);
  --glass-border: rgba(255, 255, 255, 0.08);
@@ -46,7 +49,7 @@ body::before {
  width: 600px;
  height: 600px;
  background: radial-gradient(circle, var(--secondary-glow), transparent 70%);
- opacity: 0.2;
+ opacity: 0.15;
  filter: blur(100px);
  z-index: -1;
  animation: floatAurora1 15s infinite alternate ease-in-out;
@@ -60,7 +63,7 @@ body::after {
  width: 500px;
  height: 500px;
  background: radial-gradient(circle, var(--primary-glow), transparent 70%);
- opacity: 0.2;
+ opacity: 0.15;
  filter: blur(100px);
  z-index: -1;
  animation: floatAurora2 18s infinite alternate ease-in-out;
@@ -211,8 +214,8 @@ main {
  background: var(--glass-bg);
  backdrop-filter: blur(24px);
  -webkit-backdrop-filter: blur(24px);
- border-radius: 24px; /* Bordas bem arredondadas */
- padding: 2rem; /* Mais respiro interno */
+ border-radius: 24px;
+ padding: 2rem;
  margin-bottom: 2rem;
  border: 1px solid var(--glass-border);
  box-shadow: var(--glass-shadow);
@@ -227,8 +230,8 @@ main {
 .card:hover {
  transform: translateY(-6px);
  border-color: rgba(255, 255, 255, 0.2);
- box-shadow: 0 20px 40px -10px rgba(0,0,0,0.5);
- background: rgba(255, 255, 255, 0.05);
+ box-shadow: 0 20px 40px -10px rgba(139, 92, 246, 0.2);
+ background: rgba(255, 255, 255, 0.06);
 }
 
 .card h3 {
@@ -406,6 +409,29 @@ button.secondary {
 button.secondary:hover {
   background: rgba(255, 255, 255, 0.15);
   border-color: #fff;
+}
+
+/* BOTÃO DE REINICIAR (Danger Button Melhorado) */
+button.danger-action {
+ background: rgba(239, 68, 68, 0.1);
+ border: 1px solid rgba(239, 68, 68, 0.3);
+ color: #fca5a5;
+ border-radius: 14px;
+ padding: 0.8rem 1.5rem;
+ cursor: pointer;
+ font-size: 0.9rem;
+ font-weight: 600;
+ width: 100%;
+ transition: all 0.3s ease;
+ margin-top: 0.5rem;
+}
+
+button.danger-action:hover {
+ background: rgba(239, 68, 68, 0.2);
+ border-color: #ef4444;
+ color: #fff;
+ box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+ transform: translateY(-1px);
 }
 
 .btn-icon {
@@ -1142,8 +1168,9 @@ tr:last-child td {
         <div>
           <button type="submit" class="primary">Guardar perfil</button>
         </div>
+        <!-- BOTÃO REINICIAR NOVO ESTILO -->
         <div>
-          <button type="button" class="btn-icon-danger" id="perfil-objetivo-reset" style="width:100%;">
+          <button type="button" class="danger-action" id="perfil-objetivo-reset">
             Reiniciar progreso del objetivo
           </button>
         </div>
@@ -1456,7 +1483,8 @@ const unsubPerfil = onSnapshot(docRef, (docSnap) => {
        ingresoMensualUsuario = p.ingreso_mensual || 0;
        objetivoNombre = p.objetivo_nombre;
        objetivoValor = p.objetivo_valor || 0;
-       objetivoAhorroBase = p.objetivo_ahorro_base || 0;
+       // Forçar conversão para número para evitar erros de soma
+       objetivoAhorroBase = Number(p.objetivo_ahorro_base) || 0;
        objetivoFechaInicio = p.objetivo_fecha_inicio;
        objetivoCompletado = p.objetivo_completado;
        yaMostroModalCategorias = p.mostro_modal_categorias;
@@ -1553,7 +1581,7 @@ try {
        ingreso_mensual: ingresoMensualUsuario,
        objetivo_nombre: objetivoNombre,
        objetivo_valor: objetivoValor,
-       objetivo_ahorro_base: objetivoAhorroBase,
+       objetivo_ahorro_base: Number(objetivoAhorroBase), // Garantir numérico
        objetivo_fecha_inicio: objetivoFechaInicio,
        objetivo_completado: objetivoCompletado,
        mostro_modal_categorias: yaMostroModalCategorias,
@@ -1678,13 +1706,12 @@ try {
    });
    document.getElementById("valor").value="";
    document.getElementById("descripcion").value="";
-   // Chama atualização imediatamente após adicionar
+   // Chama atualização imediatamente após adicionar (mesmo que o listener chame depois, garante sensação de resposta)
    actualizarObjetivo();
 } catch(e){ console.error(e); alert("Error"); }
 loading(false);
 });
 window.eliminarTransaccion = async (id) => {
-   // Envolvendo a deleção para atualizar o objetivo depois
    await deleteDoc(doc(db, "transacciones", id));
    actualizarObjetivo();
 };
@@ -1770,6 +1797,7 @@ objetivoNombre = document.getElementById("perfil-objetivo-nombre").value;
 const novoValor = parseNumeroLocal(document.getElementById("perfil-objetivo-valor").value);
 if (novoValor !== objetivoValor && novoValor > 0) {
    objetivoValor = novoValor;
+   // Se mudar o valor, não reseta a base automaticamente, mantém o progresso atual
 } else {
    objetivoValor = novoValor;
 }
@@ -1778,11 +1806,15 @@ await guardarPerfilEnServidor();
 inicializarInterfaz();
 });
 
+// REINICIAR OBJETIVO (CORRIGIDO: AGORA DEFINE A BASE CORRETAMENTE)
 document.getElementById("perfil-objetivo-reset").addEventListener("click", async () => {
-if(!confirm("¿Reiniciar progreso?")) return;
+if(!confirm("¿Reiniciar progreso? Esto pondrá tu ahorro actual en 0%.")) return;
+
+// A "Base" se torna o saldo atual total. Assim, qualquer novo valor será somado a partir daqui.
 objetivoAhorroBase = calcularAhorroTotal();
 objetivoFechaInicio = new Date().toISOString().slice(0,10);
 objetivoCompletado = false;
+
 await guardarPerfilEnServidor();
 inicializarInterfaz();
 });
@@ -2224,6 +2256,7 @@ function getColorParaCategoria(nombre) {
  return "#" + "00000".substring(0, 6 - c.length) + c;
 }
 
+// ATUALIZAÇÃO CRÍTICA: LOGICA DE OBJETIVO DE AHORRO
 function actualizarObjetivo() {
 const elProyeccion = document.getElementById("obj-proyeccion");
 elProyeccion.textContent = "";
@@ -2240,9 +2273,14 @@ if(!objetivoNombre || !objetivoValor || objetivoValor <= 0) {
 }
 
 const ahorroTotal = calcularAhorroTotal();
-let ahorroObjetivo = ahorroTotal - objetivoAhorroBase;
-// FIX: Permitir ver si está negativo em relação ao inicio, ou zerar?
-// Geralmente saldo de objetivo não fica negativo, então zeramos se for menor que base.
+
+// AQUI ESTAVA O ERRO: Garante que objetivoAhorroBase seja número
+const base = Number(objetivoAhorroBase) || 0;
+let ahorroObjetivo = ahorroTotal - base;
+
+// Se o saldo total for menor que a base (ex: gastou mais do que tinha quando começou), mostra 0 ou negativo?
+// Para visualização de progresso, travamos em 0 se for negativo, mas logicamente pode estar devendo.
+// Vamos travar visualmente em 0.
 if (ahorroObjetivo < 0) ahorroObjetivo = 0;
 
 if (!objetivoCompletado && ahorroObjetivo >= objetivoValor) {
@@ -2298,9 +2336,8 @@ rellenarHistorialObjetivos();
 function calcularAhorroTotal() {
 let e=0, s=0;
 transaccionesLocal.forEach(t => { if(t.tipo==="entrada") e+=t.valor; else s+=t.valor; });
-// FIX: Retornar o saldo total (pode ser negativo se gastou mais que ganhou no total,
-// mas para calculo de objetivo baseamos no acumulado)
-return e-s;
+// Retorna saldo líquido total
+return e - s;
 }
 
 function rellenarHistorialObjetivos() {
