@@ -1428,8 +1428,8 @@ onAuthStateChanged(auth, async (user) => {
          } else {
              // --- BLOQUEADO: NÃO ESTÁ NA LISTA ---
              console.warn("Acesso negado para:", user.email);
-             alert("🚫 ACESSO NEGADO\n\nEste email não possui permissão de acesso.\nSua conta foi criada, mas você precisa ser autorizado pelo administrador.");
-             
+   						 alert("🚫 ACCESO RESTRINGIDO\n\nEste correo no tiene permisos activos.\nTu cuenta ha sido creada, pero necesitas que el administrador habilite tu acceso.");
+
              // Desloga e FORÇA RECARREGAMENTO para limpar qualquer dado visual
              await signOut(auth);
              window.location.reload();
