@@ -1480,34 +1480,42 @@ const translations = {
     }
 };
 
-// Função Principal de Troca de Idioma
+// Função Principal de Troca de Idioma (VERSÃO CORRIGIDA E SEGURA)
 function updateLanguage(lang) {
     currentLang = lang;
-    localStorage.setItem('app_lang', lang); // Salva preferência
+    localStorage.setItem('app_lang', lang);
 
     // 1. Atualiza textos estáticos (HTML)
-    document.querySelectorAll('[data-i18n]').forEach(el => {
-        const key = el.getAttribute('data-i18n');
-        if (translations[lang][key]) {
-            // Se for input placeholder, troca o atributo, senão troca o texto
-            if(el.tagName === "INPUT" && el.hasAttribute("placeholder")) {
-                el.placeholder = translations[lang][key];
-            } else {
-                el.textContent = translations[lang][key];
+    const elements = document.querySelectorAll('[data-i18n]');
+    if (elements) {
+        elements.forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (translations[lang] && translations[lang][key]) {
+                if(el.tagName === "INPUT" && el.hasAttribute("placeholder")) {
+                    el.placeholder = translations[lang][key];
+                } else {
+                    el.textContent = translations[lang][key];
+                }
             }
-        }
-    });
+        });
+    }
 
-    // 2. Sincroniza os dois seletores (Login e App)
+    // 2. Sincroniza os seletores (com verificação de segurança)
     const selLogin = document.getElementById("lang-select-login");
     const selApp = document.getElementById("lang-select-app");
     if(selLogin) selLogin.value = lang;
     if(selApp) selApp.value = lang;
     
-    // 3. Atualiza gráficos se já estiverem desenhados
-    actualizarResumen();
-    actualizarObjetivo();
+    // 3. ATUALIZAÇÃO SEGURA DOS GRÁFICOS
+    // Só tenta atualizar se as funções já estiverem carregadas na memória
+    if (typeof actualizarResumen === "function") {
+        actualizarResumen();
+    }
+    if (typeof actualizarObjetivo === "function") {
+        actualizarObjetivo();
+    }
 }
+
 
 // --- UTILITÁRIOS VISUAIS ---
 function loading(show) {
