@@ -411,32 +411,38 @@ button.secondary:hover {
   border-color: #fff;
 }
 
-/* BOTÃO DE REINICIAR ESTILIZADO (GLASS NEON DANGER) */
+/* --- AJUSTE CIRÚRGICO: BOTÃO ESTILO PRISM DANGER (TRANSPARENTE COM GLOW) --- */
 button.danger-action {
- background: rgba(239, 68, 68, 0.15);
- backdrop-filter: blur(10px);
- -webkit-backdrop-filter: blur(10px);
- border: 1px solid rgba(239, 68, 68, 0.3);
- color: #fca5a5;
+ background: transparent; /* Fundo transparente para efeito glass */
+ border: 1px solid rgba(239, 68, 68, 0.3); /* Borda vermelha sutil */
+ color: #fca5a5; /* Texto vermelho claro */
  border-radius: 14px;
  padding: 0.8rem 1.5rem;
  cursor: pointer;
  font-size: 0.9rem;
- font-weight: 600;
+ font-weight: 500;
  width: 100%;
- transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
- margin-top: 0.5rem;
+ transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+ margin-top: 1rem; /* Mais espaço para separar do form */
  letter-spacing: 0.5px;
- box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+ position: relative;
+ overflow: hidden;
 }
 
+/* Efeito Hover: Acende o Neon */
 button.danger-action:hover {
- background: rgba(239, 68, 68, 0.25);
- border-color: #ef4444;
- color: #fff;
- box-shadow: 0 0 20px rgba(239, 68, 68, 0.4), 0 0 40px rgba(239, 68, 68, 0.2);
- transform: translateY(-2px);
- text-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+ background: rgba(239, 68, 68, 0.1); /* Fundo levemente vermelho ao passar */
+ border-color: #ef4444; /* Borda fica vermelho vivo */
+ color: #fff; /* Texto fica branco */
+ box-shadow: 0 0 25px rgba(239, 68, 68, 0.4), inset 0 0 10px rgba(239, 68, 68, 0.1); /* Glow externo e interno */
+ transform: translateY(-2px) scale(1.01); /* Flutua levemente */
+ text-shadow: 0 0 8px rgba(239, 68, 68, 0.8);
+}
+
+/* Estado Ativo (Clique) */
+button.danger-action:active {
+ transform: scale(0.98);
+ box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
 }
 
 .btn-icon {
