@@ -2,98 +2,167 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8" />
-<title>Control Financiero (Firebase)</title>
+<title>Control Financiero (Prism Glass)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 
 <style>
-/* --- SEU CSS ORIGINAL (INTACTO) + NUEVOS ESTILOS --- */
+/* --- TEMA PRISM GLASS (FUTURISTA ELEGANTE) --- */
+:root {
+  /* Paleta Base Dark */
+  --bg-deep: #020617;
+  --bg-surface: #0f172a;
+ 
+  /* Efeitos de Vidro */
+  --glass-bg: rgba(255, 255, 255, 0.03);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-highlight: rgba(255, 255, 255, 0.1);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+ 
+  /* Cores Prism (Aurora) */
+  --primary-glow: #8b5cf6; /* Violeta */
+  --secondary-glow: #ec4899; /* Rosa */
+  --accent-cyan: #06b6d4; /* Ciano */
+ 
+  /* Textos */
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+}
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: radial-gradient(circle at top left, #0f172a, #020617 45%, #111827 100%);
-  color: #e5e7eb;
-  padding-bottom: 2rem; /* Espacio extra al final */
+  background-color: var(--bg-deep);
+  color: var(--text-primary);
+  padding-bottom: 2rem;
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
 }
+
+/* --- BACKGROUND AURORA ANIMADO --- */
+body::before {
+  content: '';
+  position: fixed;
+  top: -20%;
+  left: -10%;
+  width: 50%;
+  height: 50%;
+  background: radial-gradient(circle, var(--secondary-glow), transparent 70%);
+  opacity: 0.15;
+  filter: blur(120px);
+  z-index: -1;
+  animation: floatAurora1 20s infinite alternate;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  bottom: -10%;
+  right: -10%;
+  width: 60%;
+  height: 60%;
+  background: radial-gradient(circle, var(--primary-glow), transparent 70%);
+  opacity: 0.15;
+  filter: blur(100px);
+  z-index: -1;
+  animation: floatAurora2 25s infinite alternate;
+}
+
+@keyframes floatAurora1 { 0% { transform: translate(0,0); } 100% { transform: translate(50px, 50px); } }
+@keyframes floatAurora2 { 0% { transform: translate(0,0); } 100% { transform: translate(-50px, -30px); } }
 
 /* INDICADOR DE CARREGAMENTO */
 #loading-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(2, 6, 23, 0.85);
+  background: rgba(2, 6, 23, 0.9);
   z-index: 100;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: bold;
-  color: #22c55e;
+  font-weight: 600;
+  color: var(--primary-glow);
   font-size: 1.2rem;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(10px);
+  letter-spacing: 1px;
 }
 
+/* HEADER GLASS */
 header {
-  background: linear-gradient(90deg, #0ea5e9, #6366f1);
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--glass-border);
   color: #f9fafb;
-  padding: 0.75rem 1rem;
+  padding: 0.9rem 1.5rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.6);
   position: sticky;
   top: 0;
   z-index: 30;
 }
 
 header h1 {
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-size: 1.2rem;
+  font-weight: 700;
+  background: linear-gradient(to right, #fff, #cbd5e1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 header .user-info {
   font-size: 0.85rem;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 1rem;
+  color: var(--text-secondary);
 }
 
 header button {
   margin-left: 0.25rem;
-  padding: 0.25rem 0.7rem;
-  border-radius: 999px;
-  border: none;
+  padding: 0.4rem 1rem;
+  border-radius: 99px;
+  border: 1px solid var(--glass-border);
   cursor: pointer;
   font-size: 0.8rem;
-  background: rgba(15, 23, 42, 0.15);
+  background: rgba(255, 255, 255, 0.05);
   color: #e5e7eb;
-  backdrop-filter: blur(6px);
+  transition: all 0.3s;
 }
 
 header button:hover {
-  background: rgba(15, 23, 42, 0.35);
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .container {
   display: flex;
-  min-height: calc(100vh - 50px);
+  min-height: calc(100vh - 60px);
 }
 
+/* NAV SIDEBAR GLASS */
 nav {
-  width: 230px;
-  background: rgba(15,23,42,0.98);
-  color: #e5e7eb;
-  padding: 1rem 0.75rem;
-  box-shadow: 4px 0 16px rgba(0,0,0,0.7);
+  width: 240px;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(16px);
+  border-right: 1px solid var(--glass-border);
+  color: var(--text-secondary);
+  padding: 1.5rem 1rem;
   position: sticky;
-  top: 50px;
-  height: calc(100vh - 50px);
+  top: 60px;
+  height: calc(100vh - 60px);
 }
 
 nav h2 {
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   text-transform: uppercase;
-  margin-bottom: 0.5rem;
-  color: #9ca3af;
-  letter-spacing: 0.08em;
+  margin-bottom: 1rem;
+  color: var(--text-muted);
+  letter-spacing: 0.1em;
+  padding-left: 0.5rem;
 }
 
 nav button {
@@ -102,14 +171,15 @@ nav button {
   background: transparent;
   border: none;
   color: inherit;
-  padding: 0.5rem 0.4rem;
-  border-radius: 8px;
+  padding: 0.75rem 0.8rem;
+  border-radius: 12px;
   cursor: pointer;
   font-size: 0.9rem;
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  transition: background 0.15s, transform 0.1s;
+  gap: 0.8rem;
+  transition: all 0.2s ease;
+  margin-bottom: 0.25rem;
 }
 
 nav button::before {
@@ -117,25 +187,29 @@ nav button::before {
   width: 6px;
   height: 6px;
   border-radius: 999px;
-  background: #4b5563;
+  background: var(--text-muted);
+  transition: all 0.3s;
 }
 
 nav button:hover {
-  background: #111827;
-  transform: translateX(2px);
+  background: rgba(255, 255, 255, 0.03);
+  color: #fff;
 }
 
 nav button.active {
-  background: linear-gradient(90deg, #1d4ed8, #22c55e);
-  color: #f9fafb;
+  background: var(--glass-highlight);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.1);
 }
 nav button.active::before {
-  background: #f9fafb;
+  background: var(--accent-cyan);
+  box-shadow: 0 0 8px var(--accent-cyan);
 }
 
 main {
   flex: 1;
-  padding: 1rem;
+  padding: 2rem;
   overflow-y: auto;
 }
 
@@ -144,94 +218,118 @@ main {
   margin: 0 auto;
 }
 
+/* CARDS PRISM GLASS */
 .card {
-  background: radial-gradient(circle at top left, rgba(15,23,42,0.9), rgba(15,23,42,0.98));
-  border-radius: 14px;
-  padding: 0.9rem 1rem;
-  margin-bottom: 1rem;
-  box-shadow: 0 14px 35px rgba(15,23,42,0.8);
-  border: 1px solid rgba(148,163,184,0.45);
-  backdrop-filter: blur(12px);
-  transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 20px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--glass-shadow);
+  border: 1px solid var(--glass-border);
+  transition: transform 0.3s ease, border-color 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Efeito de brilho sutil no card */
+.card::before {
+   content: '';
+   position: absolute;
+   top: 0; left: 0; width: 100%; height: 100%;
+   background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, transparent 100%);
+   pointer-events: none;
 }
 
 .card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 18px 40px rgba(0,0,0,0.9);
+  transform: translateY(-3px);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 .card h3 {
-  font-size: 1rem;
+  font-size: 1.1rem;
   margin-bottom: 0.5rem;
   font-weight: 600;
-  color: #e5e7eb;
+  color: var(--text-primary);
+  letter-spacing: 0.02em;
 }
 
 .card-subtitle {
-  font-size: 0.8rem;
-  color: #9ca3af;
-  margin-bottom: 0.4rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+  font-weight: 300;
 }
 
 .grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
 .stat {
-  background: radial-gradient(circle at top, #0b1120, #020617);
-  border-radius: 10px;
-  padding: 0.55rem 0.75rem;
-  border: 1px solid #1f2937;
-  box-shadow: inset 0 0 0 1px rgba(148,163,184,0.25);
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 16px;
+  padding: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  transition: background 0.2s;
+}
+.stat:hover {
+   background: rgba(0, 0, 0, 0.3);
 }
 
 .stat-label {
   font-size: 0.75rem;
-  color: #9ca3af;
-  margin-bottom: 0.1rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.3rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .stat-value {
-  font-size: 1rem;
+  font-size: 1.25rem;
   font-weight: 700;
-  color: #f9fafb;
+  color: #fff;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
 }
 
 .stat-small {
   font-size: 0.75rem;
-  color: #9ca3af;
+  color: var(--text-muted);
+  margin-top: 0.2rem;
 }
 
-/* NUEVO: ESTILOS PARA PREDICCIONES Y SEMÁFORO */
 .stat-prediction {
-   font-size: 0.8rem; color: #38bdf8; margin-top: 0.3rem;
-   font-style: italic; border-top: 1px solid #1e293b; padding-top: 0.3rem;
+   font-size: 0.8rem;
+   color: var(--accent-cyan);
+   margin-top: 0.5rem;
+   font-style: italic;
+   border-top: 1px solid var(--glass-border);
+   padding-top: 0.5rem;
 }
 
-.semaforo-verde { color: #22c55e; text-shadow: 0 0 10px rgba(34, 197, 94, 0.5); }
-.semaforo-amarillo { color: #facc15; text-shadow: 0 0 10px rgba(250, 204, 21, 0.5); }
-.semaforo-rojo { color: #ef4444; text-shadow: 0 0 15px rgba(239, 68, 68, 0.8); animation: pulse 1.5s infinite; }
+.semaforo-verde { color: #4ade80; text-shadow: 0 0 12px rgba(74, 222, 128, 0.4); }
+.semaforo-amarillo { color: #facc15; text-shadow: 0 0 12px rgba(250, 204, 21, 0.4); }
+.semaforo-rojo { color: #f87171; text-shadow: 0 0 15px rgba(248, 113, 113, 0.5); animation: pulse 2s infinite; }
 
 @keyframes pulse {
    0% { opacity: 1; }
-   50% { opacity: 0.7; transform: scale(1.02); }
+   50% { opacity: 0.6; transform: scale(1.01); }
    100% { opacity: 1; }
 }
 
-/* ESTILOS DINÁMICOS DE DISTRIBUCIÓN */
 .dist-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
     font-size: 0.85rem;
 }
 .dist-bar-bg {
     flex: 1;
     height: 6px;
-    background: #1f2937;
+    background: rgba(255, 255, 255, 0.05);
     border-radius: 999px;
     margin: 0 1rem;
     overflow: hidden;
@@ -239,13 +337,14 @@ main {
 .dist-bar-fill {
     height: 100%;
     border-radius: 999px;
+    box-shadow: 0 0 8px currentColor;
 }
 
 form {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.5rem;
-  margin-top: 0.5rem;
+  gap: 1rem;
+  margin-top: 1rem;
   align-items: end;
 }
 
@@ -255,228 +354,241 @@ form .full {
 
 label {
   font-size: 0.8rem;
-  color: #cbd5f5;
-  margin-bottom: 0.15rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.3rem;
   display: block;
+  font-weight: 500;
 }
 
 input, select {
   width: 100%;
-  padding: 0.4rem 0.5rem;
-  border-radius: 8px;
-  border: 1px solid #4b5563;
-  font-size: 0.85rem;
-  background: #020617;
-  color: #e5e7eb;
+  padding: 0.6rem 1rem;
+  border-radius: 12px;
+  border: 1px solid var(--glass-border);
+  font-size: 0.9rem;
+  background: rgba(0, 0, 0, 0.3);
+  color: #fff;
+  transition: all 0.2s;
 }
 
 input::placeholder {
-  color: #6b7280;
+  color: #475569;
 }
 
 input:focus,
 select:focus {
-  outline: 2px solid #22c55e;
-  outline-offset: 1px;
-  border-color: #22c55e;
+  outline: none;
+  border-color: var(--primary-glow);
+  background: rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
 }
 
+/* BOTÕES MODERNOS */
 button.primary {
-  background: linear-gradient(135deg, #22c55e, #16a34a);
-  color: #f9fafb;
-  border-radius: 999px;
-  padding: 0.4rem 0.9rem;
+  background: linear-gradient(135deg, var(--secondary-glow), var(--primary-glow));
+  color: #fff;
+  border-radius: 12px;
+  padding: 0.6rem 1.2rem;
   border: none;
   cursor: pointer;
-  font-size: 0.85rem;
-  font-weight: 500;
-  box-shadow: 0 4px 12px rgba(22,163,74,0.7);
-  white-space: nowrap;
+  font-size: 0.9rem;
+  font-weight: 600;
+  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+  transition: transform 0.2s, box-shadow 0.2s;
+  letter-spacing: 0.5px;
 }
 
 button.primary:hover {
-  background: linear-gradient(135deg, #16a34a, #15803d);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.6);
+  filter: brightness(1.1);
 }
 
-/* BOTÓN SECUNDARIO (NUEVO) */
 button.secondary {
-   background: linear-gradient(135deg, #6366f1, #4f46e5);
-   color: white; border-radius: 999px; padding: 0.4rem 0.9rem;
-   border: none; cursor: pointer; font-size: 0.8rem;
+   background: rgba(255, 255, 255, 0.05);
+   color: #fff;
+   border-radius: 12px;
+   padding: 0.5rem 1rem;
+   border: 1px solid rgba(255, 255, 255, 0.1);
+   cursor: pointer;
+   font-size: 0.85rem;
+   backdrop-filter: blur(4px);
+   transition: all 0.2s;
+}
+button.secondary:hover {
+   background: rgba(255, 255, 255, 0.1);
+   border-color: rgba(255, 255, 255, 0.3);
 }
 
 .btn-icon {
-  border-radius: 999px;
-  border: 1px solid #4b5563;
-  background: #020617;
-  color: #e5e7eb;
+  border-radius: 8px;
+  border: 1px solid var(--glass-border);
+  background: rgba(0, 0, 0, 0.2);
+  color: var(--text-secondary);
   font-size: 0.75rem;
-  padding: 0.25rem 0.6rem;
+  padding: 0.4rem 0.8rem;
   cursor: pointer;
   line-height: 1.2;
+  transition: all 0.2s;
+}
+.btn-icon:hover {
+   background: rgba(255,255,255,0.1);
+   color: #fff;
 }
 
 .btn-icon-danger {
-  border-color: #ef4444;
-  color: #fecaca;
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
 }
 
 .btn-icon-danger:hover {
-  background: #7f1d1d;
-  border-color: #f97316;
+  background: rgba(239, 68, 68, 0.15);
+  border-color: #ef4444;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.2);
 }
 
 .tabla-wrapper {
-  margin-top: 0.5rem;
+  margin-top: 1rem;
   overflow-x: auto;
-  border-radius: 10px;
-  border: 1px solid #1f2937;
-  background: #020617;
+  border-radius: 16px;
+  border: 1px solid var(--glass-border);
+  background: rgba(0, 0, 0, 0.2);
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.85rem;
-  color: #e5e7eb;
+  font-size: 0.9rem;
+  color: var(--text-primary);
 }
 
 th, td {
-  border-bottom: 1px solid #1f2937;
-  padding: 0.4rem 0.55rem;
+  border-bottom: 1px solid var(--glass-border);
+  padding: 0.8rem 1rem;
   text-align: left;
   white-space: nowrap;
 }
 
 th {
-  background: #020617;
-  font-weight: 500;
-  color: #9ca3af;
+  background: rgba(0, 0, 0, 0.3);
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 1px;
   position: sticky;
   top: 0;
   z-index: 1;
 }
 
-tr:nth-child(even) td {
-  background: #020617;
+tr:hover td {
+   background: rgba(255, 255, 255, 0.02);
 }
 
-tr:nth-child(odd) td {
-  background: #030712;
+tr:last-child td {
+   border-bottom: none;
 }
 
 .tag {
   display: inline-flex;
   align-items: center;
-  padding: 0.1rem 0.45rem;
-  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+  border-radius: 6px;
   font-size: 0.7rem;
-  border: 1px solid #4b5563;
+  font-weight: 600;
   margin-right: 0.25rem;
-  text-transform: capitalize;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .tag.entrada {
-  border-color: #0ea5e9;
-  background: #0c4a6e;
-  color: #e0f2fe;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  background: rgba(16, 185, 129, 0.1);
+  color: #6ee7b7;
 }
 .tag.salida {
-  border-color: #f97316;
-  background: #451a03;
-  color: #fed7aa;
+  border: 1px solid rgba(249, 115, 22, 0.3);
+  background: rgba(249, 115, 22, 0.1);
+  color: #fdba74;
 }
 
 .hidden { display: none !important; }
 
-/* LOGIN */
+/* LOGIN GLASS */
 #login-screen {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(circle at top, #0b1120, #020617 60%);
-  color: #f9fafb;
+  /* O fundo já é tratado pelo body */
   padding: 1rem;
+  position: relative;
+  z-index: 10;
 }
 
 #login-box {
-  background: radial-gradient(circle at top left, #020617, #020617);
-  border-radius: 18px;
-  border: 1px solid #4b5563;
-  padding: 1.6rem;
+  background: var(--glass-bg);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border-radius: 24px;
+  border: 1px solid var(--glass-border);
+  padding: 2.5rem;
   width: 100%;
-  max-width: 380px;
-  box-shadow: 0 25px 70px rgba(0,0,0,0.9);
-  backdrop-filter: blur(14px);
+  max-width: 400px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
 
 #login-box h2 {
-  font-size: 1.25rem;
-  margin-bottom: 0.75rem;
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+  text-align: center;
+  color: #fff;
 }
 
 #login-box p {
-  font-size: 0.85rem;
-  color: #9ca3af;
-  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-bottom: 2rem;
+  text-align: center;
 }
 
 #login-box form {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 0.75rem;
-}
-
-#login-box label {
-  color: #e5e7eb;
-}
-
-#login-box input {
-  background: #020617;
-  border-color: #4b5563;
-  color: #f9fafb;
-}
-
-#login-box button {
-  padding: 0.45rem 0.75rem;
-  border-radius: 999px;
-  border: none;
-  cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: 500;
+  gap: 1.25rem;
 }
 
 #login-box button.primary {
   width: 100%;
-  background: linear-gradient(135deg, #22c55e, #16a34a);
-  box-shadow: 0 4px 14px rgba(22,163,74,0.8);
-}
-
-#login-box button.primary:hover {
-  background: linear-gradient(135deg, #16a34a, #15803d);
+  margin-top: 1rem;
+  padding: 0.8rem;
 }
 
 #login-toggle {
   display: flex;
-  justify-content: space-between;
-  margin-top: 0.3rem;
-  font-size: 0.8rem;
-  color: #9ca3af;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
 }
 
 #login-toggle button {
   background: transparent;
-  color: #38bdf8;
+  color: var(--primary-glow);
   padding: 0;
   box-shadow: none;
+  border: none;
+  font-weight: 600;
 }
 
 #login-message {
-  font-size: 0.8rem;
-  margin-top: 0.4rem;
-  min-height: 1rem;
-  color: #f97316;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+  min-height: 1.2rem;
+  color: var(--secondary-glow);
+  text-align: center;
 }
 
 #register-extra {
@@ -485,23 +597,23 @@ tr:nth-child(odd) td {
   gap: 0.75rem;
 }
 
-/* FILAS DE GASTOS FIJOS CON ESTADO */
-.fijo-amarillo { background: #422006 !important; }
-.fijo-rojo { background: #450a0a !important; }
-.fijo-verde { background: #022c22 !important; }
+/* ESTADOS ESPECÍFICOS DE GASTOS FIJOS (MANTENDO LOGICA MAS ADAPTANDO CORES) */
+.fijo-amarillo { background: rgba(234, 179, 8, 0.1) !important; }
+.fijo-rojo { background: rgba(239, 68, 68, 0.1) !important; }
+.fijo-verde { background: rgba(34, 197, 94, 0.1) !important; }
 
 .badge-estado {
   display: inline-flex;
   align-items: center;
-  padding: 0.05rem 0.45rem;
-  border-radius: 999px;
+  padding: 0.1rem 0.5rem;
+  border-radius: 99px;
   font-size: 0.7rem;
   font-weight: 500;
 }
-.badge-amarillo { background: #facc15; color: #1f2937; }
-.badge-rojo { background: #ef4444; color: #f9fafb; }
-.badge-verde { background: #22c55e; color: #022c22; }
-.badge-normal { background: #4b5563; color: #e5e7eb; }
+.badge-amarillo { background: rgba(250, 204, 21, 0.2); color: #fef08a; border: 1px solid rgba(250, 204, 21, 0.3); }
+.badge-rojo { background: rgba(248, 113, 113, 0.2); color: #fecaca; border: 1px solid rgba(248, 113, 113, 0.3); }
+.badge-verde { background: rgba(74, 222, 128, 0.2); color: #bbf7d0; border: 1px solid rgba(74, 222, 128, 0.3); }
+.badge-normal { background: rgba(255, 255, 255, 0.1); color: #e2e8f0; }
 
 .reporte-controles {
   margin-top: 0.5rem;
@@ -514,11 +626,12 @@ tr:nth-child(odd) td {
   min-width: 160px;
 }
 
-/* MODAL PRIMEROS PASOS */
+/* MODAL */
 .modal {
   position: fixed;
   inset: 0;
-  background: rgba(15,23,42,0.85);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -531,10 +644,10 @@ tr:nth-child(odd) td {
 }
 
 @media (max-width: 768px) {
-  nav { display: none; position: fixed; top: 50px; left: 0; height: calc(100vh - 50px); z-index: 20; }
+  nav { display: none; position: fixed; top: 60px; left: 0; height: calc(100vh - 60px); z-index: 20; width: 100%; background: rgba(15,23,42,0.95); backdrop-filter: blur(20px); }
   nav.open { display: block; }
   .container { flex-direction: column; }
-  main { padding: 0.75rem; }
+  main { padding: 1rem; }
   .main-inner { max-width: 100%; }
   header button#menu-toggle { display: inline-block; }
 }
@@ -551,8 +664,8 @@ tr:nth-child(odd) td {
 
 <section id="login-screen">
 <div id="login-box">
-<h2>Entrar al Control Financiero</h2>
-<p>Inicia sesión o crea una cuenta. (Firebase)</p>
+<h2>Control Financiero</h2>
+<p>Inicia sesión o crea una cuenta. (Prism Edition)</p>
 
 <form id="login-form">
 <div>
@@ -565,7 +678,7 @@ tr:nth-child(odd) td {
 </div>
 
 <div id="register-extra" class="hidden">
-  <p style="font-size:0.7rem; color:#facc15;">Datos adicionales se configuran en Perfil.</p>
+  <p style="font-size:0.75rem; color:var(--secondary-glow); text-align:center;">Datos adicionales se configuran en Perfil.</p>
 </div>
 
 <button type="submit" class="primary" id="login-submit">Entrar</button>
@@ -609,16 +722,16 @@ tr:nth-child(odd) td {
   <section id="section-dashboard">
     <div class="card">
       <h3>Resumen del mes actual</h3>
-      <div style="display:flex; flex-wrap:wrap; gap:0.75rem; align-items:stretch; margin-top:0.5rem;">
+      <div style="display:flex; flex-wrap:wrap; gap:1rem; align-items:stretch; margin-top:0.5rem;">
         <div style="flex:2 1 220px;">
           <div class="grid">
             <div class="stat">
               <div class="stat-label">Entradas</div>
-              <div class="stat-value" id="stat-entradas">$ 0,00</div>
+              <div class="stat-value" id="stat-entradas" style="color: #4ade80;">$ 0,00</div>
             </div>
             <div class="stat">
               <div class="stat-label">Salidas</div>
-              <div class="stat-value" id="stat-salidas">$ 0,00</div>
+              <div class="stat-value" id="stat-salidas" style="color: #f87171;">$ 0,00</div>
             </div>
             <div class="stat">
               <div class="stat-label">Saldo</div>
@@ -627,10 +740,10 @@ tr:nth-child(odd) td {
             </div>
           </div>
         </div>
-        <div style="flex:1 1 160px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+        <div style="flex:1 1 160px; display:flex; flex-direction:column; align-items:center; justify-content:center; background: rgba(0,0,0,0.2); border-radius: 20px;">
           <canvas id="meta-chart" width="160" height="160"></canvas>
           <!-- AQUÍ MODIFICADO PARA SEMÁFORO -->
-          <div class="stat-small" id="stat-meta-uso" style="margin-top:0.4rem; text-align:center;"></div>
+          <div class="stat-small" id="stat-meta-uso" style="margin-top:0.4rem; text-align:center; font-weight:600;"></div>
           <div class="stat-small" id="stat-ingreso-alerta" style="margin-top:0.25rem; text-align:center;"></div>
         </div>
       </div>
@@ -645,7 +758,7 @@ tr:nth-child(odd) td {
       <p class="card-subtitle">
         Define un objetivo en la sección Perfil.
       </p>
-      <div style="display:flex; flex-wrap:wrap; gap:0.75rem; align-items:stretch; margin-top:0.5rem;">
+      <div style="display:flex; flex-wrap:wrap; gap:1rem; align-items:stretch; margin-top:0.5rem;">
         <div style="flex:2 1 220px;">
           <div class="stat">
             <div class="stat-label">Objetivo</div>
@@ -671,7 +784,7 @@ tr:nth-child(odd) td {
             </div>
           </div>
         </div>
-        <div style="flex:1 1 160px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+        <div style="flex:1 1 160px; display:flex; flex-direction:column; align-items:center; justify-content:center; background: rgba(0,0,0,0.2); border-radius: 20px;">
           <canvas id="objetivo-chart" width="160" height="160"></canvas>
         </div>
       </div>
@@ -1097,7 +1210,7 @@ Entendido
 <div style="margin-top:1rem;">
  <label style="margin-bottom:0.5rem;">Monto mensual que podrías ahorrar extra:</label>
  <input type="number" id="simulador-monto" placeholder="Ej: 100 (Cenas fuera, suscripciones...)" style="margin-bottom:1rem;" />
- <div id="simulador-resultado" style="padding:1rem; background:#0f172a; border-radius:8px; margin-bottom:1rem; font-size:0.9rem; color:#94a3b8;">
+ <div id="simulador-resultado" style="padding:1rem; background: rgba(255,255,255,0.05); border-radius:8px; margin-bottom:1rem; font-size:0.9rem; color:#94a3b8;">
    Ingresa un monto para ver el impacto en tu objetivo.
  </div>
  <div style="display:flex; gap:0.5rem; justify-content:flex-end;">
@@ -1280,6 +1393,9 @@ if (user) {
 
    document.getElementById("app").classList.add("hidden");
    document.getElementById("login-screen").classList.remove("hidden");
+   
+   // Se não há usuário, não há "loading" de dados a esperar
+   loading(false);
 }
 });
 
@@ -1719,14 +1835,14 @@ const ganancia = diasAntes - diasDespues;
 
 if(ritmoBase <= 0) {
    res.textContent = `Actualmente no ahorras. Con este corte, terminarías en ${diasDespues} días.`;
-   res.style.color = "#22c55e";
+   res.style.color = "#4ade80";
 } else {
-   res.innerHTML = `Ahorrarías <strong style="color:#fff">${diasDespues} días</strong> en total.<br>¡Terminarías <strong style="color:#22c55e">${ganancia} días antes</strong> que ahora!`;
-   res.style.color = "#94a3b8";
+   res.innerHTML = `Ahorrarías <strong style="color:#fff">${diasDespues} días</strong> en total.<br>¡Terminarías <strong style="color:#4ade80">${ganancia} días antes</strong> que ahora!`;
+   res.style.color = "#e2e8f0";
 }
 });
 
-// --- LOGICA DEL GRÁFICO VIAJERO EN EL TIEMPO (MODIFICADO: GAP / LACUNA) ---
+// --- LOGICA DEL GRÁFICO VIAJERO EN EL TIEMPO (MODIFICADO: GAP / LACUNA + CORES PRISM) ---
 function dibujarGraficoViajeroTiempo() {
    const canvas = document.getElementById("chart-time-travel");
    if(!canvas) return;
@@ -1799,7 +1915,7 @@ function dibujarGraficoViajeroTiempo() {
    const getY = (v) => h - 30 - ((v - minVal) / range) * (h - 60);
 
    // Ejes
-   ctx.strokeStyle = "#334155"; ctx.lineWidth = 1;
+   ctx.strokeStyle = "rgba(255,255,255,0.1)"; ctx.lineWidth = 1;
    ctx.beginPath(); ctx.moveTo(40, 20); ctx.lineTo(40, h-30); ctx.lineTo(w-20, h-30); ctx.stroke();
 
    // Línea
@@ -1817,10 +1933,10 @@ function dibujarGraficoViajeroTiempo() {
    
        if(p2.future) {
            ctx.setLineDash([5, 5]);
-           ctx.strokeStyle = "#38bdf8";
+           ctx.strokeStyle = "#06b6d4"; // Cyan para o futuro (Prism style)
        } else {
            ctx.setLineDash([]);
-           ctx.strokeStyle = "#22c55e";
+           ctx.strokeStyle = "#8b5cf6"; // Roxo para o passado (Prism style)
        }
        ctx.stroke();
    }
@@ -1832,23 +1948,26 @@ function dibujarGraficoViajeroTiempo() {
        if (p.val === null) {
            // Apenas desenha a label no eixo X para referência
            const xLabel = getX(i);
-           ctx.fillStyle = "#475569"; ctx.font = "10px sans-serif"; ctx.textAlign = "center";
+           ctx.fillStyle = "rgba(255,255,255,0.3)"; ctx.font = "10px sans-serif"; ctx.textAlign = "center";
            ctx.fillText(p.label, xLabel, h-10);
            return;
        }
 
        const x = getX(i); const y = getY(p.val);
-       ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI*2);
-       ctx.fillStyle = p.future ? "#38bdf8" : "#22c55e";
+       ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI*2); // Ponto um pouco maior
+       ctx.fillStyle = p.future ? "#06b6d4" : "#8b5cf6";
        ctx.fill();
+       
+       // Borda branca no ponto para destacar
+       ctx.strokeStyle = "rgba(255,255,255,0.5)"; ctx.lineWidth = 2; ctx.stroke();
    
-       ctx.fillStyle = "#94a3b8"; ctx.font = "10px sans-serif"; ctx.textAlign = "center";
+       ctx.fillStyle = "rgba(255,255,255,0.5)"; ctx.font = "10px sans-serif"; ctx.textAlign = "center";
        ctx.fillText(p.label, x, h-10);
    
        // Mostrar valor apenas no último ponto ou no mês atual (índice 2 aprox) se tiver dados
        if(i === puntos.length-1 || (i === 2 && !p.future)) {
-          ctx.fillStyle = "#e2e8f0";
-          ctx.fillText(formatearMoneda(p.val), x, y - 10);
+          ctx.fillStyle = "#fff";
+          ctx.fillText(formatearMoneda(p.val), x, y - 15);
        }
    });
 }
@@ -1871,7 +1990,7 @@ function rellenarTablaCategorias() {
 const tb = document.querySelector("#tabla-categorias tbody"); tb.innerHTML="";
 categoriasLocal.forEach(c => {
    const tr = document.createElement("tr");
-   tr.innerHTML = `<td>${c.nome}</td><td>${c.grupo === "entrada" ? "Entrada" : "Salida"}</td><td></td>`;
+   tr.innerHTML = `<td>${c.nome}</td><td><span class="tag ${c.grupo}">${c.grupo}</span></td><td></td>`;
    const btn = document.createElement("button"); btn.className="btn-icon btn-icon-danger"; btn.textContent="Eliminar"; btn.onclick = () => window.eliminarCategoria(c.id);
    tr.lastElementChild.appendChild(btn);
    tb.appendChild(tr);
@@ -2171,7 +2290,7 @@ if (restante <= 0) {
         const fechaStr = fechaEstimada.toLocaleDateString("es-ES", { day: 'numeric', month: 'short', year: 'numeric' });
 
         elProyeccion.textContent = `Al ritmo actual, terminarás en ~${diasFaltantes} días (${fechaStr}).`;
-        elProyeccion.style.color = "#38bdf8";
+        elProyeccion.style.color = "#06b6d4";
     }
 }
 
@@ -2235,6 +2354,7 @@ if(t==="salida") {
 }
 
 // Charts (Canvas - CON NÚMEROS EN EL CENTRO)
+// ADAPTADO PARA CORES PRISM (Glass & Glow)
 function dibujarGraficoMeta(porcentajeUsado, textoCentro) {
 const canvas = document.getElementById("meta-chart");
 if (!canvas) return;
@@ -2246,7 +2366,7 @@ const innerRadio = radio * 0.6;
 ctx.clearRect(0, 0, w, h);
 
 // Fondo
-ctx.beginPath(); ctx.arc(cx, cy, radio, 0, Math.PI * 2); ctx.fillStyle = "#111827"; ctx.fill();
+ctx.beginPath(); ctx.arc(cx, cy, radio, 0, Math.PI * 2); ctx.fillStyle = "rgba(255,255,255,0.05)"; ctx.fill();
 
 const clamped = Math.max(0, Math.min(porcentajeUsado, 200)) / 100;
 const inicio = -Math.PI / 2;
@@ -2255,10 +2375,10 @@ const fin = inicio + Math.PI * 2 * clamped;
 // Arco
 ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, radio, inicio, fin); ctx.closePath();
 
-// Colores semáforo en el gráfico también
-if(porcentajeUsado > 80) ctx.fillStyle = "#ef4444";
-else if(porcentajeUsado > 50) ctx.fillStyle = "#facc15";
-else ctx.fillStyle = "#22c55e";
+// Colores semáforo en el gráfico también (ADAPTADOS)
+if(porcentajeUsado > 80) ctx.fillStyle = "rgba(248, 113, 113, 0.8)"; // Rojo Glass
+else if(porcentajeUsado > 50) ctx.fillStyle = "rgba(250, 204, 21, 0.8)"; // Amarillo Glass
+else ctx.fillStyle = "rgba(74, 222, 128, 0.8)"; // Verde Glass
 
 ctx.fill();
 
@@ -2266,13 +2386,13 @@ ctx.fill();
 // Aquí dejaremos el arco hasta donde llegue (max 200% en la lógica de cálculo)
 
 // Centro
-ctx.beginPath(); ctx.arc(cx, cy, innerRadio, 0, Math.PI * 2); ctx.fillStyle = "#020617"; ctx.fill();
+ctx.beginPath(); ctx.arc(cx, cy, innerRadio, 0, Math.PI * 2); ctx.fillStyle = "#0f172a"; ctx.fill(); // Fundo da página
 
 // TEXTO EN EL CENTRO (NUEVO)
 if(textoCentro) {
  // Detectar si es negativo para cambiar color
  const esNegativo = textoCentro.includes("-");
- ctx.fillStyle = esNegativo ? "#ef4444" : "#fff"; // Rojo si negativo
+ ctx.fillStyle = esNegativo ? "#f87171" : "#fff"; // Rojo si negativo
 
  ctx.font = "bold 12px sans-serif";
  ctx.textAlign = "center";
@@ -2295,11 +2415,18 @@ const radio = Math.min(w, h) / 2 - 10;
 const innerRadio = radio * 0.6;
 ctx.clearRect(0, 0, w, h);
 
-ctx.beginPath(); ctx.arc(cx, cy, radio, 0, Math.PI * 2); ctx.fillStyle = "#111827"; ctx.fill();
+ctx.beginPath(); ctx.arc(cx, cy, radio, 0, Math.PI * 2); ctx.fillStyle = "rgba(255,255,255,0.05)"; ctx.fill();
 const end = -Math.PI/2 + (Math.PI*2 * (Math.min(porcentaje,100)/100));
 ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, radio, -Math.PI/2, end);
-ctx.fillStyle = "#0ea5e9"; ctx.fill();
-ctx.beginPath(); ctx.arc(cx, cy, innerRadio, 0, Math.PI * 2); ctx.fillStyle = "#020617"; ctx.fill();
+
+// Gradiente Prism
+const grad = ctx.createLinearGradient(0, 0, w, 0);
+grad.addColorStop(0, "#ec4899");
+grad.addColorStop(1, "#8b5cf6");
+ctx.fillStyle = grad;
+
+ctx.fill();
+ctx.beginPath(); ctx.arc(cx, cy, innerRadio, 0, Math.PI * 2); ctx.fillStyle = "#0f172a"; ctx.fill();
 
 // TEXTO EN EL CENTRO (NUEVO)
 if(textoCentro) {
