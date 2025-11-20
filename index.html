@@ -700,6 +700,20 @@ tr:last-child td {
 @media (min-width: 769px) {
  header button#menu-toggle { display: none; }
 }
+/* --- AJUSTE MOBILE: ESCONDER EMAIL --- */
+@media (max-width: 768px) {
+  /* Remove o email da tela para dar espaço ao seletor */
+  header .user-info #user-email {
+    display: none;
+  }
+  
+  /* Ajusta o espaçamento entre o seletor e o botão sair */
+  header .user-info {
+    gap: 0.5rem;
+  }
+}
+
+
 </style>
 </head>
 <body>
