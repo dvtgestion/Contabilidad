@@ -1232,18 +1232,24 @@ Para comenzar, elige por dónde quieres empezar a configurar tu cuenta:
 
 <div id="modal-simulador" class="modal hidden">
 <div class="card" style="max-width:420px; width:90%;">
-<h3 data-i18n="sim_title">🔮 Simulador</h3>
-<div style="margin-top:1rem;">
- <label style="margin-bottom:0.5rem;" data-i18n="sim_lbl_monto">Monto mensual extra:</label>
- <input type="number" id="simulador-monto" style="margin-bottom:1rem;" />
- <div id="simulador-resultado" style="padding:1rem; background:rgba(255,255,255,0.05); border-radius:8px; margin-bottom:1rem; font-size:0.9rem; color:#94a3b8;">...</div>
- <div style="display:flex; gap:0.5rem; justify-content:flex-end;">
-   <button type="button" class="secondary" id="btn-cerrar-simulador" data-i18n="sim_btn_close">Cerrar</button>
-   <button type="button" class="primary" id="btn-calcular-simulacion" data-i18n="sim_btn_calc">Calcular</button>
- </div>
+  <h3 data-i18n="sim_title">🔮 Simulador</h3>
+  
+  <div style="margin-top:1rem;">
+     <label style="margin-bottom:0.5rem;" data-i18n="sim_lbl_monto">Monto mensual extra:</label>
+     <input type="number" id="simulador-monto" style="margin-bottom:1rem;" placeholder="100" />
+     
+     <div id="simulador-resultado" data-i18n="sim_msg_initial" style="padding:1rem; background:rgba(255,255,255,0.05); border-radius:8px; margin-bottom:1rem; font-size:0.9rem; color:#94a3b8; min-height: 3.5em; display:flex; align-items:center;">
+       ...
+     </div>
+
+     <div style="display:flex; gap:0.5rem; justify-content:flex-end;">
+       <button type="button" class="secondary" id="btn-cerrar-simulador" data-i18n="sim_btn_close">Cerrar</button>
+       <button type="button" class="primary" id="btn-calcular-simulacion" data-i18n="sim_btn_calc">Calcular</button>
+     </div>
+  </div>
 </div>
 </div>
-</div>
+
 <script type="module">
 // ===============================================================
 // INTEGRACIÓN FIREBASE
@@ -1372,13 +1378,15 @@ const translations = {
         btn_save_perf: "Guardar perfil",
         btn_reset_obj: "Reiniciar progreso",
         
-        // Simulador
-        sim_title: "🔮 Simulador de Ahorro",
+                // Simulador
+        sim_title: "🔮 Simulador",
         sim_lbl_monto: "Monto mensual extra:",
         sim_btn_calc: "Calcular",
         sim_btn_close: "Cerrar",
-        sim_result_success: "¡Terminarías antes!",
         sim_result_fail: "Actualmente no ahorras.",
+        sim_result_success: "¡Terminarías antes!",
+        sim_msg_initial: "Ingresa un valor arriba para ver el impacto.", // <--- NOVA LINHA
+
         
         // Gráficos
         chart_restante: "Restante",
@@ -1465,13 +1473,15 @@ const translations = {
         btn_save_perf: "Salvar perfil",
         btn_reset_obj: "Reiniciar progresso",
         
-        // Simulador
-        sim_title: "🔮 Simulador de Economia",
+                // Simulador
+        sim_title: "🔮 Simulador",
         sim_lbl_monto: "Valor mensal extra:",
         sim_btn_calc: "Calcular",
         sim_btn_close: "Fechar",
-        sim_result_success: "Terminaria antes!",
         sim_result_fail: "Atualmente você não economiza.",
+        sim_result_success: "Terminaria antes!",
+        sim_msg_initial: "Insira um valor acima para ver o impacto.", // <--- NOVA LINHA
+
         
         // Gráficos
         chart_restante: "Restante",
@@ -2123,7 +2133,22 @@ document.getElementById("perfil-objetivo-reset").addEventListener("click", async
 
 // --- SIMULADOR ---
 const modalSim = document.getElementById("modal-simulador");
-document.getElementById("btn-abrir-simulador").addEventListener("click", () => modalSim.classList.remove("hidden"));
+
+// Botão de Abrir (Com Reset de Texto)
+document.getElementById("btn-abrir-simulador").addEventListener("click", () => {
+    modalSim.classList.remove("hidden");
+    // Reseta o texto para a instrução inicial ao abrir
+    const res = document.getElementById("simulador-resultado");
+    const input = document.getElementById("simulador-monto");
+    
+    if(translations[currentLang] && translations[currentLang].sim_msg_initial) {
+        res.textContent = translations[currentLang].sim_msg_initial;
+    } else {
+        res.textContent = "...";
+    }
+    input.value = ""; // Limpa o número anterior
+});
+
 document.getElementById("btn-cerrar-simulador").addEventListener("click", () => modalSim.classList.add("hidden"));
 
 document.getElementById("btn-calcular-simulacion").addEventListener("click", () => {
@@ -2173,6 +2198,7 @@ document.getElementById("btn-calcular-simulacion").addEventListener("click", () 
         res.innerHTML = `${translations[currentLang].sim_result_success} (${diasAntes} days)`;
     }
 });
+
 
 // --- GRÁFICOS (Completo e Expandido) ---
 
