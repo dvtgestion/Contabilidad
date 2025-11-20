@@ -6,54 +6,50 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 
 <style>
-/* --- TEMA PRISM GLASS (FUTURISTA ELEGANTE) --- */
+/* --- TEMA PRISM GLASS (FUTURISTA ELEGANTE & FLUTUANTE) --- */
 :root {
-  /* Paleta Base Dark */
+  /* Fundo Profundo */
   --bg-deep: #020617;
-  --bg-surface: #0f172a;
  
-  /* Efeitos de Vidro */
-  --glass-bg: rgba(255, 255, 255, 0.03);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-highlight: rgba(255, 255, 255, 0.1);
-  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
- 
-  /* Cores Prism (Aurora) */
-  --primary-glow: #8b5cf6; /* Violeta */
+  /* Cores Prism (Neon Suave) */
+  --primary-glow: #8b5cf6;  /* Violeta */
   --secondary-glow: #ec4899; /* Rosa */
-  --accent-cyan: #06b6d4; /* Ciano */
- 
-  /* Textos */
+  --accent-cyan: #06b6d4;   /* Ciano */
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
-  --text-muted: #64748b;
+ 
+  /* Vidro */
+  --glass-bg: rgba(255, 255, 255, 0.03);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-highlight: rgba(255, 255, 255, 0.15);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   background-color: var(--bg-deep);
   color: var(--text-primary);
-  padding-bottom: 2rem;
+  padding-bottom: 3rem;
   min-height: 100vh;
   overflow-x: hidden;
   position: relative;
 }
 
-/* --- BACKGROUND AURORA ANIMADO --- */
+/* --- BACKGROUND ANIMADO (AURORA) --- */
 body::before {
   content: '';
   position: fixed;
   top: -20%;
   left: -10%;
-  width: 50%;
-  height: 50%;
+  width: 600px;
+  height: 600px;
   background: radial-gradient(circle, var(--secondary-glow), transparent 70%);
-  opacity: 0.15;
-  filter: blur(120px);
+  opacity: 0.2;
+  filter: blur(100px);
   z-index: -1;
-  animation: floatAurora1 20s infinite alternate;
+  animation: floatAurora1 15s infinite alternate ease-in-out;
 }
 
 body::after {
@@ -61,13 +57,13 @@ body::after {
   position: fixed;
   bottom: -10%;
   right: -10%;
-  width: 60%;
-  height: 60%;
+  width: 500px;
+  height: 500px;
   background: radial-gradient(circle, var(--primary-glow), transparent 70%);
-  opacity: 0.15;
+  opacity: 0.2;
   filter: blur(100px);
   z-index: -1;
-  animation: floatAurora2 25s infinite alternate;
+  animation: floatAurora2 18s infinite alternate ease-in-out;
 }
 
 @keyframes floatAurora1 { 0% { transform: translate(0,0); } 100% { transform: translate(50px, 50px); } }
@@ -77,7 +73,7 @@ body::after {
 #loading-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(2, 6, 23, 0.9);
+  background: rgba(2, 6, 23, 0.95);
   z-index: 100;
   display: flex;
   align-items: center;
@@ -86,23 +82,23 @@ body::after {
   color: var(--primary-glow);
   font-size: 1.2rem;
   backdrop-filter: blur(10px);
-  letter-spacing: 1px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
 }
 
-/* HEADER GLASS */
+/* HEADER */
 header {
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(15, 23, 42, 0.7);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--glass-border);
-  color: #f9fafb;
-  padding: 0.9rem 1.5rem;
+  padding: 1rem 1.5rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
   position: sticky;
   top: 0;
-  z-index: 30;
+  z-index: 50;
 }
 
 header h1 {
@@ -111,6 +107,7 @@ header h1 {
   background: linear-gradient(to right, #fff, #cbd5e1);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  letter-spacing: -0.5px;
 }
 
 header .user-info {
@@ -122,7 +119,7 @@ header .user-info {
 }
 
 header button {
-  margin-left: 0.25rem;
+  margin-left: 0.5rem;
   padding: 0.4rem 1rem;
   border-radius: 99px;
   border: 1px solid var(--glass-border);
@@ -135,15 +132,15 @@ header button {
 
 header button:hover {
   background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .container {
   display: flex;
-  min-height: calc(100vh - 60px);
+  min-height: calc(100vh - 70px);
 }
 
-/* NAV SIDEBAR GLASS */
+/* SIDEBAR */
 nav {
   width: 240px;
   background: rgba(15, 23, 42, 0.4);
@@ -152,16 +149,16 @@ nav {
   color: var(--text-secondary);
   padding: 1.5rem 1rem;
   position: sticky;
-  top: 60px;
-  height: calc(100vh - 60px);
+  top: 70px;
+  height: calc(100vh - 70px);
 }
 
 nav h2 {
   font-size: 0.75rem;
   text-transform: uppercase;
   margin-bottom: 1rem;
-  color: var(--text-muted);
-  letter-spacing: 0.1em;
+  color: #64748b;
+  letter-spacing: 2px;
   padding-left: 0.5rem;
 }
 
@@ -171,41 +168,32 @@ nav button {
   background: transparent;
   border: none;
   color: inherit;
-  padding: 0.75rem 0.8rem;
-  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  border-radius: 16px;
   cursor: pointer;
   font-size: 0.9rem;
   display: flex;
   align-items: center;
   gap: 0.8rem;
-  transition: all 0.2s ease;
-  margin-bottom: 0.25rem;
-}
-
-nav button::before {
-  content: "";
-  width: 6px;
-  height: 6px;
-  border-radius: 999px;
-  background: var(--text-muted);
-  transition: all 0.3s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-bottom: 0.5rem;
 }
 
 nav button:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.05);
   color: #fff;
+  transform: translateX(4px);
 }
 
 nav button.active {
-  background: var(--glass-highlight);
+  background: linear-gradient(90deg, rgba(139, 92, 246, 0.15), transparent);
   color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 0 15px rgba(139, 92, 246, 0.1);
+  border-left: 3px solid var(--primary-glow);
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.1);
 }
-nav button.active::before {
-  background: var(--accent-cyan);
-  box-shadow: 0 0 8px var(--accent-cyan);
-}
+
+/* Removemos a bolinha do estilo anterior para ficar mais clean */
+nav button::before { display: none; }
 
 main {
   flex: 1;
@@ -218,132 +206,131 @@ main {
   margin: 0 auto;
 }
 
-/* CARDS PRISM GLASS */
+/* --- CARDS FLUTUANTES (PRISM STYLE) --- */
 .card {
   background: var(--glass-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-radius: 20px;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-radius: 24px; /* Bordas bem arredondadas */
+  padding: 2rem; /* Mais respiro interno */
+  margin-bottom: 2rem;
   border: 1px solid var(--glass-border);
-  transition: transform 0.3s ease, border-color 0.3s;
+  box-shadow: var(--glass-shadow);
+ 
+  /* Animação de flutuação */
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), border-color 0.3s, box-shadow 0.3s;
   position: relative;
   overflow: hidden;
 }
 
-/* Efeito de brilho sutil no card */
-.card::before {
-   content: '';
-   position: absolute;
-   top: 0; left: 0; width: 100%; height: 100%;
-   background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, transparent 100%);
-   pointer-events: none;
-}
-
+/* Brilho ao passar o mouse e leve subida */
 .card:hover {
-  transform: translateY(-3px);
-  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-6px);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 20px 40px -10px rgba(0,0,0,0.5);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .card h3 {
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   margin-bottom: 0.5rem;
   font-weight: 600;
-  color: var(--text-primary);
-  letter-spacing: 0.02em;
+  color: #fff;
+  letter-spacing: 0.5px;
 }
 
 .card-subtitle {
   font-size: 0.85rem;
   color: var(--text-secondary);
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
   font-weight: 300;
 }
 
 .grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1rem;
+  gap: 1.5rem;
 }
 
 .stat {
   background: rgba(0, 0, 0, 0.2);
   border-radius: 16px;
-  padding: 1rem;
+  padding: 1.2rem;
   border: 1px solid rgba(255, 255, 255, 0.03);
   transition: background 0.2s;
 }
 .stat:hover {
-   background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.3);
 }
 
 .stat-label {
   font-size: 0.75rem;
   color: var(--text-secondary);
-  margin-bottom: 0.3rem;
+  margin-bottom: 0.4rem;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
 }
 
 .stat-value {
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: #fff;
-  text-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+  text-shadow: 0 0 20px rgba(255,255,255,0.1);
 }
 
 .stat-small {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  margin-top: 0.2rem;
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-top: 0.3rem;
 }
 
 .stat-prediction {
    font-size: 0.8rem;
    color: var(--accent-cyan);
-   margin-top: 0.5rem;
+   margin-top: 0.8rem;
    font-style: italic;
    border-top: 1px solid var(--glass-border);
    padding-top: 0.5rem;
 }
 
+/* Cores de status */
 .semaforo-verde { color: #4ade80; text-shadow: 0 0 12px rgba(74, 222, 128, 0.4); }
 .semaforo-amarillo { color: #facc15; text-shadow: 0 0 12px rgba(250, 204, 21, 0.4); }
-.semaforo-rojo { color: #f87171; text-shadow: 0 0 15px rgba(248, 113, 113, 0.5); animation: pulse 2s infinite; }
+.semaforo-rojo { color: #f87171; text-shadow: 0 0 12px rgba(248, 113, 113, 0.4); animation: pulse 2s infinite; }
 
 @keyframes pulse {
    0% { opacity: 1; }
-   50% { opacity: 0.6; transform: scale(1.01); }
+   50% { opacity: 0.6; transform: scale(1.02); }
    100% { opacity: 1; }
 }
 
+/* Barras de distribuição */
 .dist-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 0.75rem;
+    margin-bottom: 1rem;
     font-size: 0.85rem;
 }
 .dist-bar-bg {
     flex: 1;
-    height: 6px;
+    height: 8px;
     background: rgba(255, 255, 255, 0.05);
     border-radius: 999px;
-    margin: 0 1rem;
+    margin: 0 1.2rem;
     overflow: hidden;
 }
 .dist-bar-fill {
     height: 100%;
     border-radius: 999px;
-    box-shadow: 0 0 8px currentColor;
+    box-shadow: 0 0 10px currentColor;
 }
 
+/* Formulários */
 form {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 1rem;
+  gap: 1.2rem;
   margin-top: 1rem;
   align-items: end;
 }
@@ -354,16 +341,16 @@ form .full {
 
 label {
   font-size: 0.8rem;
-  color: var(--text-secondary);
-  margin-bottom: 0.3rem;
+  color: #cbd5e1;
+  margin-bottom: 0.4rem;
   display: block;
   font-weight: 500;
 }
 
 input, select {
   width: 100%;
-  padding: 0.6rem 1rem;
-  border-radius: 12px;
+  padding: 0.8rem 1rem;
+  border-radius: 14px;
   border: 1px solid var(--glass-border);
   font-size: 0.9rem;
   background: rgba(0, 0, 0, 0.3);
@@ -383,45 +370,46 @@ select:focus {
   box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
 }
 
-/* BOTÕES MODERNOS */
+/* Botões */
 button.primary {
   background: linear-gradient(135deg, var(--secondary-glow), var(--primary-glow));
   color: #fff;
-  border-radius: 12px;
-  padding: 0.6rem 1.2rem;
+  border-radius: 14px;
+  padding: 0.8rem 1.5rem;
   border: none;
   cursor: pointer;
   font-size: 0.9rem;
   font-weight: 600;
-  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
-  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+  transition: all 0.3s;
   letter-spacing: 0.5px;
 }
 
 button.primary:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.6);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(139, 92, 246, 0.5);
   filter: brightness(1.1);
 }
 
 button.secondary {
    background: rgba(255, 255, 255, 0.05);
    color: #fff;
-   border-radius: 12px;
-   padding: 0.5rem 1rem;
+   border-radius: 14px;
+   padding: 0.6rem 1.2rem;
    border: 1px solid rgba(255, 255, 255, 0.1);
    cursor: pointer;
-   font-size: 0.85rem;
+   font-size: 0.8rem;
+   font-weight: 500;
    backdrop-filter: blur(4px);
    transition: all 0.2s;
 }
 button.secondary:hover {
-   background: rgba(255, 255, 255, 0.1);
-   border-color: rgba(255, 255, 255, 0.3);
+   background: rgba(255, 255, 255, 0.15);
+   border-color: #fff;
 }
 
 .btn-icon {
-  border-radius: 8px;
+  border-radius: 10px;
   border: 1px solid var(--glass-border);
   background: rgba(0, 0, 0, 0.2);
   color: var(--text-secondary);
@@ -445,7 +433,6 @@ button.secondary:hover {
   background: rgba(239, 68, 68, 0.15);
   border-color: #ef4444;
   color: #fff;
-  box-shadow: 0 0 10px rgba(239, 68, 68, 0.2);
 }
 
 .tabla-wrapper {
@@ -465,7 +452,7 @@ table {
 
 th, td {
   border-bottom: 1px solid var(--glass-border);
-  padding: 0.8rem 1rem;
+  padding: 1rem 1.2rem;
   text-align: left;
   white-space: nowrap;
 }
@@ -493,8 +480,8 @@ tr:last-child td {
 .tag {
   display: inline-flex;
   align-items: center;
-  padding: 0.2rem 0.6rem;
-  border-radius: 6px;
+  padding: 0.25rem 0.7rem;
+  border-radius: 8px;
   font-size: 0.7rem;
   font-weight: 600;
   margin-right: 0.25rem;
@@ -515,13 +502,12 @@ tr:last-child td {
 
 .hidden { display: none !important; }
 
-/* LOGIN GLASS */
+/* LOGIN */
 #login-screen {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  /* O fundo já é tratado pelo body */
   padding: 1rem;
   position: relative;
   z-index: 10;
@@ -531,16 +517,16 @@ tr:last-child td {
   background: var(--glass-bg);
   backdrop-filter: blur(30px);
   -webkit-backdrop-filter: blur(30px);
-  border-radius: 24px;
+  border-radius: 30px;
   border: 1px solid var(--glass-border);
-  padding: 2.5rem;
+  padding: 3rem;
   width: 100%;
-  max-width: 400px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  max-width: 420px;
+  box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.6);
 }
 
 #login-box h2 {
-  font-size: 1.5rem;
+  font-size: 1.6rem;
   margin-bottom: 0.5rem;
   text-align: center;
   color: #fff;
@@ -549,27 +535,28 @@ tr:last-child td {
 #login-box p {
   font-size: 0.9rem;
   color: var(--text-secondary);
-  margin-bottom: 2rem;
+  margin-bottom: 2.5rem;
   text-align: center;
 }
 
 #login-box form {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 1.25rem;
+  gap: 1.5rem;
 }
 
 #login-box button.primary {
   width: 100%;
   margin-top: 1rem;
-  padding: 0.8rem;
+  padding: 1rem;
+  font-size: 1rem;
 }
 
 #login-toggle {
   display: flex;
   justify-content: center;
   gap: 0.5rem;
-  margin-top: 1.5rem;
+  margin-top: 2rem;
   font-size: 0.9rem;
   color: var(--text-secondary);
 }
@@ -585,7 +572,7 @@ tr:last-child td {
 
 #login-message {
   font-size: 0.85rem;
-  margin-top: 0.5rem;
+  margin-top: 1rem;
   min-height: 1.2rem;
   color: var(--secondary-glow);
   text-align: center;
@@ -597,7 +584,7 @@ tr:last-child td {
   gap: 0.75rem;
 }
 
-/* ESTADOS ESPECÍFICOS DE GASTOS FIJOS (MANTENDO LOGICA MAS ADAPTANDO CORES) */
+/* ESTADOS ESPECÍFICOS DE GASTOS FIJOS */
 .fijo-amarillo { background: rgba(234, 179, 8, 0.1) !important; }
 .fijo-rojo { background: rgba(239, 68, 68, 0.1) !important; }
 .fijo-verde { background: rgba(34, 197, 94, 0.1) !important; }
@@ -605,10 +592,10 @@ tr:last-child td {
 .badge-estado {
   display: inline-flex;
   align-items: center;
-  padding: 0.1rem 0.5rem;
+  padding: 0.15rem 0.6rem;
   border-radius: 99px;
   font-size: 0.7rem;
-  font-weight: 500;
+  font-weight: 600;
 }
 .badge-amarillo { background: rgba(250, 204, 21, 0.2); color: #fef08a; border: 1px solid rgba(250, 204, 21, 0.3); }
 .badge-rojo { background: rgba(248, 113, 113, 0.2); color: #fecaca; border: 1px solid rgba(248, 113, 113, 0.3); }
@@ -619,7 +606,7 @@ tr:last-child td {
   margin-top: 0.5rem;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: 1rem;
   align-items: flex-end;
 }
 .reporte-controles > div {
@@ -630,7 +617,7 @@ tr:last-child td {
 .modal {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
@@ -644,10 +631,10 @@ tr:last-child td {
 }
 
 @media (max-width: 768px) {
-  nav { display: none; position: fixed; top: 60px; left: 0; height: calc(100vh - 60px); z-index: 20; width: 100%; background: rgba(15,23,42,0.95); backdrop-filter: blur(20px); }
+  nav { display: none; position: fixed; top: 70px; left: 0; height: calc(100vh - 70px); z-index: 20; width: 100%; background: rgba(15,23,42,0.95); backdrop-filter: blur(20px); }
   nav.open { display: block; }
   .container { flex-direction: column; }
-  main { padding: 1rem; }
+  main { padding: 1.5rem; }
   .main-inner { max-width: 100%; }
   header button#menu-toggle { display: inline-block; }
 }
@@ -665,7 +652,7 @@ tr:last-child td {
 <section id="login-screen">
 <div id="login-box">
 <h2>Control Financiero</h2>
-<p>Inicia sesión o crea una cuenta. (Prism Edition)</p>
+<p>Inicia sesión (Prism Edition)</p>
 
 <form id="login-form">
 <div>
@@ -722,7 +709,7 @@ tr:last-child td {
   <section id="section-dashboard">
     <div class="card">
       <h3>Resumen del mes actual</h3>
-      <div style="display:flex; flex-wrap:wrap; gap:1rem; align-items:stretch; margin-top:0.5rem;">
+      <div style="display:flex; flex-wrap:wrap; gap:1.5rem; align-items:stretch; margin-top:1rem;">
         <div style="flex:2 1 220px;">
           <div class="grid">
             <div class="stat">
@@ -740,10 +727,13 @@ tr:last-child td {
             </div>
           </div>
         </div>
-        <div style="flex:1 1 160px; display:flex; flex-direction:column; align-items:center; justify-content:center; background: rgba(0,0,0,0.2); border-radius: 20px;">
-          <canvas id="meta-chart" width="160" height="160"></canvas>
+        <div style="flex:1 1 200px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+          <!-- CANVAS MAIS LARGO PARA O DONUT MODERNIZADO -->
+          <div style="position: relative; width: 160px; height: 160px;">
+             <canvas id="meta-chart" width="160" height="160"></canvas>
+          </div>
           <!-- AQUÍ MODIFICADO PARA SEMÁFORO -->
-          <div class="stat-small" id="stat-meta-uso" style="margin-top:0.4rem; text-align:center; font-weight:600;"></div>
+          <div class="stat-small" id="stat-meta-uso" style="margin-top:0.8rem; text-align:center; font-weight: 600;"></div>
           <div class="stat-small" id="stat-ingreso-alerta" style="margin-top:0.25rem; text-align:center;"></div>
         </div>
       </div>
@@ -751,23 +741,23 @@ tr:last-child td {
 
     <div class="card">
       <div style="display:flex; justify-content:space-between; align-items:center;">
-         <h3>Objetivo de ahorro específico</h3>
+         <h3>Objetivo de ahorro</h3>
          <!-- BOTÓN NUEVO SIMULADOR -->
          <button type="button" class="secondary" id="btn-abrir-simulador">🔮 Simular</button>
       </div>
       <p class="card-subtitle">
         Define un objetivo en la sección Perfil.
       </p>
-      <div style="display:flex; flex-wrap:wrap; gap:1rem; align-items:stretch; margin-top:0.5rem;">
+      <div style="display:flex; flex-wrap:wrap; gap:1.5rem; align-items:stretch; margin-top:1rem;">
         <div style="flex:2 1 220px;">
-          <div class="stat">
-            <div class="stat-label">Objetivo</div>
+          <div class="stat" style="margin-bottom:1rem; border-left: none;">
+            <div class="stat-label">Objetivo Activo</div>
             <div class="stat-value" id="obj-nombre">Sin objetivo definido</div>
             <div class="stat-small">
               Meta: <span id="obj-meta">-</span>
             </div>
           </div>
-          <div class="grid" style="margin-top:0.5rem;">
+          <div class="grid">
             <div class="stat">
               <div class="stat-label">Ahorro acumulado</div>
               <div class="stat-value" id="obj-ahorrado">$ 0,00</div>
@@ -784,8 +774,10 @@ tr:last-child td {
             </div>
           </div>
         </div>
-        <div style="flex:1 1 160px; display:flex; flex-direction:column; align-items:center; justify-content:center; background: rgba(0,0,0,0.2); border-radius: 20px;">
-          <canvas id="objetivo-chart" width="160" height="160"></canvas>
+        <div style="flex:1 1 200px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+          <div style="position: relative; width: 160px; height: 160px;">
+              <canvas id="objetivo-chart" width="160" height="160"></canvas>
+          </div>
         </div>
       </div>
     </div>
@@ -805,7 +797,7 @@ tr:last-child td {
         Desglose por categoría (gastos fijos y variables).
       </p>
       <!-- CONTENEDOR DINÁMICO PARA CATEGORÍAS -->
-      <div id="contenedor-distribucion" style="margin-top:0.5rem;">
+      <div id="contenedor-distribucion" style="margin-top:1rem;">
         <!-- Se llena con JS -->
         <div style="text-align:center; color:#64748b; font-size:0.9rem; padding:1rem;">
           No hay datos suficientes este mes.
@@ -869,8 +861,8 @@ tr:last-child td {
         Usa el buscador para encontrarlas por descripción o por fecha.
       </div>
 
-      <div style="margin-top:0.5rem; display:flex; flex-wrap:wrap; gap:0.5rem; align-items:flex-end;">
-        <div>
+      <div style="margin-top:1rem; display:flex; flex-wrap:wrap; gap:1rem; align-items:flex-end;">
+        <div style="flex: 1;">
           <label for="filtro-texto">Buscar por descripción</label>
           <input type="text" id="filtro-texto" placeholder="Ej: mercado, cine, alquiler..." />
         </div>
@@ -879,7 +871,7 @@ tr:last-child td {
           <input type="date" id="filtro-fecha" />
         </div>
         <div>
-          <button type="button" class="primary" id="btn-limpiar-filtros">Limpiar filtros</button>
+          <button type="button" class="secondary" id="btn-limpiar-filtros">Limpiar filtros</button>
         </div>
       </div>
 
@@ -1009,14 +1001,14 @@ tr:last-child td {
         </div>
       </div>
 
-      <div class="grid" style="margin-top:0.75rem;">
+      <div class="grid" style="margin-top:1.5rem;">
         <div class="stat">
           <div class="stat-label">Entradas del mes</div>
-          <div class="stat-value" id="rep-entradas">$ 0,00</div>
+          <div class="stat-value" id="rep-entradas" style="color: #4ade80;">$ 0,00</div>
         </div>
         <div class="stat">
           <div class="stat-label">Salidas del mes</div>
-          <div class="stat-value" id="rep-salidas">$ 0,00</div>
+          <div class="stat-value" id="rep-salidas" style="color: #f87171;">$ 0,00</div>
         </div>
         <div class="stat">
           <div class="stat-label">Saldo del mes</div>
@@ -1151,13 +1143,13 @@ tr:last-child td {
           <button type="submit" class="primary">Guardar perfil</button>
         </div>
         <div>
-          <button type="button" class="btn-icon" id="perfil-objetivo-reset">
+          <button type="button" class="btn-icon-danger" id="perfil-objetivo-reset" style="width:100%;">
             Reiniciar progreso del objetivo
           </button>
         </div>
       </form>
-      <div id="perfil-mensaje" class="stat-small" style="margin-top:0.4rem;"></div>
-      <div id="perfil-analisis" class="stat-small" style="margin-top:0.5rem;"></div>
+      <div id="perfil-mensaje" class="stat-small" style="margin-top:0.8rem; text-align:center;"></div>
+      <div id="perfil-analisis" class="stat-small" style="margin-top:0.5rem; text-align:center;"></div>
     </div>
 
     <div class="card">
@@ -1210,11 +1202,11 @@ Entendido
 <div style="margin-top:1rem;">
  <label style="margin-bottom:0.5rem;">Monto mensual que podrías ahorrar extra:</label>
  <input type="number" id="simulador-monto" placeholder="Ej: 100 (Cenas fuera, suscripciones...)" style="margin-bottom:1rem;" />
- <div id="simulador-resultado" style="padding:1rem; background: rgba(255,255,255,0.05); border-radius:8px; margin-bottom:1rem; font-size:0.9rem; color:#94a3b8;">
+ <div id="simulador-resultado" style="padding:1rem; background:rgba(255,255,255,0.05); border-radius:8px; margin-bottom:1rem; font-size:0.9rem; color:#94a3b8;">
    Ingresa un monto para ver el impacto en tu objetivo.
  </div>
  <div style="display:flex; gap:0.5rem; justify-content:flex-end;">
-   <button type="button" class="btn-icon" id="btn-cerrar-simulador">Cerrar</button>
+   <button type="button" class="secondary" id="btn-cerrar-simulador">Cerrar</button>
    <button type="button" class="primary" id="btn-calcular-simulacion">Calcular</button>
  </div>
 </div>
@@ -1394,7 +1386,7 @@ if (user) {
    document.getElementById("app").classList.add("hidden");
    document.getElementById("login-screen").classList.remove("hidden");
    
-   // Se não há usuário, não há "loading" de dados a esperar
+   // Se não há usuário, ocultar loading
    loading(false);
 }
 });
@@ -1835,10 +1827,10 @@ const ganancia = diasAntes - diasDespues;
 
 if(ritmoBase <= 0) {
    res.textContent = `Actualmente no ahorras. Con este corte, terminarías en ${diasDespues} días.`;
-   res.style.color = "#4ade80";
+   res.style.color = "#22c55e";
 } else {
-   res.innerHTML = `Ahorrarías <strong style="color:#fff">${diasDespues} días</strong> en total.<br>¡Terminarías <strong style="color:#4ade80">${ganancia} días antes</strong> que ahora!`;
-   res.style.color = "#e2e8f0";
+   res.innerHTML = `Ahorrarías <strong style="color:#fff">${diasDespues} días</strong> en total.<br>¡Terminarías <strong style="color:#22c55e">${ganancia} días antes</strong> que ahora!`;
+   res.style.color = "#94a3b8";
 }
 });
 
@@ -1914,7 +1906,7 @@ function dibujarGraficoViajeroTiempo() {
    const getX = (i) => 40 + (i * ((w-60) / (puntos.length-1)));
    const getY = (v) => h - 30 - ((v - minVal) / range) * (h - 60);
 
-   // Ejes
+   // Ejes (Glassy)
    ctx.strokeStyle = "rgba(255,255,255,0.1)"; ctx.lineWidth = 1;
    ctx.beginPath(); ctx.moveTo(40, 20); ctx.lineTo(40, h-30); ctx.lineTo(w-20, h-30); ctx.stroke();
 
@@ -1954,7 +1946,7 @@ function dibujarGraficoViajeroTiempo() {
        }
 
        const x = getX(i); const y = getY(p.val);
-       ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI*2); // Ponto um pouco maior
+       ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI*2); // Ponto um pouco maior
        ctx.fillStyle = p.future ? "#06b6d4" : "#8b5cf6";
        ctx.fill();
        
@@ -2027,7 +2019,7 @@ const venc = fijo.vencimiento;
 const mesInicio = fijo.mes_inicio || obtenerAnioMesActual(); // Adaptação: Firebase usa camelCase ou snake_case conforme salvo
 
 if (anioMesActual < mesInicio) {
-return { claseFila: "", badgeClase: "badge-normal", texto: "Aún no aplica este mes", restante: fijo.valor, totalPagado: 0 };
+return { claseFila: "", badgeClase: "badge-normal", texto: "Próximo mes", restante: fijo.valor, totalPagado: 0 };
 }
 
 const transMes = filtrarMesActual(transaccionesLocal, "fecha");
@@ -2041,16 +2033,16 @@ const restante = Math.max(0, fijo.valor - totalPagado);
 const pagoCompleto = totalPagado >= (fijo.valor - 0.01);
 
 if (pagoCompleto) {
-return { claseFila: "fijo-verde", badgeClase: "badge-verde", texto: "Pagado completamente este mes", restante: 0, totalPagado };
+return { claseFila: "fijo-verde", badgeClase: "badge-verde", texto: "Pagado", restante: 0, totalPagado };
 }
 const faltanteTexto = restante > 0 ? `Falta ${formatearMoneda(restante)}` : "";
 if (totalPagado > 0 && !pagoCompleto) {
-if (diaHoy >= venc) return { claseFila: "fijo-rojo", badgeClase: "badge-rojo", texto: `Pago parcial. ${faltanteTexto}`, restante, totalPagado };
-else if (diaHoy >= venc - 7) return { claseFila: "fijo-amarillo", badgeClase: "badge-amarillo", texto: `Pago parcial. ${faltanteTexto}`, restante, totalPagado };
-else return { claseFila: "", badgeClase: "badge-normal", texto: `Pago parcial. ${faltanteTexto}`, restante, totalPagado };
+if (diaHoy >= venc) return { claseFila: "fijo-rojo", badgeClase: "badge-rojo", texto: `Parcial (Vencido)`, restante, totalPagado };
+else if (diaHoy >= venc - 7) return { claseFila: "fijo-amarillo", badgeClase: "badge-amarillo", texto: `Parcial (Cerca)`, restante, totalPagado };
+else return { claseFila: "", badgeClase: "badge-normal", texto: `Parcial`, restante, totalPagado };
 }
 if (diaHoy < venc - 7) return { claseFila: "", badgeClase: "badge-normal", texto: "Pendiente", restante, totalPagado };
-else if (diaHoy >= venc - 7 && diaHoy < venc) return { claseFila: "fijo-amarillo", badgeClase: "badge-amarillo", texto: "Cerca del vencimiento", restante, totalPagado };
+else if (diaHoy >= venc - 7 && diaHoy < venc) return { claseFila: "fijo-amarillo", badgeClase: "badge-amarillo", texto: "Vence pronto", restante, totalPagado };
 else return { claseFila: "fijo-rojo", badgeClase: "badge-rojo", texto: "Vencido", restante, totalPagado };
 }
 
@@ -2088,7 +2080,7 @@ l.forEach(t => {
    let catNombre = "-";
    if (t.categoriaId === null && t.gastoFijoId) {
       const f = fijosLocal.find(x => x.id === t.gastoFijoId);
-      catNombre = "Gasto fijo - " + (f ? f.descripcion : "");
+      catNombre = "Fijo: " + (f ? f.descripcion : "");
    } else {
       const c = categoriasLocal.find(x => x.id === t.categoriaId);
       catNombre = c ? c.nome : "-";
@@ -2097,12 +2089,12 @@ l.forEach(t => {
    if (t.tipo === "salida") {
        if(t.origen === "tarjeta" && t.tarjetaId) {
           const tar = tarjetasLocal.find(x => x.id === t.tarjetaId);
-          origenTexto = "Tarjeta - " + (tar ? `${tar.alias} (${tar.digitos})` : "");
-       } else origenTexto = "Efectivo"; // CAMBIADO A EFECTIVO
+          origenTexto = "💳 " + (tar ? `${tar.alias}` : "");
+       } else origenTexto = "💵 Efectivo"; // CAMBIADO A EFECTIVO
    }
 
    tr.innerHTML = `<td>${t.fecha}</td><td><span class="tag ${t.tipo}">${t.tipo}</span></td><td>${catNombre}</td><td>${origenTexto}</td><td>${t.descripcion||""}</td><td>${formatearMoneda(t.valor)}</td><td></td>`;
-   const btn = document.createElement("button"); btn.className="btn-icon btn-icon-danger"; btn.textContent="Eliminar"; btn.onclick=()=>window.eliminarTransaccion(t.id);
+   const btn = document.createElement("button"); btn.className="btn-icon btn-icon-danger"; btn.textContent="X"; btn.onclick=()=>window.eliminarTransaccion(t.id);
    tr.lastElementChild.appendChild(btn);
    tb.appendChild(tr);
 });
@@ -2365,28 +2357,28 @@ const radio = Math.min(w, h) / 2 - 10;
 const innerRadio = radio * 0.6;
 ctx.clearRect(0, 0, w, h);
 
-// Fondo
+// Fundo
 ctx.beginPath(); ctx.arc(cx, cy, radio, 0, Math.PI * 2); ctx.fillStyle = "rgba(255,255,255,0.05)"; ctx.fill();
 
-const clamped = Math.max(0, Math.min(porcentajeUsado, 200)) / 100;
+const clamped = Math.max(0, Math.min(porcentajeUsado, 100)) / 100;
 const inicio = -Math.PI / 2;
 const fin = inicio + Math.PI * 2 * clamped;
 
-// Arco
-ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, radio, inicio, fin); ctx.closePath();
+// Arco Moderno (Donut com linha grossa e glow)
+ctx.beginPath(); ctx.arc(cx, cy, radio, inicio, fin);
+ctx.lineCap = "round";
+ctx.lineWidth = 12; // Linha grossa estilo donut
 
-// Colores semáforo en el gráfico también (ADAPTADOS)
-if(porcentajeUsado > 80) ctx.fillStyle = "rgba(248, 113, 113, 0.8)"; // Rojo Glass
-else if(porcentajeUsado > 50) ctx.fillStyle = "rgba(250, 204, 21, 0.8)"; // Amarillo Glass
-else ctx.fillStyle = "rgba(74, 222, 128, 0.8)"; // Verde Glass
+// Cor baseada no semáforo
+let color = "#4ade80";
+if(porcentajeUsado > 80) color = "#f87171";
+else if(porcentajeUsado > 50) color = "#facc15";
 
-ctx.fill();
+ctx.strokeStyle = color;
+ctx.stroke();
 
-// Si pasa de 100%, dibujar anillo rojo completo si se desea, o dejar el arco lleno.
-// Aquí dejaremos el arco hasta donde llegue (max 200% en la lógica de cálculo)
-
-// Centro
-ctx.beginPath(); ctx.arc(cx, cy, innerRadio, 0, Math.PI * 2); ctx.fillStyle = "#0f172a"; ctx.fill(); // Fundo da página
+// Centro (Fundo do buraco do donut)
+ctx.beginPath(); ctx.arc(cx, cy, innerRadio, 0, Math.PI * 2); ctx.fillStyle = "#020617"; ctx.fill(); // Mesmo fundo do body
 
 // TEXTO EN EL CENTRO (NUEVO)
 if(textoCentro) {
@@ -2417,16 +2409,19 @@ ctx.clearRect(0, 0, w, h);
 
 ctx.beginPath(); ctx.arc(cx, cy, radio, 0, Math.PI * 2); ctx.fillStyle = "rgba(255,255,255,0.05)"; ctx.fill();
 const end = -Math.PI/2 + (Math.PI*2 * (Math.min(porcentaje,100)/100));
-ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, radio, -Math.PI/2, end);
 
-// Gradiente Prism
-const grad = ctx.createLinearGradient(0, 0, w, 0);
+// Gradiente Prism (Roxo -> Rosa)
+const grad = ctx.createLinearGradient(0, 0, w, h);
 grad.addColorStop(0, "#ec4899");
 grad.addColorStop(1, "#8b5cf6");
-ctx.fillStyle = grad;
 
-ctx.fill();
-ctx.beginPath(); ctx.arc(cx, cy, innerRadio, 0, Math.PI * 2); ctx.fillStyle = "#0f172a"; ctx.fill();
+ctx.beginPath(); ctx.arc(cx, cy, radio, -Math.PI/2, end);
+ctx.lineCap = "round";
+ctx.lineWidth = 12; // Donut grosso
+ctx.strokeStyle = grad;
+ctx.stroke();
+
+ctx.beginPath(); ctx.arc(cx, cy, innerRadio, 0, Math.PI * 2); ctx.fillStyle = "#020617"; ctx.fill();
 
 // TEXTO EN EL CENTRO (NUEVO)
 if(textoCentro) {
