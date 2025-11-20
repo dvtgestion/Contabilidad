@@ -1438,7 +1438,7 @@ onAuthStateChanged(auth, async (user) => {
          console.error("Erro whitelist:", error);
          // Se for erro de permissão do Firebase (Rules), tratamos como bloqueio
          if (error.code === 'permission-denied') {
-            alert("🚫 ACESSO NEGADO\n\nVocê não tem permissão para verificar a licença.");
+            alert("🚫 ERROR DE PERMISOS\n\nNo tienes autorización para verificar la licencia.");
          } else {
             alert("Erro de conexão. Tente novamente.");
          }
