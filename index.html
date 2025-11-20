@@ -1363,12 +1363,13 @@ return anio.toString().padStart(4, "0") + "-" + mes.toString().padStart(2, "0");
 
 // --- ESTADO GLOBAL ---
 let usuarioActual = null;
+// Dados de Listas
 let categoriasLocal = [];
 let transaccionesLocal = [];
 let fijosLocal = [];
 let tarjetasLocal = [];
 
-// Variaveis Perfil
+// Dados de Perfil (Variáveis Primitivas)
 let metaMensualUsuario = 0;
 let ingresoMensualUsuario = 0;
 let edadUsuario = null;
@@ -1382,74 +1383,92 @@ let objetivoFechaInicio = null;
 let objetivoCompletado = false;
 let objetivosHistorial = [];
 
-// Listeners de Firebase (para cancelar subscrição ao sair)
+// Listeners de Firebase
 let unsubs = [];
 
+// Função para Zerar Memória (Evita vazamento de dados entre contas)
+function limparMemoriaGlobal() {
+    usuarioActual = null;
+    categoriasLocal = []; transaccionesLocal = []; fijosLocal = []; tarjetasLocal = [];
+    metaMensualUsuario = 0; ingresoMensualUsuario = 0; edadUsuario = null;
+    sexoUsuario = ""; paisUsuario = ""; monedaUsuario = "USD"; // Reset para padrão
+    objetivoNombre = ""; objetivoValor = 0; objetivoAhorroBase = 0;
+    objetivoFechaInicio = null; objetivoCompletado = false; objetivosHistorial = [];
+    yaMostroModalCategorias = false;
+}
+
 // ----------------------------------------------------------------------
-// ----------------------------------------------------------------------
-// AUTENTICACIÓN COM WHITELIST (SISTEMA DE SEGURANÇA)
+// AUTENTICACIÓN COM WHITELIST (SEGURANÇA REFORÇADA)
 // ----------------------------------------------------------------------
 onAuthStateChanged(auth, async (user) => {
   if (user) {
-     // O usuário logou no Firebase (email/senha corretos).
-     // AGORA: Vamos verificar se ele pagou (se está na Whitelist).
-     
-     // Mostra loading enquanto verifica
+     // 1. Usuário logou no Firebase.
      loading(true);
      const loadingText = document.getElementById('loading-overlay');
-     if(loadingText) loadingText.textContent = "Verificando permissão...";
+     if(loadingText) loadingText.textContent = "Verificando licença...";
      
      try {
-         // Referência ao documento do email dele na coleção 'clientes_permitidos'
+         // 2. Verifica Whitelist (Seu email está na lista?)
          const docRef = doc(db, "clientes_permitidos", user.email); 
          const docSnap = await getDoc(docRef);
 
-         if (docSnap.exists()) {
-             // --- SUCESSO: ESTÁ NA LISTA ---
+         if (docSnap.exists() && docSnap.data().ativo === true) {
+             // --- SUCESSO: PERMITIDO ---
              if(loadingText) loadingText.textContent = "Cargando datos...";
              
              usuarioActual = user;
              document.getElementById("user-email").textContent = user.email;
+             
+             // Troca de tela
              document.getElementById("login-screen").classList.add("hidden");
              document.getElementById("app").classList.remove("hidden");
 
-             // Inicia o app normalmente
+             // Inicia o sistema
              iniciarListeners(user.uid);
          } else {
-             // --- ERRO: NÃO ESTÁ NA LISTA ---
-             console.warn("Acesso negado: Email não está na whitelist.");
-             alert("🚫 ACESSO RESTRITO\n\nEste email não possui uma licença ativa.\nEntre em contato com o suporte para adquirir seu acesso.");
+             // --- BLOQUEADO: NÃO ESTÁ NA LISTA ---
+             console.warn("Acesso negado para:", user.email);
+             alert("🚫 ACESSO NEGADO\n\nEste email não possui permissão de acesso.\nSua conta foi criada, mas você precisa ser autorizado pelo administrador.");
              
-             // Desloga o usuário imediatamente
+             // Desloga e FORÇA RECARREGAMENTO para limpar qualquer dado visual
              await signOut(auth);
-             loading(false);
+             window.location.reload();
          }
      } catch (error) {
-         console.error("Erro ao verificar whitelist:", error);
-         alert("Erro de conexão ao verificar sua licença. Tente novamente.");
-         await signOut(auth); // Por segurança, desloga se der erro
-         loading(false);
+         console.error("Erro whitelist:", error);
+         // Se for erro de permissão do Firebase (Rules), tratamos como bloqueio
+         if (error.code === 'permission-denied') {
+            alert("🚫 ACESSO NEGADO\n\nVocê não tem permissão para verificar a licença.");
+         } else {
+            alert("Erro de conexão. Tente novamente.");
+         }
+         await signOut(auth);
+         window.location.reload();
      }
 
   } else {
      // --- LOGOUT / NINGUÉM LOGADO ---
-     usuarioActual = null;
+     
+     // Se tínhamos um usuário antes e agora não (logout real), recarregamos a página
+     // Isso garante que NENHUM dado da conta anterior fique na memória.
+     if (usuarioActual) {
+         window.location.reload();
+         return;
+     }
 
-     // Limpar dados da memória
-     categoriasLocal = []; transaccionesLocal = []; fijosLocal = []; tarjetasLocal = [];
-
-     // Cancelar listeners ativos
+     limparMemoriaGlobal(); // Garante limpeza
+     
+     // Cancelar listeners
      unsubs.forEach(u => u());
      unsubs = [];
 
-     // Alternar telas
+     // Tela de Login
      document.getElementById("app").classList.add("hidden");
      document.getElementById("login-screen").classList.remove("hidden");
      
      loading(false);
   }
 });
-
 
 // ----------------------------------------------------------------------
 // CARGA DE DATOS (FIRESTORE REALTIME)
@@ -1458,52 +1477,40 @@ function iniciarListeners(uid) {
 loading(true);
 
 // 1. Categorias
-const qCat = query(collection(db, "categorias"), where("uid", "==", uid));
-const unsubCat = onSnapshot(qCat, (snapshot) => {
+const qCat = query(collection(db, "categorias"), where("uid", "==", uid), orderBy("createdAt", "desc")); // Tenta ordenar, se falhar por índice, remove orderBy
+const unsubCat = onSnapshot(query(collection(db, "categorias"), where("uid", "==", uid)), (snapshot) => {
    categoriasLocal = [];
-   snapshot.forEach(doc => {
-       categoriasLocal.push({ id: doc.id, ...doc.data() });
-   });
-   // Quando carrega categorias, atualiza a UI dependente
+   snapshot.forEach(doc => { categoriasLocal.push({ id: doc.id, ...doc.data() }); });
    inicializarInterfaz();
    mostrarModalCategoriasSiCorresponde();
 });
 unsubs.push(unsubCat);
 
 // 2. Transacciones
-const qTrans = query(collection(db, "transacciones"), where("uid", "==", uid));
-const unsubTrans = onSnapshot(qTrans, (snapshot) => {
+const unsubTrans = onSnapshot(query(collection(db, "transacciones"), where("uid", "==", uid)), (snapshot) => {
    transaccionesLocal = [];
-   snapshot.forEach(doc => {
-       transaccionesLocal.push({ id: doc.id, ...doc.data() });
-   });
+   snapshot.forEach(doc => { transaccionesLocal.push({ id: doc.id, ...doc.data() }); });
    inicializarInterfaz();
 });
 unsubs.push(unsubTrans);
 
 // 3. Gastos Fijos
-const qFijos = query(collection(db, "gastos_fijos"), where("uid", "==", uid));
-const unsubFijos = onSnapshot(qFijos, (snapshot) => {
+const unsubFijos = onSnapshot(query(collection(db, "gastos_fijos"), where("uid", "==", uid)), (snapshot) => {
    fijosLocal = [];
-   snapshot.forEach(doc => {
-       fijosLocal.push({ id: doc.id, ...doc.data() });
-   });
+   snapshot.forEach(doc => { fijosLocal.push({ id: doc.id, ...doc.data() }); });
    inicializarInterfaz();
 });
 unsubs.push(unsubFijos);
 
 // 4. Tarjetas
-const qTarj = query(collection(db, "tarjetas"), where("uid", "==", uid));
-const unsubTarj = onSnapshot(qTarj, (snapshot) => {
+const unsubTarj = onSnapshot(query(collection(db, "tarjetas"), where("uid", "==", uid)), (snapshot) => {
    tarjetasLocal = [];
-   snapshot.forEach(doc => {
-       tarjetasLocal.push({ id: doc.id, ...doc.data() });
-   });
+   snapshot.forEach(doc => { tarjetasLocal.push({ id: doc.id, ...doc.data() }); });
    inicializarInterfaz();
 });
 unsubs.push(unsubTarj);
 
-// 5. Perfil (Documento Único)
+// 5. Perfil (Aqui corrigimos o vazamento de dados se o perfil for novo)
 const docRef = doc(db, "perfil", uid);
 const unsubPerfil = onSnapshot(docRef, (docSnap) => {
    if (docSnap.exists()) {
@@ -1511,28 +1518,30 @@ const unsubPerfil = onSnapshot(docRef, (docSnap) => {
        edadUsuario = p.edad;
        sexoUsuario = p.sexo;
        paisUsuario = p.pais;
-       monedaUsuario = p.moneda;
-       metaMensualUsuario = p.meta_mensual || 0;
-       ingresoMensualUsuario = p.ingreso_mensual || 0;
-       objetivoNombre = p.objetivo_nombre;
-       objetivoValor = p.objetivo_valor || 0;
-       // Forçar conversão para número para evitar erros de soma
+       monedaUsuario = p.moneda || "USD"; // Default
+       metaMensualUsuario = Number(p.meta_mensual) || 0;
+       ingresoMensualUsuario = Number(p.ingreso_mensual) || 0;
+       objetivoNombre = p.objetivo_nombre || "";
+       objetivoValor = Number(p.objetivo_valor) || 0;
        objetivoAhorroBase = Number(p.objetivo_ahorro_base) || 0;
        objetivoFechaInicio = p.objetivo_fecha_inicio;
        objetivoCompletado = p.objetivo_completado;
        yaMostroModalCategorias = p.mostro_modal_categorias;
        objetivosHistorial = p.objetivos_historial || [];
  
-       // Se moeda não definida, tenta deduzir
-       if(!monedaUsuario && paisUsuario) {
-            monedaUsuario = monedaPorDefectoParaPais(paisUsuario);
-       }
+       if(!monedaUsuario && paisUsuario) monedaUsuario = monedaPorDefectoParaPais(paisUsuario);
    } else {
-       // Se não existe perfil, cria vazio na memória
+       // PERFIL NOVO: Garante que as variáveis globais estejam ZERADAS
+       // (Caso o reload não tenha ocorrido por algum motivo, isso é a segurança extra)
+       metaMensualUsuario = 0;
+       ingresoMensualUsuario = 0;
+       objetivoNombre = "";
+       objetivoValor = 0;
+       objetivoAhorroBase = 0;
        yaMostroModalCategorias = false;
    }
    inicializarInterfaz();
-   loading(false); // Fim do carregamento inicial
+   loading(false);
 });
 unsubs.push(unsubPerfil);
 }
