@@ -415,50 +415,31 @@ button.secondary:hover {
 /* NOVO ESTILO DO BOTÃO REINICIAR - COM GRADIENTE E PRESENÇA */
 /* ============================================================ */
 button.danger-action {
-    /* Gradiente vermelho escuro e translúcido para dar volume */
     background: linear-gradient(135deg, rgba(220, 38, 38, 0.2), rgba(153, 27, 27, 0.1));
-    
-    /* Efeito de vidro fosco */
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    
-    /* Borda mais visível e brilhante */
     border: 1px solid rgba(248, 113, 113, 0.4);
-    
-    /* Texto e Tipografia */
-    color: #fca5a5; /* Vermelho claro */
+    color: #fca5a5;
     font-weight: 600;
     font-size: 0.95rem;
     letter-spacing: 0.5px;
-    
-    /* Dimensões e Espaçamento */
     width: 100%;
-    padding: 1rem; /* Um pouco mais alto para impor presença */
-    border-radius: 16px; /* Mais arredondado */
-    margin-top: 1.5rem; /* Mais afastado dos campos de cima */
-    
-    /* Sombras para ele flutuar */
+    padding: 1rem;
+    border-radius: 16px;
+    margin-top: 1.5rem;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Efeito ao passar o mouse (Hover) */
 button.danger-action:hover {
-    /* Fica mais claro e intenso */
     background: linear-gradient(135deg, rgba(220, 38, 38, 0.4), rgba(185, 28, 28, 0.3));
-    border-color: #ef4444; /* Borda vermelha neon */
-    color: #ffffff; /* Texto branco */
-    
-    /* Brilho externo (Glow) */
+    border-color: #ef4444;
+    color: #ffffff;
     box-shadow: 0 0 25px rgba(239, 68, 68, 0.5);
-    
-    /* Movimento */
     transform: translateY(-3px);
 }
 
-/* Efeito ao clicar */
 button.danger-action:active {
     transform: scale(0.98);
 }
@@ -700,7 +681,6 @@ tr:last-child td {
 }
 </style>
 </head>
-
 <body>
 
 <div id="loading-overlay" class="hidden">Cargando datos...</div>
@@ -1258,7 +1238,6 @@ Entendido
 </div>
 </div>
 </div>
-
 <script type="module">
 // ===============================================================
 // INTEGRACIÓN FIREBASE
@@ -1328,6 +1307,7 @@ if (str === null || str === undefined) return 0;
 if (typeof str !== "string") str = String(str);
 str = str.trim();
 if (!str) return 0;
+// Suporte para formatos 1.000,00 e 1000.00
 str = str.replace(/\./g, "");
 str = str.replace(",", ".");
 const n = parseFloat(str);
@@ -1704,7 +1684,7 @@ if(tipo==="salida"){
        tId = document.getElementById("tarjeta-select").value;
        if(!tId) { alert("Seleccione tarjeta"); return; }
        origFinal="tarjeta";
-   } else origFinal="efectivo"; // CAMBIO: NORMAL A EFECTIVO
+   } else origFinal="efectivo";
 }
 
 const catIdDB = (catVal === "__gasto_fijo__") ? null : catVal;
@@ -1725,7 +1705,7 @@ try {
    });
    document.getElementById("valor").value="";
    document.getElementById("descripcion").value="";
-   // Chama atualização imediatamente após adicionar (mesmo que o listener chame depois, garante sensação de resposta)
+   // Força atualização imediata
    actualizarObjetivo();
 } catch(e){ console.error(e); alert("Error"); }
 loading(false);
@@ -1741,7 +1721,7 @@ window.eliminarTransaccion = async (id) => {
 // ----------------------------------------------------------------------
 
 // UI Helpers para preencher tabelas
-window.eliminarCategoria = eliminarCategoria; // Tornar global para o HTML onclick
+window.eliminarCategoria = eliminarCategoria;
 window.eliminarFijo = eliminarFijo;
 window.eliminarTarjeta = eliminarTarjeta;
 window.eliminarTransaccion = eliminarTransaccion;
@@ -1770,10 +1750,10 @@ rellenarTablaTarjetas();
 rellenarTablaTransacciones();
 rellenarPerfil();
 rellenarHistorialObjetivos();
-actualizarResumen(); // INCLUYE SEMAFORO Y DISTRIBUCIÓN ESPECÍFICA
+actualizarResumen();
 analisisLatam();
-actualizarObjetivo(); // INCLUYE PROYECCION Y NUMEROS EN PIZZA
-dibujarGraficoViajeroTiempo(); // NUEVO
+actualizarObjetivo();
+dibujarGraficoViajeroTiempo();
 actualizarCampoGastoFijo();
 actualizarCampoOrigenYTarjeta();
 inicializarReporte();
@@ -1812,11 +1792,9 @@ ingresoMensualUsuario = parseNumeroLocal(document.getElementById("perfil-ingreso
 monedaUsuario = document.getElementById("perfil-moneda").value;
 objetivoNombre = document.getElementById("perfil-objetivo-nombre").value;
 
-// Lógica de resetar objetivo se mudar valor
 const novoValor = parseNumeroLocal(document.getElementById("perfil-objetivo-valor").value);
 if (novoValor !== objetivoValor && novoValor > 0) {
    objetivoValor = novoValor;
-   // Se mudar o valor, não reseta a base automaticamente, mantém o progresso atual
 } else {
    objetivoValor = novoValor;
 }
@@ -1825,11 +1803,10 @@ await guardarPerfilEnServidor();
 inicializarInterfaz();
 });
 
-// REINICIAR OBJETIVO (CORRIGIDO: AGORA DEFINE A BASE CORRETAMENTE)
+// REINICIAR OBJETIVO
 document.getElementById("perfil-objetivo-reset").addEventListener("click", async () => {
 if(!confirm("¿Reiniciar progreso? Esto pondrá tu ahorro actual en 0%.")) return;
 
-// A "Base" se torna o saldo atual total. Assim, qualquer novo valor será somado a partir daqui.
 objetivoAhorroBase = calcularAhorroTotal();
 objetivoFechaInicio = new Date().toISOString().slice(0,10);
 objetivoCompletado = false;
@@ -1849,9 +1826,11 @@ const res = document.getElementById("simulador-resultado");
 
 if(extra <= 0) { res.textContent = "Ingresa un monto válido."; return; }
 
-// Recalcular estado actual
 let totE=0, totS=0;
-transaccionesLocal.forEach(t => { if(t.tipo==="entrada") totE+=t.valor; else totS+=t.valor; });
+transaccionesLocal.forEach(t => { 
+    const v = Number(t.valor)||0;
+    if(t.tipo==="entrada") totE+=v; else totS+=v; 
+});
 const ahorroTotal = Math.max(0, totE - totS);
 let actual = ahorroTotal - objetivoAhorroBase;
 if(actual<0) actual=0;
@@ -1859,21 +1838,21 @@ const restante = objetivoValor - actual;
 
 if(restante <= 0) { res.textContent = "¡Ya cumpliste tu objetivo!"; return; }
 
-// Ritmo actual del mes
 const mes = obtenerAnioMesActual();
 const transMes = transaccionesLocal.filter(t => t.fecha && t.fecha.startsWith(mes));
 let eM=0, sM=0;
-transMes.forEach(t => { if(t.tipo==="entrada") eM+=t.valor; else sM+=t.valor; });
+transMes.forEach(t => { 
+    const v = Number(t.valor)||0;
+    if(t.tipo==="entrada") eM+=v; else sM+=v; 
+});
 const flujoMes = Math.max(0, eM - sM);
 const dia = new Date().getDate();
-const ritmoBase = (flujoMes/dia)*30; // Ahorro/mes estimado
+const ritmoBase = (flujoMes/dia)*30;
 
-// Escenarios
 const tiempoActual = ritmoBase > 0 ? (restante / ritmoBase) : 9999;
 const nuevoRitmo = ritmoBase + extra;
 const tiempoNuevo = restante / nuevoRitmo;
 
-// Días
 const diasAntes = Math.ceil(tiempoActual * 30);
 const diasDespues = Math.ceil(tiempoNuevo * 30);
 const ganancia = diasAntes - diasDespues;
@@ -1887,7 +1866,7 @@ if(ritmoBase <= 0) {
 }
 });
 
-// --- LOGICA DEL GRÁFICO VIAJERO EN EL TIEMPO (MODIFICADO: GAP / LACUNA + CORES PRISM) ---
+// --- LOGICA DEL GRÁFICO VIAJERO EN EL TIEMPO ---
 function dibujarGraficoViajeroTiempo() {
    const canvas = document.getElementById("chart-time-travel");
    if(!canvas) return;
@@ -1898,7 +1877,6 @@ function dibujarGraficoViajeroTiempo() {
 
    const hoy = new Date();
    const meses = [];
-   // Histórico de 3 meses atrás + 6 futuros
    for(let i=-2; i<=6; i++) {
        const d = new Date(hoy.getFullYear(), hoy.getMonth() + i, 1);
        meses.push({
@@ -1909,11 +1887,11 @@ function dibujarGraficoViajeroTiempo() {
    }
 
    let saldoAcumulado = 0;
-   // Calcular saldo previo al rango visible
    const primerMesMostrado = meses[0].dateStr;
    transaccionesLocal.forEach(t => {
        if(t.fecha < primerMesMostrado + "-01") {
-           if(t.tipo==="entrada") saldoAcumulado += t.valor; else saldoAcumulado -= t.valor;
+           const v = Number(t.valor)||0;
+           if(t.tipo==="entrada") saldoAcumulado += v; else saldoAcumulado -= v;
        }
    });
 
@@ -1925,31 +1903,27 @@ function dibujarGraficoViajeroTiempo() {
        if(!m.isFuture) {
            const trans = transaccionesLocal.filter(t => t.fecha && t.fecha.startsWith(m.dateStr));
            
-           // CAMBIO PRINCIPAL: SI NO HAY DATOS EN UN MES PASADO/PRESENTE, VALOR ES NULL (GAP)
            if (trans.length === 0) {
                puntos.push({ val: null, future: false, label: m.label });
-               // Nota: No actualizamos saldoAcumulado, ni tendencia, mantenemos el estado anterior
-               // pero visualmente será un hueco.
            } else {
                let e=0, s=0;
-               trans.forEach(t => { if(t.tipo==="entrada") e+=t.valor; else s+=t.valor; });
+               trans.forEach(t => { 
+                   const v = Number(t.valor)||0;
+                   if(t.tipo==="entrada") e+=v; else s+=v; 
+               });
                saldoAcumulado += (e-s);
                puntos.push({ val: saldoAcumulado, future: false, label: m.label });
                tendenciaAhorro += (e-s);
                mesesConDatos++;
            }
        } else {
-           // Futuro: Proyectamos desde el último saldo conocido (saldoAcumulado)
            const promedio = mesesConDatos > 0 ? (tendenciaAhorro / mesesConDatos) : 0;
            saldoAcumulado += promedio;
            puntos.push({ val: saldoAcumulado, future: true, label: m.label });
        }
    });
 
-   // Filtramos nulos para calcular escalas
    const valoresValidos = puntos.map(p => p.val).filter(v => v !== null);
-   
-   // Se não houver pontos validos, não desenha nada
    if (valoresValidos.length === 0) return;
 
    const maxVal = Math.max(...valoresValidos) * 1.1;
@@ -1959,17 +1933,13 @@ function dibujarGraficoViajeroTiempo() {
    const getX = (i) => 40 + (i * ((w-60) / (puntos.length-1)));
    const getY = (v) => h - 30 - ((v - minVal) / range) * (h - 60);
 
-   // Ejes (Glassy)
    ctx.strokeStyle = "rgba(255,255,255,0.1)"; ctx.lineWidth = 1;
    ctx.beginPath(); ctx.moveTo(40, 20); ctx.lineTo(40, h-30); ctx.lineTo(w-20, h-30); ctx.stroke();
 
-   // Línea
    ctx.lineWidth = 3;
    for(let i=0; i<puntos.length-1; i++) {
        const p1 = puntos[i];
        const p2 = puntos[i+1];
-       
-       // CAMBIO GAP: Si alguno de los puntos es null, saltamos (no dibujamos línea)
        if (p1.val === null || p2.val === null) continue;
 
        ctx.beginPath();
@@ -1978,20 +1948,17 @@ function dibujarGraficoViajeroTiempo() {
    
        if(p2.future) {
            ctx.setLineDash([5, 5]);
-           ctx.strokeStyle = "#06b6d4"; // Cyan para o futuro (Prism style)
+           ctx.strokeStyle = "#06b6d4";
        } else {
            ctx.setLineDash([]);
-           ctx.strokeStyle = "#8b5cf6"; // Roxo para o passado (Prism style)
+           ctx.strokeStyle = "#8b5cf6";
        }
        ctx.stroke();
    }
    ctx.setLineDash([]);
 
-   // Puntos
    puntos.forEach((p, i) => {
-       // CAMBIO GAP: No dibujar punto si es null
        if (p.val === null) {
-           // Apenas desenha a label no eixo X para referência
            const xLabel = getX(i);
            ctx.fillStyle = "rgba(255,255,255,0.3)"; ctx.font = "10px sans-serif"; ctx.textAlign = "center";
            ctx.fillText(p.label, xLabel, h-10);
@@ -1999,17 +1966,14 @@ function dibujarGraficoViajeroTiempo() {
        }
 
        const x = getX(i); const y = getY(p.val);
-       ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI*2); // Ponto um pouco maior
+       ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI*2);
        ctx.fillStyle = p.future ? "#06b6d4" : "#8b5cf6";
        ctx.fill();
-       
-       // Borda branca no ponto para destacar
        ctx.strokeStyle = "rgba(255,255,255,0.5)"; ctx.lineWidth = 2; ctx.stroke();
    
        ctx.fillStyle = "rgba(255,255,255,0.5)"; ctx.font = "10px sans-serif"; ctx.textAlign = "center";
        ctx.fillText(p.label, x, h-10);
    
-       // Mostrar valor apenas no último ponto ou no mês atual (índice 2 aprox) se tiver dados
        if(i === puntos.length-1 || (i === 2 && !p.future)) {
           ctx.fillStyle = "#fff";
           ctx.fillText(formatearMoneda(p.val), x, y - 15);
@@ -2017,7 +1981,7 @@ function dibujarGraficoViajeroTiempo() {
    });
 }
 
-// --- FUNÇÕES AUXILIARES DE UI (TABELAS E SELECTS) ---
+// --- FUNÇÕES AUXILIARES DE UI ---
 function rellenarSelectCategorias() {
 const sel = document.getElementById("categoria");
 sel.innerHTML = "";
@@ -2069,7 +2033,7 @@ function estadoFijoParaMes(fijo, anioMesActual) {
 const hoy = new Date();
 const diaHoy = hoy.getDate();
 const venc = fijo.vencimiento;
-const mesInicio = fijo.mes_inicio || obtenerAnioMesActual(); // Adaptação: Firebase usa camelCase ou snake_case conforme salvo
+const mesInicio = fijo.mes_inicio || obtenerAnioMesActual();
 
 if (anioMesActual < mesInicio) {
 return { claseFila: "", badgeClase: "badge-normal", texto: "Próximo mes", restante: fijo.valor, totalPagado: 0 };
@@ -2079,7 +2043,7 @@ const transMes = filtrarMesActual(transaccionesLocal, "fecha");
 let totalPagado = 0;
 transMes.forEach(t => {
 if (t.tipo === "salida" && t.gastoFijoId === fijo.id) {
- totalPagado += t.valor;
+ totalPagado += Number(t.valor)||0;
 }
 });
 const restante = Math.max(0, fijo.valor - totalPagado);
@@ -2120,7 +2084,6 @@ rellenarSelectTarjetas();
 function rellenarTablaTransacciones() {
 const tb = document.querySelector("#tabla-transacciones tbody"); tb.innerHTML="";
 const mes = obtenerAnioMesActual();
-// Filtrar localmente (já que pegamos tudo do user)
 let l = transaccionesLocal.filter(t=>t.fecha && t.fecha.startsWith(mes));
 const ft = document.getElementById("filtro-texto").value.toLowerCase();
 const ff = document.getElementById("filtro-fecha").value;
@@ -2143,7 +2106,7 @@ l.forEach(t => {
        if(t.origen === "tarjeta" && t.tarjetaId) {
           const tar = tarjetasLocal.find(x => x.id === t.tarjetaId);
           origenTexto = "💳 " + (tar ? `${tar.alias}` : "");
-       } else origenTexto = "💵 Efectivo"; // CAMBIADO A EFECTIVO
+       } else origenTexto = "💵 Efectivo";
    }
 
    tr.innerHTML = `<td>${t.fecha}</td><td><span class="tag ${t.tipo}">${t.tipo}</span></td><td>${catNombre}</td><td>${origenTexto}</td><td>${t.descripcion||""}</td><td>${formatearMoneda(t.valor)}</td><td></td>`;
@@ -2161,12 +2124,13 @@ let totalSalidasFijos = 0;
 let totalSalidasOtros = 0;
 
 transMes.forEach(t => {
+const v = Number(t.valor) || 0;
 if (t.tipo === "entrada") {
-  totalEntradas += t.valor;
+  totalEntradas += v;
 } else if (t.tipo === "salida") {
-  totalSalidas += t.valor;
-  if (t.gastoFijoId) totalSalidasFijos += t.valor;
-  else totalSalidasOtros += t.valor;
+  totalSalidas += v;
+  if (t.gastoFijoId) totalSalidasFijos += v;
+  else totalSalidasOtros += v;
 }
 });
 
@@ -2181,11 +2145,9 @@ if (saldo > 0) saldoTexto.textContent = "Estás con saldo positivo este mes.";
 else if (saldo < 0) saldoTexto.textContent = "Estás gastando más de lo que entra este mes.";
 else saldoTexto.textContent = "Saldo neutro por ahora.";
 
-// --- LÓGICA NUEVA: DISTRIBUCIÓN ESPECÍFICA ---
 const contenedorDist = document.getElementById("contenedor-distribucion");
-contenedorDist.innerHTML = ""; // Limpiar
+contenedorDist.innerHTML = "";
 
-// Agrupar gastos por categoría
 let gastosPorCat = {};
 let totalGastado = 0;
 
@@ -2193,29 +2155,27 @@ transMes.forEach(t => {
   if(t.tipo === "salida") {
       let nombreCat = "Sin categoría";
       if(t.gastoFijoId) {
-          nombreCat = "Gastos Fijos"; // Opcional: Podrías buscar el nombre específico del gasto fijo
+          nombreCat = "Gastos Fijos";
       } else if(t.categoriaId) {
           const c = categoriasLocal.find(cat => cat.id === t.categoriaId);
           if(c) nombreCat = c.nome;
       }
-   
+      const v = Number(t.valor)||0;
       if(!gastosPorCat[nombreCat]) gastosPorCat[nombreCat] = 0;
-      gastosPorCat[nombreCat] += t.valor;
-      totalGastado += t.valor;
+      gastosPorCat[nombreCat] += v;
+      totalGastado += v;
   }
 });
 
 if(totalGastado === 0) {
  contenedorDist.innerHTML = '<div style="text-align:center; color:#64748b; font-size:0.9rem; padding:1rem;">No hay salidas este mes.</div>';
 } else {
- // Ordenar de mayor a menor
  const ordenados = Object.keys(gastosPorCat).sort((a,b) => gastosPorCat[b] - gastosPorCat[a]);
 
  ordenados.forEach(cat => {
      const valor = gastosPorCat[cat];
      const porcentaje = (valor / totalGastado) * 100;
    
-     // Crear elementos HTML dinámicos
      const row = document.createElement("div");
      row.className = "dist-row";
      row.innerHTML = `
@@ -2229,26 +2189,22 @@ if(totalGastado === 0) {
  });
 }
 
-// SEMAFORO DE GASTOS
 const lblMeta = document.getElementById("stat-meta-uso");
 const lblIngreso = document.getElementById("stat-ingreso-alerta");
 
 if(metaMensualUsuario > 0) {
   const uso = (totalSalidas/metaMensualUsuario)*100;
-  const restanteMeta = metaMensualUsuario - totalSalidas; // CAMBIO: Permitir negativo
+  const restanteMeta = metaMensualUsuario - totalSalidas;
 
-  // Pasa el texto del restante al gráfico
   dibujarGraficoMeta(uso, formatearMoneda(restanteMeta));
 
   lblMeta.textContent = `Meta: ${formatearMoneda(metaMensualUsuario)}`;
 
-  // Logica Semaforo
-  lblMeta.className = "stat-small"; // Reset
+  lblMeta.className = "stat-small"; 
   if(uso < 50) lblMeta.classList.add("semaforo-verde");
   else if(uso >= 50 && uso < 80) lblMeta.classList.add("semaforo-amarillo");
   else {
       lblMeta.classList.add("semaforo-rojo");
-      // Vibracion en movil
       if("vibrate" in navigator && uso >= 80) navigator.vibrate(200);
   }
 } else {
@@ -2265,7 +2221,6 @@ lblIngreso.textContent = "";
 }
 }
 
-// Helper para colores aleatorios consistentes
 function getColorParaCategoria(nombre) {
  let hash = 0;
  for (let i = 0; i < nombre.length; i++) {
@@ -2275,7 +2230,20 @@ function getColorParaCategoria(nombre) {
  return "#" + "00000".substring(0, 6 - c.length) + c;
 }
 
-// ATUALIZAÇÃO CRÍTICA: LOGICA DE OBJETIVO DE AHORRO
+// ---------------------------------------------------------------------------
+// CORREÇÃO DA LÓGICA DE OBJETIVO DE AHORRO (SOMA E RESTA)
+// ---------------------------------------------------------------------------
+function calcularAhorroTotal() {
+    let e=0, s=0;
+    transaccionesLocal.forEach(t => {
+        // FIX: Garantir que é número para não somar strings
+        const v = Number(t.valor) || 0;
+        if(t.tipo==="entrada") e += v;
+        else s += v;
+    });
+    return e - s;
+}
+
 function actualizarObjetivo() {
 const elProyeccion = document.getElementById("obj-proyeccion");
 elProyeccion.textContent = "";
@@ -2291,15 +2259,14 @@ if(!objetivoNombre || !objetivoValor || objetivoValor <= 0) {
   return;
 }
 
+// 1. Calcula todo o saldo (Entradas - Saídas)
 const ahorroTotal = calcularAhorroTotal();
 
-// AQUI ESTAVA O ERRO: Garante que objetivoAhorroBase seja número
+// 2. Subtrai a base (saldo que já existia antes de reiniciar o objetivo)
 const base = Number(objetivoAhorroBase) || 0;
 let ahorroObjetivo = ahorroTotal - base;
 
-// Se o saldo total for menor que a base (ex: gastou mais do que tinha quando começou), mostra 0 ou negativo?
-// Para visualização de progresso, travamos em 0 se for negativo, mas logicamente pode estar devendo.
-// Vamos travar visualmente em 0.
+// Se o usuário gastou mais do que tinha na base, o objetivo fica zerado visualmente
 if (ahorroObjetivo < 0) ahorroObjetivo = 0;
 
 if (!objetivoCompletado && ahorroObjetivo >= objetivoValor) {
@@ -2310,7 +2277,7 @@ if (!objetivoCompletado && ahorroObjetivo >= objetivoValor) {
 }
 
 const pct = (ahorroObjetivo/objetivoValor)*100;
-const restante = Math.max(0, objetivoValor - ahorroObjetivo); // Valor que falta
+const restante = Math.max(0, objetivoValor - ahorroObjetivo);
 
 document.getElementById("obj-nombre").textContent = objetivoNombre;
 document.getElementById("obj-meta").textContent = formatearMoneda(objetivoValor);
@@ -2322,10 +2289,12 @@ if (restante <= 0) {
 } else {
     document.getElementById("obj-texto").textContent = `Has avanzado ${pct.toFixed(1)}%`;
  
-    // PROYECCION INTELIGENTE
     const transMes = filtrarMesActual(transaccionesLocal, "fecha");
     let eMes = 0; let sMes = 0;
-    transMes.forEach(t => { if(t.tipo==="entrada") eMes+=t.valor; else sMes+=t.valor; });
+    transMes.forEach(t => { 
+        const v = Number(t.valor)||0; 
+        if(t.tipo==="entrada") eMes+=v; else sMes+=v; 
+    });
     let saldoMes = eMes - sMes;
  
     const diaHoy = new Date().getDate();
@@ -2347,16 +2316,8 @@ if (restante <= 0) {
     }
 }
 
-// Pasamos el valor restante al gráfico
 dibujarGraficoObjetivo(pct, formatearMoneda(restante));
 rellenarHistorialObjetivos();
-}
-
-function calcularAhorroTotal() {
-let e=0, s=0;
-transaccionesLocal.forEach(t => { if(t.tipo==="entrada") e+=t.valor; else s+=t.valor; });
-// Retorna saldo líquido total
-return e - s;
 }
 
 function rellenarHistorialObjetivos() {
@@ -2375,7 +2336,6 @@ if (!metaMensualUsuario || !pais || !edad) {
 document.getElementById("perfil-analisis").textContent = "Completa perfil para análisis.";
 return;
 }
-// Logica simples de exemplo
 const base = { bo: 1500, br: 3000, ar: 250000, cl: 400000, mx: 9000, otro: 700 };
 const basePais = base[pais] || base.otro;
 const referencia = basePais;
@@ -2407,8 +2367,6 @@ if(t==="salida") {
 }
 }
 
-// Charts (Canvas - CON NÚMEROS EN EL CENTRO)
-// ADAPTADO PARA CORES PRISM (Glass & Glow)
 function dibujarGraficoMeta(porcentajeUsado, textoCentro) {
 const canvas = document.getElementById("meta-chart");
 if (!canvas) return;
@@ -2419,19 +2377,16 @@ const radio = Math.min(w, h) / 2 - 10;
 const innerRadio = radio * 0.6;
 ctx.clearRect(0, 0, w, h);
 
-// Fundo
 ctx.beginPath(); ctx.arc(cx, cy, radio, 0, Math.PI * 2); ctx.fillStyle = "rgba(255,255,255,0.05)"; ctx.fill();
 
 const clamped = Math.max(0, Math.min(porcentajeUsado, 100)) / 100;
 const inicio = -Math.PI / 2;
 const fin = inicio + Math.PI * 2 * clamped;
 
-// Arco Moderno (Donut com linha grossa e glow)
 ctx.beginPath(); ctx.arc(cx, cy, radio, inicio, fin);
 ctx.lineCap = "round";
-ctx.lineWidth = 12; // Linha grossa estilo donut
+ctx.lineWidth = 12;
 
-// Cor baseada no semáforo
 let color = "#4ade80";
 if(porcentajeUsado > 80) color = "#f87171";
 else if(porcentajeUsado > 50) color = "#facc15";
@@ -2439,14 +2394,11 @@ else if(porcentajeUsado > 50) color = "#facc15";
 ctx.strokeStyle = color;
 ctx.stroke();
 
-// Centro (Fundo do buraco do donut)
-ctx.beginPath(); ctx.arc(cx, cy, innerRadio, 0, Math.PI * 2); ctx.fillStyle = "#020617"; ctx.fill(); // Mesmo fundo do body
+ctx.beginPath(); ctx.arc(cx, cy, innerRadio, 0, Math.PI * 2); ctx.fillStyle = "#020617"; ctx.fill();
 
-// TEXTO EN EL CENTRO (NUEVO)
 if(textoCentro) {
- // Detectar si es negativo para cambiar color
  const esNegativo = textoCentro.includes("-");
- ctx.fillStyle = esNegativo ? "#f87171" : "#fff"; // Rojo si negativo
+ ctx.fillStyle = esNegativo ? "#f87171" : "#fff";
 
  ctx.font = "bold 12px sans-serif";
  ctx.textAlign = "center";
@@ -2472,20 +2424,18 @@ ctx.clearRect(0, 0, w, h);
 ctx.beginPath(); ctx.arc(cx, cy, radio, 0, Math.PI * 2); ctx.fillStyle = "rgba(255,255,255,0.05)"; ctx.fill();
 const end = -Math.PI/2 + (Math.PI*2 * (Math.min(porcentaje,100)/100));
 
-// Gradiente Prism (Roxo -> Rosa)
 const grad = ctx.createLinearGradient(0, 0, w, h);
 grad.addColorStop(0, "#ec4899");
 grad.addColorStop(1, "#8b5cf6");
 
 ctx.beginPath(); ctx.arc(cx, cy, radio, -Math.PI/2, end);
 ctx.lineCap = "round";
-ctx.lineWidth = 12; // Donut grosso
+ctx.lineWidth = 12;
 ctx.strokeStyle = grad;
 ctx.stroke();
 
 ctx.beginPath(); ctx.arc(cx, cy, innerRadio, 0, Math.PI * 2); ctx.fillStyle = "#020617"; ctx.fill();
 
-// TEXTO EN EL CENTRO (NUEVO)
 if(textoCentro) {
  ctx.fillStyle = "#fff";
  ctx.font = "bold 12px sans-serif";
@@ -2499,7 +2449,6 @@ if(textoCentro) {
 }
 }
 
-// --- FUNÇÕES QUE FALTAVAM NA SUA CÓPIA (Adicionadas para não quebrar) ---
 function rellenarPerfil() {
 document.getElementById("perfil-edad").value = edadUsuario || "";
 document.getElementById("perfil-sexo").value = sexoUsuario || "";
@@ -2514,7 +2463,6 @@ document.getElementById("perfil-objetivo-valor").value = objetivoValor || "";
 function inicializarReporte() {
 const sel = document.getElementById("reporte-mes");
 sel.innerHTML = "";
-// Pega meses únicos das transações
 const meses = new Set();
 meses.add(obtenerAnioMesActual());
 transaccionesLocal.forEach(t => {
@@ -2530,7 +2478,6 @@ ordenados.forEach(m => {
 });
 
 sel.onchange = () => cargarDatosReporte(sel.value);
-// Carrega mes atual
 if (ordenados.length > 0) cargarDatosReporte(ordenados[0]);
 }
 
@@ -2540,10 +2487,10 @@ let e = 0, s = 0;
 let gastosPorCat = {};
 
 filtradas.forEach(t => {
-    if(t.tipo==="entrada") e+=t.valor;
+    const v = Number(t.valor) || 0;
+    if(t.tipo==="entrada") e+=v;
     else {
-        s+=t.valor;
-        // Agrupa
+        s+=v;
         let catName = "Sin categoría";
         if (t.gastoFijoId) catName = "Gasto Fijo";
         else if (t.categoriaId) {
@@ -2551,7 +2498,7 @@ filtradas.forEach(t => {
             if(c) catName = c.nome;
         }
         if(!gastosPorCat[catName]) gastosPorCat[catName] = 0;
-        gastosPorCat[catName] += t.valor;
+        gastosPorCat[catName] += v;
     }
 });
 
