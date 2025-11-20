@@ -1821,6 +1821,15 @@ if (btnCategorias) { // Verifica se o botão existe para não dar erro
         await guardarPerfilEnServidor();
     });
 }
+// --- FUNÇÃO QUE ESTAVA FALTANDO ---
+function mostrarModalCategoriasSiCorresponde() {
+    // Se não tem categorias E ainda não mostrou o aviso nesta sessão
+    if (categoriasLocal.length === 0 && !yaMostroModalCategorias) {
+        document.getElementById("modal-categorias").classList.remove("hidden");
+    } else {
+        document.getElementById("modal-categorias").classList.add("hidden");
+    }
+}
 
 
 function inicializarInterfaz() {
