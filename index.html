@@ -2830,6 +2830,16 @@ document.getElementById("reporte-mes-actual").addEventListener("click", () => {
     sel.value = current;
     cargarDatosReporte(current);
 });
+// --- FUNÇÃO DE CORES (QUE ESTAVA FALTANDO) ---
+function getColorParaCategoria(nombre) {
+ let hash = 0;
+ for (let i = 0; i < nombre.length; i++) {
+     hash = nombre.charCodeAt(i) + ((hash << 5) - hash);
+ }
+ const c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
+ return "#" + "00000".substring(0, 6 - c.length) + c;
+}
+
 
 </script>
 </body>
