@@ -411,9 +411,11 @@ button.secondary:hover {
   border-color: #fff;
 }
 
-/* BOTÃO DE REINICIAR (Danger Button Melhorado) */
+/* BOTÃO DE REINICIAR ESTILIZADO (GLASS NEON DANGER) */
 button.danger-action {
- background: rgba(239, 68, 68, 0.1);
+ background: rgba(239, 68, 68, 0.15);
+ backdrop-filter: blur(10px);
+ -webkit-backdrop-filter: blur(10px);
  border: 1px solid rgba(239, 68, 68, 0.3);
  color: #fca5a5;
  border-radius: 14px;
@@ -422,16 +424,19 @@ button.danger-action {
  font-size: 0.9rem;
  font-weight: 600;
  width: 100%;
- transition: all 0.3s ease;
+ transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
  margin-top: 0.5rem;
+ letter-spacing: 0.5px;
+ box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 button.danger-action:hover {
- background: rgba(239, 68, 68, 0.2);
+ background: rgba(239, 68, 68, 0.25);
  border-color: #ef4444;
  color: #fff;
- box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
- transform: translateY(-1px);
+ box-shadow: 0 0 20px rgba(239, 68, 68, 0.4), 0 0 40px rgba(239, 68, 68, 0.2);
+ transform: translateY(-2px);
+ text-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
 }
 
 .btn-icon {
@@ -724,7 +729,6 @@ tr:last-child td {
 <button data-section="fijos">Gastos fijos</button>
 <button data-section="tarjetas">Tarjetas</button>
 <button data-section="reportes">Reporte mensual</button>
-<!-- CAMBIO SOLICITADO: SOLO CATEGORIAS -->
 <button data-section="categorias">Categorías</button>
 <button data-section="perfil">Perfil</button>
 </nav>
@@ -754,11 +758,9 @@ tr:last-child td {
           </div>
         </div>
         <div style="flex:1 1 200px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-          <!-- CANVAS MAIS LARGO PARA O DONUT MODERNIZADO -->
           <div style="position: relative; width: 160px; height: 160px;">
              <canvas id="meta-chart" width="160" height="160"></canvas>
           </div>
-          <!-- AQUÍ MODIFICADO PARA SEMÁFORO -->
           <div class="stat-small" id="stat-meta-uso" style="margin-top:0.8rem; text-align:center; font-weight: 600;"></div>
           <div class="stat-small" id="stat-ingreso-alerta" style="margin-top:0.25rem; text-align:center;"></div>
         </div>
@@ -768,7 +770,6 @@ tr:last-child td {
     <div class="card">
       <div style="display:flex; justify-content:space-between; align-items:center;">
          <h3>Objetivo de ahorro</h3>
-         <!-- BOTÓN NUEVO SIMULADOR -->
          <button type="button" class="secondary" id="btn-abrir-simulador">🔮 Simular</button>
       </div>
       <p class="card-subtitle">
@@ -795,7 +796,6 @@ tr:last-child td {
             <div class="stat">
               <div class="stat-label">Detalle y Proyección</div>
               <div class="stat-small" id="obj-texto"></div>
-              <!-- NUEVO CAMPO PROYECCIÓN -->
               <div class="stat-prediction" id="obj-proyeccion"></div>
             </div>
           </div>
@@ -808,7 +808,6 @@ tr:last-child td {
       </div>
     </div>
 
-    <!-- NUEVA TARJETA VIAJERO EN EL TIEMPO (ALTURA REDUCIDA A 160px) -->
     <div class="card">
         <h3>Proyección Financiera (Viajero en el Tiempo)</h3>
         <p class="card-subtitle">Línea continua: Tu saldo real. Línea punteada: Tu futuro estimado si sigues gastando igual. (Los meses sin datos no se grafican)</p>
@@ -822,9 +821,7 @@ tr:last-child td {
       <p class="card-subtitle">
         Desglose por categoría (gastos fijos y variables).
       </p>
-      <!-- CONTENEDOR DINÁMICO PARA CATEGORÍAS -->
       <div id="contenedor-distribucion" style="margin-top:1rem;">
-        <!-- Se llena con JS -->
         <div style="text-align:center; color:#64748b; font-size:0.9rem; padding:1rem;">
           No hay datos suficientes este mes.
         </div>
@@ -847,7 +844,6 @@ tr:last-child td {
           <label for="categoria">Categoría</label>
           <select id="categoria" required></select>
         </div>
-        <!-- CAMBIO: NORMAL POR EFECTIVO -->
         <div id="campo-origen" class="hidden">
           <label for="origen">Origen (solo salidas)</label>
           <select id="origen">
@@ -1168,7 +1164,6 @@ tr:last-child td {
         <div>
           <button type="submit" class="primary">Guardar perfil</button>
         </div>
-        <!-- BOTÃO REINICIAR NOVO ESTILO -->
         <div>
           <button type="button" class="danger-action" id="perfil-objetivo-reset">
             Reiniciar progreso del objetivo
@@ -1220,7 +1215,6 @@ Entendido
 </div>
 </div>
 
-<!-- MODAL SIMULADOR AHORRO (NUEVO) -->
 <div id="modal-simulador" class="modal hidden">
 <div class="card" style="max-width:420px; width:90%;">
 <h3>🔮 Simulador de Ahorro</h3>
