@@ -1204,21 +1204,38 @@ tr:last-child td {
 </div>
 
 <div id="modal-categorias" class="modal hidden">
-<div class="card" style="max-width:420px; width:90%; text-align:left;">
-<h3>Primeros pasos</h3>
-<p class="card-subtitle">
-Como acabas de crear tu cuenta, tus categorías están vacías.
+<div class="card" style="max-width:450px; width:90%; text-align:left; border: 1px solid var(--primary-glow);">
+<h3>👋 ¡Bienvenido/a!</h3>
+<p class="card-subtitle" style="margin-bottom:1rem;">
+Para comenzar, elige por dónde quieres empezar a configurar tu cuenta:
 </p>
-<p style="font-size:0.85rem; margin-top:0.5rem;">
-1. En el menú lateral, entra en <strong>"Categorías y metas"</strong>.<br/>
-2. Crea tus propias categorías (ej.: Mercado, Alquiler, Universidad, Salud...).<br/>
-3. Después, usa esas categorías al registrar tus transacciones.
-</p>
-<button type="button" class="primary" id="modal-categorias-ok" style="margin-top:0.75rem;">
-Entendido
+
+<div style="display:flex; flex-direction:column; gap:1rem;">
+  
+  <div style="background:rgba(255,255,255,0.05); padding:1rem; border-radius:16px; display:flex; justify-content:space-between; align-items:center;">
+    <div style="margin-right:1rem;">
+      <strong style="color:var(--accent-cyan);">1. Configurar Perfil ⚙️</strong>
+      <div style="font-size:0.8rem; color:var(--text-secondary); margin-top:0.3rem;">Define tu moneda, país y meta mensual.</div>
+    </div>
+    <button type="button" class="secondary" id="btn-ir-perfil" style="white-space:nowrap;">Ir a Perfil</button>
+  </div>
+
+  <div style="background:rgba(255,255,255,0.05); padding:1rem; border-radius:16px; display:flex; justify-content:space-between; align-items:center;">
+    <div style="margin-right:1rem;">
+      <strong style="color:var(--secondary-glow);">2. Crear Categorías 📂</strong>
+      <div style="font-size:0.8rem; color:var(--text-secondary); margin-top:0.3rem;">Crea grupos como Mercado, Alquiler, etc.</div>
+    </div>
+    <button type="button" class="secondary" id="btn-ir-categorias" style="white-space:nowrap;">Ir a Categorías</button>
+  </div>
+
+</div>
+
+<button type="button" class="primary" id="modal-categorias-ok" style="margin-top:1.5rem; width:100%;">
+Cerrar y explorar solo
 </button>
 </div>
 </div>
+
 
 <div id="modal-simulador" class="modal hidden">
 <div class="card" style="max-width:420px; width:90%;">
@@ -1777,30 +1794,55 @@ yaMostroModalCategorias = true;
 await guardarPerfilEnServidor();
 });
 
-function mostrarModalCategoriasSiCorresponde() {
-if (categoriasLocal.length === 0 && !yaMostroModalCategorias) {
-modalCategorias.classList.remove("hidden");
-} else {
-modalCategorias.classList.add("hidden");
-}
+// --- COLE ISSO LOGO ABAIXO DO modalCategoriasOk.addEventListener ---
+
+// --- LÓGICA DOS BOTÕES DO MODAL DE BOAS-VINDAS ---
+
+// Botão "Ir a Perfil"
+const btnPerfil = document.getElementById("btn-ir-perfil");
+if (btnPerfil) { // Verifica se o botão existe para não dar erro
+    btnPerfil.addEventListener("click", async () => {
+        document.getElementById("modal-categorias").classList.add("hidden");
+        const menuPerfil = document.querySelector('button[data-section="perfil"]');
+        if(menuPerfil) menuPerfil.click(); // Vai para a tela de perfil
+        yaMostroModalCategorias = true;
+        await guardarPerfilEnServidor();
+    });
 }
 
-function inicializarInterfaz() {
-rellenarSelectCategorias();
-rellenarTablaCategorias();
-rellenarTablaFijos();
-rellenarTablaTarjetas();
-rellenarTablaTransacciones();
-rellenarPerfil();
-rellenarHistorialObjetivos();
-actualizarResumen();
-analisisLatam();
-actualizarObjetivo();
-dibujarGraficoViajeroTiempo();
-actualizarCampoGastoFijo();
-actualizarCampoOrigenYTarjeta();
-inicializarReporte();
+// Botão "Ir a Categorias"
+const btnCategorias = document.getElementById("btn-ir-categorias");
+if (btnCategorias) { // Verifica se o botão existe para não dar erro
+    btnCategorias.addEventListener("click", async () => {
+        document.getElementById("modal-categorias").classList.add("hidden");
+        const menuCategorias = document.querySelector('button[data-section="categorias"]');
+        if(menuCategorias) menuCategorias.click(); // Vai para a tela de categorias
+        yaMostroModalCategorias = true;
+        await guardarPerfilEnServidor();
+    });
 }
+
+
+function inicializarInterfaz() {
+    rellenarSelectCategorias();
+    rellenarTablaCategorias();
+    rellenarTablaFijos();
+    rellenarTablaTarjetas();
+    rellenarTablaTransacciones();
+    rellenarPerfil();
+    rellenarHistorialObjetivos();
+    actualizarResumen();
+    analisisLatam();
+    actualizarObjetivo();
+    dibujarGraficoViajeroTiempo();
+    actualizarCampoGastoFijo();
+    actualizarCampoOrigenYTarjeta();
+    inicializarReporte();
+
+    // --- ADICIONE ESTA LINHA ABAIXO PARA O AVISO APARECER: ---
+    mostrarModalCategoriasSiCorresponde();
+}
+
 
 // UI Listeners
 const sidebar = document.getElementById("sidebar");
