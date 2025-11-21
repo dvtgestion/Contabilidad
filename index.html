@@ -2497,10 +2497,16 @@ function rellenarSelectTarjetas() {
     tarjetasLocal.forEach(t => {
         const o = document.createElement("option");
         o.value = t.id;
-        o.textContent = `${t.alias || ""} ${t.digitos || ""}`;
+        
+        // MUDANÇA AQUI:
+        // Antes era: `${t.alias || ""} ${t.digitos || ""}`
+        // Agora é: "Alias - Banco" (Ex: Jose - Bisa)
+        o.textContent = `${t.alias || "Tarjeta"} - ${t.banco || "Banco"}`;
+        
         s.appendChild(o);
     });
 }
+
 
 function rellenarTablaTarjetas() {
     const tb = document.querySelector("#tabla-tarjetas tbody");
