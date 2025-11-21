@@ -1670,8 +1670,15 @@ function limparMemoriaGlobal() {
 // ----------------------------------------------------------------------
 // 👇👇👇 SUBSTITUA SEU BLOCO ATUAL POR ESTE AQUI 👇👇👇
 onAuthStateChanged(auth, async (user) => {
-  // 1. CORREÇÃO DE IDIOMA: Força atualização assim que o firebase conecta
+   // 1. Garante o idioma atual
   updateLanguage(currentLang);
+
+  // 👇👇👇 COLE ESTAS 4 LINHAS AQUI (ELAS ESTAVAM FALTANDO) 👇👇👇
+  const selLogin = document.getElementById("lang-select-login");
+  const selApp = document.getElementById("lang-select-app");
+  if(selLogin) selLogin.onchange = (e) => updateLanguage(e.target.value);
+  if(selApp) selApp.onchange = (e) => updateLanguage(e.target.value);
+  // 👆👆👆 FIM DO TRECHO QUE FALTAVA 👆👆👆
 
   if (user) {
      loading(true);
