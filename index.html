@@ -1683,14 +1683,63 @@ onAuthStateChanged(auth, async (user) => {
   if (user) {
      loading(true);
      const loadingText = document.getElementById('loading-overlay');
-     if(loadingText) loadingText.textContent = translations[currentLang].loading_check;
+     // Carrega texto de loading correto se disponível
+     if(loadingText && translations[currentLang]) loadingText.textContent = translations[currentLang].loading_check;
      
      try {
          const docRef = doc(db, "clientes_permitidos", user.email); 
          const docSnap = await getDoc(docRef);
 
-         if (docSnap.exists() && docSnap.data().ativo === true) {
-             if(loadingText) loadingText.textContent = translations[currentLang].loading_data;
+         // VERIFICA SE O USUÁRIO EXISTE NO BANCO
+         if (docSnap.exists()) {
+             const dadosUser = docSnap.data();
+
+             // 1. BLOQUEIO MANUAL (ATIVO/INATIVO)
+             // Se o campo 'ativo' não for true, bloqueia
+             if (dadosUser.ativo !== true) {
+                 alert(translations[currentLang].alert_restric);
+                 await signOut(auth);
+                 window.location.reload();
+                 return;
+             }
+
+             // 2. BLOQUEIO POR DATA (CALENDÁRIO) 📅
+             if (dadosUser.data_vencimento) {
+                 const hoje = new Date();
+                 hoje.setHours(0, 0, 0, 0); // Zera horas para comparar apenas data
+
+                 // Quebra a data "AAAA-MM-DD" (ex: 2025-11-19)
+                 const partes = dadosUser.data_vencimento.split('-');
+                 // Cria data corretamente (mês no JS começa em 0)
+                 const dataVenc = new Date(partes[0], partes[1] - 1, partes[2]);
+
+                 // A) SE JÁ VENCEU (BLOQUEIA) 🚫
+                 if (hoje > dataVenc) {
+                     const esPt = currentLang === 'pt';
+                     const msgBloqueio = esPt
+                        ? `🚫 ACESSO SUSPENSO\n\nSua assinatura venceu no dia: ${dadosUser.data_vencimento}.\nPor favor, regularize seu pagamento para acessar.`
+                        : `🚫 ACCESO SUSPENDIDO\n\nTu suscripción venció el día: ${dadosUser.data_vencimento}.\nPor favor, regulariza tu pago para acceder.`;
+
+                     alert(msgBloqueio);
+                     await signOut(auth);
+                     window.location.reload();
+                     return; // Para o código aqui
+                 }
+
+                 // B) SE VAI VENCER (AVISO VISUAL) ⚠️
+                 const diffTempo = dataVenc - hoje;
+                 // Converte milissegundos em dias
+                 const diffDias = Math.ceil(diffTempo / (1000 * 60 * 60 * 24));
+
+                 // Se faltar 5 dias ou menos (e não for negativo)
+                 if (diffDias <= 5 && diffDias >= 0) {
+                     // Chama a função que cria a barra vermelha (com atraso de 2s para garantir que a tela carregou)
+                     setTimeout(() => mostrarAvisoVencimento(diffDias), 2000);
+                 }
+             }
+
+             // --- SUCESSO: LIBERA O ACESSO --- ✅
+             if(loadingText && translations[currentLang]) loadingText.textContent = translations[currentLang].loading_data;
              
              usuarioActual = user;
              document.getElementById("user-email").textContent = user.email;
@@ -1698,12 +1747,14 @@ onAuthStateChanged(auth, async (user) => {
              document.getElementById("app").classList.remove("hidden");
              
              // Atualiza selects do app
+             const selApp = document.getElementById("lang-select-app");
              if(selApp) selApp.value = currentLang;
 
              iniciarListeners(user.uid);
+
          } else {
-             console.warn("Acesso negado:", user.email);
-             // USA A MENSAGEM TRADUZIDA
+             // Se não achou o documento na whitelist
+             console.warn("Acesso negado (não encontrado):", user.email);
              alert(translations[currentLang].alert_restric);
              await signOut(auth);
              window.location.reload();
@@ -1720,6 +1771,7 @@ onAuthStateChanged(auth, async (user) => {
      }
 
   } else {
+     // --- USUÁRIO NÃO LOGADO ---
      if (usuarioActual) {
          window.location.reload();
          return;
@@ -1732,6 +1784,7 @@ onAuthStateChanged(auth, async (user) => {
      document.getElementById("login-screen").classList.remove("hidden");
      
      // Atualiza select do login
+     const selLogin = document.getElementById("lang-select-login");
      if(selLogin) selLogin.value = currentLang;
      
      loading(false);
@@ -1740,6 +1793,7 @@ onAuthStateChanged(auth, async (user) => {
 
 // ----------------------------------------------------------------------
 // CARGA DE DATOS
+
 // ----------------------------------------------------------------------
 function iniciarListeners(uid) {
 loading(true);
@@ -2941,6 +2995,41 @@ function estadoFijoParaMes(gasto, anioMes) {
         return { texto: "Pendiente", badgeClase: "badge-normal", claseFila: "" };
     }
 }
+
+// --- FUNÇÃO: MOSTRAR BARRA DE VENCIMENTO (BILÍNGUE) ---
+function mostrarAvisoVencimento(diasRestantes) {
+    // 1. Define o texto baseado no idioma atual
+    const esPt = currentLang === 'pt';
+    let textoMensagem = "";
+
+    if (diasRestantes === 0) {
+        textoMensagem = esPt 
+            ? "⚠️ ATENÇÃO: Sua assinatura vence HOJE!" 
+            : "⚠️ ATENCIÓN: ¡Tu suscripción vence HOY!";
+    } else {
+        textoMensagem = esPt 
+            ? `⚠️ ATENÇÃO: Sua assinatura vence em ${diasRestantes} dias. Evite o bloqueio!` 
+            : `⚠️ ATENCIÓN: Tu suscripción vence en ${diasRestantes} días. ¡Evita el bloqueo!`;
+    }
+
+    // 2. Cria a barra visual
+    const aviso = document.createElement("div");
+    aviso.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%;
+        background: linear-gradient(90deg, #ef4444, #b91c1c);
+        color: #fff; text-align: center; padding: 10px;
+        z-index: 9999; font-weight: bold; font-size: 0.9rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        display: flex; justify-content: center; align-items: center; gap: 10px;
+    `;
+    
+    aviso.innerHTML = `<span>${textoMensagem}</span>`;
+    document.body.appendChild(aviso);
+    
+    const header = document.querySelector("header");
+    if(header) header.style.marginTop = "40px";
+}
+
 
 
 </script>
