@@ -712,8 +712,6 @@ tr:last-child td {
     gap: 0.5rem;
   }
 }
-
-
 </style>
 </head>
 <body>
@@ -756,6 +754,7 @@ tr:last-child td {
 </form>
 </div>
 </section>
+
 <div id="app" class="hidden">
 <header>
 <div style="display:flex; align-items:center; gap:0.5rem;">
@@ -990,8 +989,7 @@ tr:last-child td {
               <th data-i18n="lbl_desc">Descripción</th>
               <th data-i18n="lbl_valor">Valor</th>
               <th data-i18n="lbl_fecha">Vencimiento</th>
-              <th>Estado</th>
-              <th>#</th>
+              <th data-i18n="lbl_estado">Estado</th> <th>#</th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -1264,41 +1262,41 @@ Para comenzar, elige por dónde quieres empezar a configurar tu cuenta:
 </div>
 </div>
 
-
+<script type="module">
 // ===============================================================
-// 1. CONFIGURAÇÃO E IMPORTS
+// INTEGRACIÓN FIREBASE
 // ===============================================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
-    getAuth,
-    createUserWithEmailAndPassword,
-    signInWithEmailAndPassword,
-    signOut,
-    onAuthStateChanged
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import {
-    getFirestore,
-    collection,
-    addDoc,
-    getDocs,
-    getDoc,
-    setDoc,
-    deleteDoc,
-    doc,
-    query,
-    where,
-    onSnapshot,
-    orderBy,
-    serverTimestamp
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  getDoc,
+  setDoc,
+  deleteDoc,
+  doc,
+  query,
+  where,
+  onSnapshot,
+  orderBy,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyC2SYOIRUVXWxRZjZXJaFX2hFID1izQks4",
-    authDomain: "controlefinanceiro-7f8f1.firebaseapp.com",
-    projectId: "controlefinanceiro-7f8f1",
-    storageBucket: "controlefinanceiro-7f8f1.firebasestorage.app",
-    messagingSenderId: "438314445354",
-    appId: "1:438314445354:web:e4551a6f467b20e9cfb153"
+  apiKey: "AIzaSyC2SYOIRUVXWxRZjZXJaFX2hFID1izQks4",
+  authDomain: "controlefinanceiro-7f8f1.firebaseapp.com",
+  projectId: "controlefinanceiro-7f8f1",
+  storageBucket: "controlefinanceiro-7f8f1.firebasestorage.app",
+  messagingSenderId: "438314445354",
+  appId: "1:438314445354:web:e4551a6f467b20e9cfb153"
 };
 
 // Inicializar Firebase
@@ -1307,326 +1305,388 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 // ===============================================================
-// 2. SISTEMA DE IDIOMAS (i18n)
+// SISTEMA DE IDIOMAS (i18n) - DICIONÁRIO COMPLETO & ATUALIZADO
 // ===============================================================
 let savedLang = localStorage.getItem('app_lang');
 let currentLang = (savedLang === 'es' || savedLang === 'pt') ? savedLang : 'es';
 
 const translations = {
-    es: {
-        login_title: "Control Financiero",
-        login_subtitle: "Inicia sesión (Prism Edition)",
-        lbl_email: "Correo electrónico",
-        lbl_pass: "Contraseña",
-        login_extra_info: "Datos adicionales se configuran en Perfil.",
-        btn_enter: "Entrar",
-        btn_create: "Crear cuenta",
-        msg_no_account: "¿No tienes cuenta?",
-        msg_has_account: "¿Ya tienes cuenta?",
-        
-        menu_title: "MENÚ",
-        menu_dashboard: "Inicio",
-        menu_transacciones: "Transacciones",
-        menu_fijos: "Gastos fijos",
-        menu_tarjetas: "Tarjetas",
-        menu_reportes: "Reporte mensual",
-        menu_categorias: "Categorías",
-        menu_perfil: "Perfil",
-        btn_logout: "Salir",
+  es: {
+    // Login
+    login_title: "Control Financiero",
+    login_subtitle: "Inicia sesión (Prism Edition)",
+    lbl_email: "Correo electrónico",
+    lbl_pass: "Contraseña",
+    login_extra_info: "Datos adicionales se configuran en Perfil.",
+    btn_enter: "Entrar",
+    btn_create: "Crear cuenta",
+    msg_no_account: "¿No tienes cuenta?",
+    msg_has_account: "¿Ya tienes cuenta?",
 
-        dash_resumen_title: "Resumen del mes actual",
-        stat_entradas: "Entradas",
-        stat_salidas: "Salidas",
-        stat_saldo: "Saldo",
-        dash_obj_title: "Objetivo de ahorro",
-        btn_simular: "🔮 Simular",
-        dash_obj_subtitle: "Define un objetivo en la sección Perfil.",
-        lbl_obj_activo: "Objetivo Activo",
-        lbl_ahorro_acumulado: "Ahorro acumulado",
-        lbl_falta: "Falta para el objetivo",
-        lbl_detalle: "Detalle y Proyección",
-        dash_travel_title: "Proyección Financiera (Viajero en el Tiempo)",
-        dash_dist_title: "Distribución de salidas del mes",
-        
-        trans_new_title: "Nueva transacción",
-        lbl_tipo: "Tipo",
-        lbl_cat: "Categoría",
-        lbl_origen: "Origen (solo salidas)",
-        lbl_valor: "Valor",
-        lbl_fecha: "Fecha",
-        lbl_desc: "Descripción",
-        btn_add: "Añadir",
-        trans_list_title: "Transacciones del mes",
-        placeholder_search: "Ej: mercado, cine...",
-        btn_clean_filter: "Limpiar filtros",
-        
-        opt_entrada: "Entrada",
-        opt_salida: "Salida",
-        opt_efectivo: "Efectivo",
-        opt_tarjeta: "Tarjeta",
+    // Menu
+    menu_title: "MENÚ",
+    menu_dashboard: "Inicio",
+    menu_transacciones: "Transacciones",
+    menu_fijos: "Gastos fijos",
+    menu_tarjetas: "Tarjetas",
+    menu_reportes: "Reporte mensual",
+    menu_categorias: "Categorías",
+    menu_perfil: "Perfil",
+    btn_logout: "Salir",
 
-        alert_restric: "🚫 ACCESO RESTRINGIDO\n\nEste correo no tiene permisos activos.\nTu cuenta ha sido creada, pero necesitas que el administrador habilite tu acceso.",
-        alert_permiso: "🚫 ERROR DE PERMISOS\n\nNo tienes autorización para verificar la licencia.",
-        alert_bienvenida_title: "👋 ¡Bienvenido/a!",
-        alert_bienvenida_text: "Para comenzar, elige por dónde quieres empezar a configurar tu cuenta:",
-        btn_ir_perfil: "1. Configurar Perfil ⚙️",
-        btn_ir_cat: "2. Crear Categorías 📂",
-        msg_guardado: "Guardado.",
-        
-        perf_title: "Perfil financiero",
-        lbl_edad: "Edad",
-        lbl_sexo: "Sexo",
-        lbl_pais: "País",
-        lbl_meta: "Meta mensual de gasto",
-        lbl_ingreso: "Ingreso mensual",
-        lbl_moneda: "Moneda",
-        lbl_obj_nome: "Nombre del Objetivo",
-        lbl_obj_val: "Valor objetivo",
-        btn_save_perf: "Guardar perfil",
-        btn_reset_obj: "Reiniciar progreso",
-        
-        sim_title: "🔮 Simulador",
-        sim_lbl_monto: "Monto mensual extra:",
-        sim_btn_calc: "Calcular",
-        sim_btn_close: "Cerrar",
-        sim_result_fail: "Actualmente no ahorras.",
-        sim_result_success: "¡Terminarías antes!",
-        sim_msg_initial: "Ingresa un valor arriba para ver el impacto.",
-        
-        chart_restante: "Restante",
-        chart_falta: "Falta",
-        loading_check: "Validando acceso...",
-        loading_data: "Cargando datos...",
-        
-        alert_plan_expired: "🚫 PLAN VENCIDO\n\nSu acceso expiró el {date}.\nPor favor, realice el pago para renovar su suscripción.",
-        alert_plan_warning: "⚠️ AVISO DE RENOVACIÓN\n\nSu plan vence en {days} días ({date}).\nContacte al soporte para evitar el bloqueo."
-    },
-    pt: {
-        login_title: "Controle Financeiro",
-        login_subtitle: "Faça login (Prism Edition)",
-        lbl_email: "E-mail",
-        lbl_pass: "Senha",
-        login_extra_info: "Dados adicionais são configurados no Perfil.",
-        btn_enter: "Entrar",
-        btn_create: "Criar conta",
-        msg_no_account: "Não tem conta?",
-        msg_has_account: "Já tem conta?",
-        
-        menu_title: "MENU",
-        menu_dashboard: "Início",
-        menu_transacciones: "Transações",
-        menu_fijos: "Gastos Fixos",
-        menu_tarjetas: "Cartões",
-        menu_reportes: "Relatório Mensal",
-        menu_categorias: "Categorias",
-        menu_perfil: "Perfil",
-        btn_logout: "Sair",
+    // Dashboard
+    dash_resumen_title: "Resumen del mes actual",
+    stat_entradas: "Entradas",
+    stat_salidas: "Salidas",
+    stat_saldo: "Saldo",
+    dash_obj_title: "Objetivo de ahorro",
+    btn_simular: "🔮 Simular",
+    dash_obj_subtitle: "Define un objetivo en la sección Perfil.",
+    lbl_obj_activo: "Objetivo Activo",
+    lbl_ahorro_acumulado: "Ahorro acumulado",
+    lbl_falta: "Falta para el objetivo",
+    lbl_detalle: "Detalle y Proyección",
+    dash_travel_title: "Proyección Financiera (Viajero en el Tiempo)",
+    dash_dist_title: "Distribución de salidas del mes",
 
-        dash_resumen_title: "Resumo do mês atual",
-        stat_entradas: "Entradas",
-        stat_salidas: "Saídas",
-        stat_saldo: "Saldo",
-        dash_obj_title: "Objetivo de Economia",
-        btn_simular: "🔮 Simular",
-        dash_obj_subtitle: "Defina um objetivo na seção Perfil.",
-        lbl_obj_activo: "Objetivo Ativo",
-        lbl_ahorro_acumulado: "Economia acumulada",
-        lbl_falta: "Falta para o objetivo",
-        lbl_detalle: "Detalhe e Projeção",
-        dash_travel_title: "Projeção Financeira (Viajante do Tempo)",
-        dash_dist_title: "Distribuição de saídas do mês",
+    // Transacciones
+    trans_new_title: "Nueva transacción",
+    lbl_tipo: "Tipo",
+    lbl_cat: "Categoría",
+    lbl_origen: "Origen (solo salidas)",
+    lbl_valor: "Valor",
+    lbl_fecha: "Fecha",
+    lbl_desc: "Descripción",
+    btn_add: "Añadir",
+    trans_list_title: "Transacciones del mes",
+    placeholder_search: "Ej: mercado, cine...",
+    btn_clean_filter: "Limpiar filtros",
 
-        trans_new_title: "Nova transação",
-        lbl_tipo: "Tipo",
-        lbl_cat: "Categoria",
-        lbl_origen: "Origem (só saídas)",
-        lbl_valor: "Valor",
-        lbl_fecha: "Data",
-        lbl_desc: "Descrição",
-        btn_add: "Adicionar",
-        trans_list_title: "Transações do mês",
-        placeholder_search: "Ex: mercado, cinema...",
-        btn_clean_filter: "Limpar filtros",
+    // Gastos Fijos & Estados (NUEVO)
+    lbl_estado: "Estado",
+    st_pago: "Pago",
+    st_vencido: "Vencido",
+    st_hoy: "Vence hoy",
+    st_proximo: "Próximo",
 
-        opt_entrada: "Entrada",
-        opt_salida: "Saída",
-        opt_efectivo: "Dinheiro",
-        opt_tarjeta: "Cartão",
+    // Cards & Labels Gerais
+    opt_entrada: "Entrada",
+    opt_salida: "Salida",
+    opt_efectivo: "Efectivo",
+    opt_tarjeta: "Tarjeta",
 
-        alert_restric: "🚫 ACESSO RESTRITO\n\nEste e-mail não tem permissões ativas.\nSua conta foi criada, mas você precisa que o administrador habilite seu acesso.",
-        alert_permiso: "🚫 ERRO DE PERMISSÃO\n\nVocê não tem autorização para verificar a licença.",
-        alert_bienvenida_title: "👋 Bem-vindo(a)!",
-        alert_bienvenida_text: "Para começar, escolha por onde quer iniciar a configuração:",
-        btn_ir_perfil: "1. Configurar Perfil ⚙️",
-        btn_ir_cat: "2. Criar Categorias 📂",
-        msg_guardado: "Salvo.",
-        
-        perf_title: "Perfil Financeiro",
-        lbl_edad: "Idade",
-        lbl_sexo: "Sexo",
-        lbl_pais: "País",
-        lbl_meta: "Meta mensal",
-        lbl_ingreso: "Renda mensal",
-        lbl_moneda: "Moeda",
-        lbl_obj_nome: "Nome do Objetivo",
-        lbl_obj_val: "Valor do objetivo",
-        btn_save_perf: "Salvar perfil",
-        btn_reset_obj: "Reiniciar progresso",
-        
-        sim_title: "🔮 Simulador",
-        sim_lbl_monto: "Valor mensal extra:",
-        sim_btn_calc: "Calcular",
-        sim_btn_close: "Fechar",
-        sim_result_fail: "Atualmente você não economiza.",
-        sim_result_success: "Terminaria antes!",
-        sim_msg_initial: "Insira um valor acima para ver o impacto.",
-        
-        chart_restante: "Restante",
-        chart_falta: "Falta",
-        loading_check: "Verificando acesso...",
-        loading_data: "Carregando dados...",
-        
-        alert_plan_expired: "🚫 PLANO VENCIDO\n\nSeu acesso expirou em {date}.\nPor favor, realize o pagamento para renovar sua assinatura.",
-        alert_plan_warning: "⚠️ AVISO DE RENOVAÇÃO\n\nSeu plano vence em {days} dias ({date}).\nContate o suporte para evitar o bloqueio."
-    }
+    // Alertas
+    alert_restric: "🚫 ACCESO RESTRINGIDO\n\nEste correo no tiene permisos activos.\nTu cuenta ha sido creada, pero necesitas que el administrador habilite tu acceso.",
+    alert_permiso: "🚫 ERROR DE PERMISOS\n\nNo tienes autorización para verificar la licencia.",
+    alert_bienvenida_title: "👋 ¡Bienvenido/a!",
+    alert_bienvenida_text: "Para comenzar, elige por dónde quieres empezar a configurar tu cuenta:",
+    btn_ir_perfil: "1. Configurar Perfil ⚙️",
+    btn_ir_cat: "2. Crear Categorías 📂",
+    msg_guardado: "Guardado.",
+
+    // Perfil
+    perf_title: "Perfil financiero",
+    lbl_edad: "Edad",
+    lbl_sexo: "Sexo",
+    lbl_pais: "País",
+    lbl_meta: "Meta mensual de gasto",
+    lbl_ingreso: "Ingreso mensual",
+    lbl_moneda: "Moneda",
+    lbl_obj_nome: "Nombre del Objetivo",
+    lbl_obj_val: "Valor objetivo",
+    btn_save_perf: "Guardar perfil",
+    btn_reset_obj: "Reiniciar progreso",
+
+    // Simulador
+    sim_title: "🔮 Simulador",
+    sim_lbl_monto: "Monto mensual extra:",
+    sim_btn_calc: "Calcular",
+    sim_btn_close: "Cerrar",
+    sim_result_fail: "Actualmente no ahorras.",
+    sim_result_success: "¡Terminarías antes!",
+    sim_msg_initial: "Ingresa un valor arriba para ver el impacto.",
+
+    // Gráficos
+    chart_restante: "Restante",
+    chart_falta: "Falta",
+    loading_check: "Validando acceso...",
+    loading_data: "Cargando datos..."
+  },
+  pt: {
+    // Login
+    login_title: "Controle Financeiro",
+    login_subtitle: "Faça login (Prism Edition)",
+    lbl_email: "E-mail",
+    lbl_pass: "Senha",
+    login_extra_info: "Dados adicionais são configurados no Perfil.",
+    btn_enter: "Entrar",
+    btn_create: "Criar conta",
+    msg_no_account: "Não tem conta?",
+    msg_has_account: "Já tem conta?",
+
+    // Menu
+    menu_title: "MENU",
+    menu_dashboard: "Início",
+    menu_transacciones: "Transações",
+    menu_fijos: "Gastos Fixos",
+    menu_tarjetas: "Cartões",
+    menu_reportes: "Relatório Mensal",
+    menu_categorias: "Categorias",
+    menu_perfil: "Perfil",
+    btn_logout: "Sair",
+
+    // Dashboard
+    dash_resumen_title: "Resumo do mês atual",
+    stat_entradas: "Entradas",
+    stat_salidas: "Saídas",
+    stat_saldo: "Saldo",
+    dash_obj_title: "Objetivo de Economia",
+    btn_simular: "🔮 Simular",
+    dash_obj_subtitle: "Defina um objetivo na seção Perfil.",
+    lbl_obj_activo: "Objetivo Ativo",
+    lbl_ahorro_acumulado: "Economia acumulada",
+    lbl_falta: "Falta para o objetivo",
+    lbl_detalle: "Detalhe e Projeção",
+    dash_travel_title: "Projeção Financeira (Viajante do Tempo)",
+    dash_dist_title: "Distribuição de saídas do mês",
+
+    // Transacciones
+    trans_new_title: "Nova transação",
+    lbl_tipo: "Tipo",
+    lbl_cat: "Categoria",
+    lbl_origen: "Origem (só saídas)",
+    lbl_valor: "Valor",
+    lbl_fecha: "Data",
+    lbl_desc: "Descrição",
+    btn_add: "Adicionar",
+    trans_list_title: "Transações do mês",
+    placeholder_search: "Ex: mercado, cinema...",
+    btn_clean_filter: "Limpar filtros",
+
+    // Gastos Fijos & Estados (NOVO)
+    lbl_estado: "Estado",
+    st_pago: "Pago",
+    st_vencido: "Vencido",
+    st_hoy: "Vence hoje",
+    st_proximo: "Próximo",
+
+    // Cards & Labels Gerais
+    opt_entrada: "Entrada",
+    opt_salida: "Saída",
+    opt_efectivo: "Dinheiro",
+    opt_tarjeta: "Cartão",
+
+    // Alertas
+    alert_restric: "🚫 ACESSO RESTRITO\n\nEste e-mail não tem permissões ativas.\nSua conta foi criada, mas você precisa que o administrador habilite seu acesso.",
+    alert_permiso: "🚫 ERRO DE PERMISSÃO\n\nVocê não tem autorização para verificar a licença.",
+    alert_bienvenida_title: "👋 Bem-vindo(a)!",
+    alert_bienvenida_text: "Para começar, escolha por onde quer iniciar a configuração:",
+    btn_ir_perfil: "1. Configurar Perfil ⚙️",
+    btn_ir_cat: "2. Criar Categorias 📂",
+    msg_guardado: "Salvo.",
+
+    // Perfil
+    perf_title: "Perfil Financeiro",
+    lbl_edad: "Idade",
+    lbl_sexo: "Sexo",
+    lbl_pais: "País",
+    lbl_meta: "Meta mensal",
+    lbl_ingreso: "Renda mensal",
+    lbl_moneda: "Moeda",
+    lbl_obj_nome: "Nome do Objetivo",
+    lbl_obj_val: "Valor do objetivo",
+    btn_save_perf: "Salvar perfil",
+    btn_reset_obj: "Reiniciar progresso",
+
+    // Simulador
+    sim_title: "🔮 Simulador",
+    sim_lbl_monto: "Valor mensal extra:",
+    sim_btn_calc: "Calcular",
+    sim_btn_close: "Fechar",
+    sim_result_fail: "Atualmente você não economiza.",
+    sim_result_success: "Terminaria antes!",
+    sim_msg_initial: "Insira um valor acima para ver o impacto.",
+
+    // Gráficos
+    chart_restante: "Restante",
+    chart_falta: "Falta",
+    loading_check: "Verificando acesso...",
+    loading_data: "Carregando dados..."
+  }
 };
 
-// Função Principal de Troca de Idioma (VERSÃO SEGURA)
+// Função Principal de Troca de Idioma
 function updateLanguage(lang) {
-    if (lang !== 'es' && lang !== 'pt') lang = 'es';
-    currentLang = lang;
-    
+  // Segurança extra: se chegar algo inválido, força espanhol
+  if (lang !== 'es' && lang !== 'pt') lang = 'es';
+
+  currentLang = lang;
+  try {
+    localStorage.setItem('app_lang', lang);
+  } catch (e) {
+    console.warn("Sem acesso ao localStorage");
+  }
+
+  // Atualiza textos estáticos (HTML)
+  const elements = document.querySelectorAll('[data-i18n]');
+  if (elements) {
+    elements.forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      // Verifica se a tradução existe antes de tentar usar
+      if (translations[lang] && translations[lang][key]) {
+        if (el.tagName === "INPUT" && el.hasAttribute("placeholder")) {
+          el.placeholder = translations[lang][key];
+        } else {
+          el.textContent = translations[lang][key];
+        }
+      }
+    });
+  }
+
+  // Sincroniza os seletores
+  const selLogin = document.getElementById("lang-select-login");
+  const selApp = document.getElementById("lang-select-app");
+  if (selLogin) selLogin.value = lang;
+  if (selApp) selApp.value = lang;
+
+  // ATUALIZAÇÃO SEGURA DOS GRÁFICOS
+  if (typeof actualizarResumen === "function") {
     try {
-        localStorage.setItem('app_lang', lang);
-    } catch (e) { console.warn("Sem acesso ao localStorage"); }
-
-    // Atualiza textos estáticos (HTML)
-    const elements = document.querySelectorAll('[data-i18n]');
-    if (elements) {
-        elements.forEach(el => {
-            const key = el.getAttribute('data-i18n');
-            if (translations[lang] && translations[lang][key]) {
-                if(el.tagName === "INPUT" && el.hasAttribute("placeholder")) {
-                    el.placeholder = translations[lang][key];
-                } else {
-                    el.textContent = translations[lang][key];
-                }
-            }
-        });
+      actualizarResumen();
+    } catch (e) {
+      console.error("Erro ao atualizar resumo", e);
     }
-
-    // Sincroniza os seletores
-    const selLogin = document.getElementById("lang-select-login");
-    const selApp = document.getElementById("lang-select-app");
-    if(selLogin) selLogin.value = lang;
-    if(selApp) selApp.value = lang;
-    
-    // Tenta atualizar gráficos se as funções existirem
-    if (typeof actualizarResumen === "function") {
-        try { actualizarResumen(); } catch(e) { console.error("Erro ao atualizar resumo", e); }
+  }
+  if (typeof actualizarObjetivo === "function") {
+    try {
+      actualizarObjetivo();
+    } catch (e) {
+      console.error("Erro ao atualizar objetivo", e);
     }
-    if (typeof actualizarObjetivo === "function") {
-        try { actualizarObjetivo(); } catch(e) { console.error("Erro ao atualizar objetivo", e); }
-    }
+  }
+  if (typeof inicializarInterfaz === "function") {
+    inicializarInterfaz();
+  }
 }
 
-// ===============================================================
-// 3. UTILITÁRIOS
-// ===============================================================
+
+// --- UTILITÁRIOS VISUAIS ---
 function loading(show) {
-    const el = document.getElementById('loading-overlay');
-    if (el) {
-        if (show) el.classList.remove('hidden');
-        else el.classList.add('hidden');
-    }
+  const el = document.getElementById('loading-overlay');
+  if (el) {
+    if (show) el.classList.remove('hidden');
+    else el.classList.add('hidden');
+  }
 }
 
 function monedaPorDefectoParaPais(pais) {
-    switch (pais) {
-        case "bo": return "BOB";
-        case "br": return "BRL";
-        case "ar": return "ARS";
-        case "cl": return "CLP";
-        case "mx": return "MXN";
-        case "otro": return "USD";
-        default: return "USD";
-    }
+  switch (pais) {
+    case "bo":
+      return "BOB";
+    case "br":
+      return "BRL";
+    case "ar":
+      return "ARS";
+    case "cl":
+      return "CLP";
+    case "mx":
+      return "MXN";
+    case "otro":
+      return "USD";
+    default:
+      return "USD";
+  }
 }
 
 function parseNumeroLocal(str) {
-    if (str === null || str === undefined) return 0;
-    if (typeof str !== "string") str = String(str);
-    str = str.trim();
-    if (!str) return 0;
-    str = str.replace(/\./g, "");
-    str = str.replace(",", ".");
-    const n = parseFloat(str);
-    return isNaN(n) ? 0 : n;
+  if (str === null || str === undefined) return 0;
+  if (typeof str !== "string") str = String(str);
+  str = str.trim();
+  if (!str) return 0;
+  str = str.replace(/\./g, "");
+  str = str.replace(",", ".");
+  const n = parseFloat(str);
+  return isNaN(n) ? 0 : n;
 }
 
 let monedaUsuario = "USD";
 
 function formatearMoneda(valor) {
-    const currency = monedaUsuario || "USD";
-    let locale = "en-US";
-    if (currentLang === "pt") locale = "pt-BR";
-    else locale = "es-ES";
+  const currency = monedaUsuario || "USD";
+  let locale = "en-US";
 
-    switch (currency) {
-        case "BRL": locale = "pt-BR"; break;
-        case "BOB": locale = "es-BO"; break;
-        case "ARS": locale = "es-AR"; break;
-        case "CLP": locale = "es-CL"; break;
-        case "MXN": locale = "es-MX"; break;
-        case "EUR": locale = "es-ES"; break;
-        case "USD": locale = "en-US"; break;
-    }
-    try {
-        return valor.toLocaleString(locale, { style: "currency", currency });
-    } catch (e) {
-        return valor.toFixed(2);
-    }
+  // Ajuste fino de locale baseado no idioma escolhido
+  if (currentLang === "pt") locale = "pt-BR";
+  else locale = "es-ES";
+
+  switch (currency) {
+    case "BRL":
+      locale = "pt-BR";
+      break;
+    case "BOB":
+      locale = "es-BO";
+      break;
+    case "ARS":
+      locale = "es-AR";
+      break;
+    case "CLP":
+      locale = "es-CL";
+      break;
+    case "MXN":
+      locale = "es-MX";
+      break;
+    case "EUR":
+      locale = "es-ES";
+      break;
+    case "USD":
+      locale = "en-US";
+      break;
+  }
+  try {
+    return valor.toLocaleString(locale, {
+      style: "currency",
+      currency
+    });
+  } catch (e) {
+    return valor.toFixed(2);
+  }
 }
 
 function obtenerAnioMesActual() {
-    return new Date().toISOString().slice(0, 7);
+  return new Date().toISOString().slice(0, 7);
 }
 
 function filtrarMesActual(lista, campoFecha) {
-    const anioMesActual = obtenerAnioMesActual();
-    return lista.filter(item => item[campoFecha] && item[campoFecha].startsWith(anioMesActual));
+  const anioMesActual = obtenerAnioMesActual();
+  return lista.filter(item => item[campoFecha] && item[campoFecha].startsWith(anioMesActual));
 }
 
 function nombreMes(anioMes) {
-    if (!anioMes) return "";
-    const [anio, mes] = anioMes.split("-");
-    const fecha = new Date(parseInt(anio), parseInt(mes) - 1, 1);
-    const langLocale = currentLang === "pt" ? "pt-BR" : "es-ES";
-    return fecha.toLocaleDateString(langLocale, { month: "long", year: "numeric" });
+  if (!anioMes) return "";
+  const [anio, mes] = anioMes.split("-");
+  const fecha = new Date(parseInt(anio), parseInt(mes) - 1, 1);
+  // Usa o idioma selecionado para a data
+  const langLocale = currentLang === "pt" ? "pt-BR" : "es-ES";
+  return fecha.toLocaleDateString(langLocale, {
+    month: "long",
+    year: "numeric"
+  });
 }
 
 function siguienteAnioMes(anioMes) {
-    if (!anioMes) return anioMes;
-    const [anioStr, mesStr] = anioMes.split("-");
-    let anio = parseInt(anioStr, 10);
-    let mes = parseInt(mesStr, 10);
-    mes += 1;
-    if (mes === 13) { mes = 1; anio += 1; }
-    return anio.toString().padStart(4, "0") + "-" + mes.toString().padStart(2, "0");
+  if (!anioMes) return anioMes;
+  const [anioStr, mesStr] = anioMes.split("-");
+  let anio = parseInt(anioStr, 10);
+  let mes = parseInt(mesStr, 10);
+  mes += 1;
+  if (mes === 13) {
+    mes = 1;
+    anio += 1;
+  }
+  return anio.toString().padStart(4, "0") + "-" + mes.toString().padStart(2, "0");
 }
 
-function getColorParaCategoria(nombre) {
-    let hash = 0;
-    for (let i = 0; i < nombre.length; i++) {
-        hash = nombre.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
-    return "#" + "00000".substring(0, 6 - c.length) + c;
-}
-
-// ===============================================================
-// 4. ESTADO GLOBAL
-// ===============================================================
+// --- ESTADO GLOBAL ---
 let usuarioActual = null;
 let categoriasLocal = [];
 let transaccionesLocal = [];
@@ -1649,853 +1709,1372 @@ let objetivosHistorial = [];
 let unsubs = [];
 
 function limparMemoriaGlobal() {
-    usuarioActual = null;
-    categoriasLocal = []; transaccionesLocal = []; fijosLocal = []; tarjetasLocal = [];
-    metaMensualUsuario = 0; ingresoMensualUsuario = 0; edadUsuario = null;
-    sexoUsuario = ""; paisUsuario = ""; monedaUsuario = "USD"; 
-    objetivoNombre = ""; objetivoValor = 0; objetivoAhorroBase = 0;
-    objetivoFechaInicio = null; objetivoCompletado = false; objetivosHistorial = [];
-    yaMostroModalCategorias = false;
+  usuarioActual = null;
+  categoriasLocal = [];
+  transaccionesLocal = [];
+  fijosLocal = [];
+  tarjetasLocal = [];
+  metaMensualUsuario = 0;
+  ingresoMensualUsuario = 0;
+  edadUsuario = null;
+  sexoUsuario = "";
+  paisUsuario = "";
+  monedaUsuario = "USD";
+  objetivoNombre = "";
+  objetivoValor = 0;
+  objetivoAhorroBase = 0;
+  objetivoFechaInicio = null;
+  objetivoCompletado = false;
+  objetivosHistorial = [];
+  yaMostroModalCategorias = false;
+}
+// --- LÓGICA NOVA: ESTADO DO GASTO FIXO (EXPANDIDA) ---
+function estadoFijoParaMes(fijo, anioMes) {
+  // 1. Verifica se foi pago neste mês
+  const pago = transaccionesLocal.some(t =>
+    t.gastoFijoId === fijo.id &&
+    t.fecha && t.fecha.startsWith(anioMes)
+  );
+
+  if (pago) {
+    return {
+      texto: translations[currentLang].st_pago, // "Pago"
+      badgeClase: "badge-verde",
+      claseFila: "fijo-verde"
+    };
+  }
+
+  // 2. Se não pago, verifica datas
+  const hoje = new Date();
+  const mesAtualStr = obtenerAnioMesActual(); // "202X-XX"
+
+  // Só alerta vencimento se estivermos olhando para o mês atual ou passado
+  if (anioMes > mesAtualStr) {
+    return {
+      texto: "-",
+      badgeClase: "badge-normal",
+      claseFila: ""
+    };
+  }
+
+  const diaAtual = hoje.getDate();
+  const diaVencimento = parseInt(fijo.vencimiento);
+
+  // Se o mês do filtro for anterior ao atual e não está pago -> Vencido
+  if (anioMes < mesAtualStr) {
+    return {
+      texto: translations[currentLang].st_vencido,
+      badgeClase: "badge-rojo",
+      claseFila: "fijo-rojo"
+    };
+  }
+
+  // Estamos no mês atual
+  if (diaAtual > diaVencimento) {
+    return {
+      texto: translations[currentLang].st_vencido,
+      badgeClase: "badge-rojo",
+      claseFila: "fijo-rojo"
+    };
+  } else if (diaAtual === diaVencimento) {
+    return {
+      texto: translations[currentLang].st_hoy,
+      badgeClase: "badge-amarillo",
+      claseFila: "fijo-amarillo"
+    };
+  } else if (diaVencimento - diaAtual <= 3) {
+    // Aviso de proximidade (3 dias antes)
+    return {
+      texto: translations[currentLang].st_proximo,
+      badgeClase: "badge-amarillo",
+      claseFila: ""
+    };
+  }
+
+  return {
+    texto: "Pend.",
+    badgeClase: "badge-normal",
+    claseFila: ""
+  };
 }
 
-// ===============================================================
-// 5. AUTENTICACIÓN E SEGURANÇA
-// ===============================================================
+// ----------------------------------------------------------------------
+// AUTENTICACIÓN COM WHITELIST E IDIOMA
+// ----------------------------------------------------------------------
 onAuthStateChanged(auth, async (user) => {
-  // Tenta atualizar idioma
-  try { updateLanguage(currentLang); } catch(e) { console.warn("Erro idioma", e); }
-  
-  // Listeners de idioma
+  // Inicializa idioma
+  updateLanguage(currentLang);
+
+  // Listeners de troca de idioma
   const selLogin = document.getElementById("lang-select-login");
   const selApp = document.getElementById("lang-select-app");
-  if(selLogin) selLogin.onchange = (e) => updateLanguage(e.target.value);
-  if(selApp) selApp.onchange = (e) => updateLanguage(e.target.value);
+  if (selLogin) selLogin.onchange = (e) => updateLanguage(e.target.value);
+  if (selApp) selApp.onchange = (e) => updateLanguage(e.target.value);
 
   if (user) {
-     loading(true);
-     const loadingText = document.getElementById('loading-overlay');
-     if(loadingText && translations[currentLang]) {
-         loadingText.textContent = translations[currentLang].loading_check;
-     }
-     
-     try {
-         const docRef = doc(db, "clientes_permitidos", user.email); 
-         const docSnap = await getDoc(docRef);
+    loading(true);
+    const loadingText = document.getElementById('loading-overlay');
+    if (loadingText) loadingText.textContent = translations[currentLang].loading_check;
 
-         if (docSnap.exists() && docSnap.data().ativo === true) {
-             const dados = docSnap.data();
+    try {
+      const docRef = doc(db, "clientes_permitidos", user.email);
+      const docSnap = await getDoc(docRef);
 
-             // --- VERIFICAÇÃO DE VALIDADE ---
-             try {
-                 if (dados.validade) {
-                     const hoje = new Date().toISOString().split('T')[0];
-                     const dataValidade = dados.validade;
+      if (docSnap.exists() && docSnap.data().ativo === true) {
+        if (loadingText) loadingText.textContent = translations[currentLang].loading_data;
 
-                     if (dataValidade && dataValidade.length === 10) {
-                         // Venceu?
-                         if (hoje > dataValidade) {
-                             console.warn("Plano vencido:", user.email);
-                             let msg = "Plano Vencido.";
-                             if(translations[currentLang] && translations[currentLang].alert_plan_expired) {
-                                 msg = translations[currentLang].alert_plan_expired.replace("{date}", dataValidade);
-                             }
-                             alert(msg);
-                             await signOut(auth);
-                             window.location.reload();
-                             return;
-                         }
+        usuarioActual = user;
+        document.getElementById("user-email").textContent = user.email;
+        document.getElementById("login-screen").classList.add("hidden");
+        document.getElementById("app").classList.remove("hidden");
 
-                         // Vai vencer?
-                         const dataH = new Date(hoje);
-                         const dataV = new Date(dataValidade);
-                         const diffTime = dataV - dataH;
-                         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-                         
-                         if (diffDays >= 0 && diffDays <= 5) {
-                             let msg = "Aviso.";
-                             if(translations[currentLang] && translations[currentLang].alert_plan_warning) {
-                                 msg = translations[currentLang].alert_plan_warning
-                                     .replace("{days}", diffDays)
-                                     .replace("{date}", dataValidade);
-                             }
-                             alert(msg);
-                         }
-                     }
-                 }
-             } catch (erroValidade) {
-                 console.error("Erro validade ignorado:", erroValidade);
-             }
-             // ------------------------------
+        // Atualiza selects do app
+        if (selApp) selApp.value = currentLang;
 
-             if(loadingText && translations[currentLang]) {
-                 loadingText.textContent = translations[currentLang].loading_data;
-             }
-             
-             usuarioActual = user;
-             document.getElementById("user-email").textContent = user.email;
-             document.getElementById("login-screen").classList.add("hidden");
-             document.getElementById("app").classList.remove("hidden");
-             
-             if(selApp) selApp.value = currentLang;
-
-             iniciarListeners(user.uid);
-
-         } else {
-             console.warn("Acesso negado:", user.email);
-             let msg = "Acesso Restrito";
-             if(translations[currentLang]) msg = translations[currentLang].alert_restric;
-             alert(msg);
-             await signOut(auth);
-             window.location.reload();
-         }
-     } catch (error) {
-         console.error("Erro whitelist:", error);
-         let msg = "Erro.";
-         if (error.code === 'permission-denied') {
-             if(translations[currentLang]) msg = translations[currentLang].alert_permiso;
-         } else {
-             msg = "Erro de conexão.";
-         }
-         alert(msg);
-         await signOut(auth);
-         window.location.reload();
-     }
+        iniciarListeners(user.uid);
+      } else {
+        console.warn("Acesso negado:", user.email);
+        alert(translations[currentLang].alert_restric);
+        await signOut(auth);
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error("Erro whitelist:", error);
+      if (error.code === 'permission-denied') {
+        alert(translations[currentLang].alert_permiso);
+      } else {
+        alert("Error de conexión / Erro de conexão.");
+      }
+      await signOut(auth);
+      window.location.reload();
+    }
 
   } else {
-     if (usuarioActual) {
-         window.location.reload();
-         return;
-     }
-     if (typeof limparMemoriaGlobal === "function") limparMemoriaGlobal();
-     unsubs.forEach(u => u());
-     unsubs = [];
-     document.getElementById("app").classList.add("hidden");
-     document.getElementById("login-screen").classList.remove("hidden");
-     if(selLogin) selLogin.value = currentLang;
-     loading(false);
+    if (usuarioActual) {
+      window.location.reload();
+      return;
+    }
+    limparMemoriaGlobal();
+    unsubs.forEach(u => u());
+    unsubs = [];
+
+    document.getElementById("app").classList.add("hidden");
+    document.getElementById("login-screen").classList.remove("hidden");
+
+    // Atualiza select do login
+    if (selLogin) selLogin.value = currentLang;
+
+    loading(false);
   }
 });
-// ===============================================================
-// 6. CARGA DE DADOS (FIRESTORE)
-// ===============================================================
+
+// ----------------------------------------------------------------------
+// CARGA DE DATOS (LISTENERS)
+// ----------------------------------------------------------------------
 function iniciarListeners(uid) {
-    loading(true);
-    
-    // Helper para criar queries
-    const qBase = (col) => query(collection(db, col), where("uid", "==", uid));
-    
-    // 1. Categorias
-    unsubs.push(onSnapshot(qBase("categorias"), (s) => {
-        categoriasLocal = []; 
-        s.forEach(d => categoriasLocal.push({ id: d.id, ...d.data() }));
-        inicializarInterfaz(); 
-        mostrarModalCategoriasSiCorresponde();
-    }));
+  loading(true);
 
-    // 2. Transações
-    unsubs.push(onSnapshot(qBase("transacciones"), (s) => {
-        transaccionesLocal = []; 
-        s.forEach(d => transaccionesLocal.push({ id: d.id, ...d.data() }));
-        inicializarInterfaz();
-    }));
+  const unsubCat = onSnapshot(query(collection(db, "categorias"), where("uid", "==", uid)), (snapshot) => {
+    categoriasLocal = [];
+    snapshot.forEach(doc => {
+      categoriasLocal.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
+    inicializarInterfaz();
+    mostrarModalCategoriasSiCorresponde();
+  });
+  unsubs.push(unsubCat);
 
-    // 3. Gastos Fijos
-    unsubs.push(onSnapshot(qBase("gastos_fijos"), (s) => {
-        fijosLocal = []; 
-        s.forEach(d => fijosLocal.push({ id: d.id, ...d.data() }));
-        inicializarInterfaz();
-    }));
+  const unsubTrans = onSnapshot(query(collection(db, "transacciones"), where("uid", "==", uid)), (snapshot) => {
+    transaccionesLocal = [];
+    snapshot.forEach(doc => {
+      transaccionesLocal.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
+    inicializarInterfaz();
+  });
+  unsubs.push(unsubTrans);
 
-    // 4. Tarjetas
-    unsubs.push(onSnapshot(qBase("tarjetas"), (s) => {
-        tarjetasLocal = []; 
-        s.forEach(d => tarjetasLocal.push({ id: d.id, ...d.data() }));
-        inicializarInterfaz();
-    }));
+  const unsubFijos = onSnapshot(query(collection(db, "gastos_fijos"), where("uid", "==", uid)), (snapshot) => {
+    fijosLocal = [];
+    snapshot.forEach(doc => {
+      fijosLocal.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
+    inicializarInterfaz();
+  });
+  unsubs.push(unsubFijos);
 
-    // 5. Perfil
-    unsubs.push(onSnapshot(doc(db, "perfil", uid), (s) => {
-        if (s.exists()) {
-            const p = s.data();
-            edadUsuario = p.edad; sexoUsuario = p.sexo; paisUsuario = p.pais;
-            monedaUsuario = p.moneda || "USD";
-            metaMensualUsuario = Number(p.meta_mensual)||0;
-            ingresoMensualUsuario = Number(p.ingreso_mensual)||0;
-            objetivoNombre = p.objetivo_nombre||"";
-            objetivoValor = Number(p.objetivo_valor)||0;
-            objetivoAhorroBase = Number(p.objetivo_ahorro_base)||0;
-            objetivoFechaInicio = p.objetivo_fecha_inicio;
-            objetivoCompletado = p.objetivo_completado;
-            yaMostroModalCategorias = p.mostro_modal_categorias;
-            objetivosHistorial = p.objetivos_historial || [];
-            
-            if(!monedaUsuario && paisUsuario) monedaUsuario = monedaPorDefectoParaPais(paisUsuario);
-        } else {
-             // Perfil novo
-             metaMensualUsuario = 0; ingresoMensualUsuario = 0;
-             objetivoNombre = ""; objetivoValor = 0; objetivoAhorroBase = 0;
-             yaMostroModalCategorias = false;
-        }
-        inicializarInterfaz();
-        loading(false);
-    }));
+  const unsubTarj = onSnapshot(query(collection(db, "tarjetas"), where("uid", "==", uid)), (snapshot) => {
+    tarjetasLocal = [];
+    snapshot.forEach(doc => {
+      tarjetasLocal.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
+    inicializarInterfaz();
+  });
+  unsubs.push(unsubTarj);
+
+  const docRef = doc(db, "perfil", uid);
+  const unsubPerfil = onSnapshot(docRef, (docSnap) => {
+    if (docSnap.exists()) {
+      const p = docSnap.data();
+      edadUsuario = p.edad;
+      sexoUsuario = p.sexo;
+      paisUsuario = p.pais;
+      monedaUsuario = p.moneda || "USD";
+      metaMensualUsuario = Number(p.meta_mensual) || 0;
+      ingresoMensualUsuario = Number(p.ingreso_mensual) || 0;
+      objetivoNombre = p.objetivo_nombre || "";
+      objetivoValor = Number(p.objetivo_valor) || 0;
+      objetivoAhorroBase = Number(p.objetivo_ahorro_base) || 0;
+      objetivoFechaInicio = p.objetivo_fecha_inicio;
+      objetivoCompletado = p.objetivo_completado;
+      yaMostroModalCategorias = p.mostro_modal_categorias;
+      objetivosHistorial = p.objetivos_historial || [];
+
+      if (!monedaUsuario && paisUsuario) monedaUsuario = monedaPorDefectoParaPais(paisUsuario);
+    } else {
+      metaMensualUsuario = 0;
+      ingresoMensualUsuario = 0;
+      objetivoNombre = "";
+      objetivoValor = 0;
+      objetivoAhorroBase = 0;
+      yaMostroModalCategorias = false;
+    }
+    inicializarInterfaz();
+    loading(false);
+  });
+  unsubs.push(unsubPerfil);
 }
 
-// ===============================================================
-// 7. LÓGICA DE INTERFACE (UI)
-// ===============================================================
-
-// Login Toggle
+// ----------------------------------------------------------------------
+// LÓGICA DE LOGIN UI
+// ----------------------------------------------------------------------
 const loginForm = document.getElementById("login-form");
-const loginEmail = document.getElementById("login-email");
-const loginPassword = document.getElementById("login-password");
-const loginSubmit = document.getElementById("login-submit");
 const toggleModeBtn = document.getElementById("toggle-mode");
-const toggleText = document.getElementById("toggle-text");
-const loginMessage = document.getElementById("login-message");
-const registerExtra = document.getElementById("register-extra");
 let modoRegistro = false;
 
 toggleModeBtn.addEventListener("click", () => {
-    modoRegistro = !modoRegistro;
-    if (modoRegistro) {
-        loginSubmit.textContent = translations[currentLang].btn_create;
-        toggleText.textContent = translations[currentLang].msg_has_account;
-        toggleModeBtn.textContent = translations[currentLang].btn_enter;
-        registerExtra.classList.remove("hidden");
-    } else {
-        loginSubmit.textContent = translations[currentLang].btn_enter;
-        toggleText.textContent = translations[currentLang].msg_no_account;
-        toggleModeBtn.textContent = translations[currentLang].btn_create;
-        registerExtra.classList.add("hidden");
-    }
-    loginMessage.textContent = "";
+  modoRegistro = !modoRegistro;
+  if (modoRegistro) {
+    document.getElementById("login-submit").textContent = translations[currentLang].btn_create;
+    document.getElementById("toggle-text").textContent = translations[currentLang].msg_has_account;
+    toggleModeBtn.textContent = translations[currentLang].btn_enter;
+    document.getElementById("register-extra").classList.remove("hidden");
+  } else {
+    document.getElementById("login-submit").textContent = translations[currentLang].btn_enter;
+    document.getElementById("toggle-text").textContent = translations[currentLang].msg_no_account;
+    toggleModeBtn.textContent = translations[currentLang].btn_create;
+    document.getElementById("register-extra").classList.add("hidden");
+  }
+  document.getElementById("login-message").textContent = "";
 });
 
 loginForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    loginMessage.style.color = "#f97316";
-    loginMessage.textContent = "Procesando...";
-    try {
-        if (modoRegistro) await createUserWithEmailAndPassword(auth, loginEmail.value, loginPassword.value);
-        else await signInWithEmailAndPassword(auth, loginEmail.value, loginPassword.value);
-    } catch (error) {
-        console.error(error);
-        loginMessage.textContent = "Error: " + error.message;
+  e.preventDefault();
+  const email = document.getElementById("login-email").value;
+  const pass = document.getElementById("login-password").value;
+  const msg = document.getElementById("login-message");
+
+  msg.style.color = "#f97316";
+  msg.textContent = "Procesando...";
+
+  try {
+    if (modoRegistro) {
+      await createUserWithEmailAndPassword(auth, email, pass);
+    } else {
+      await signInWithEmailAndPassword(auth, email, pass);
     }
+  } catch (error) {
+    console.error(error);
+    msg.textContent = "Error: " + error.message;
+  }
 });
 
-document.getElementById("logout-btn").addEventListener("click", () => signOut(auth));
+document.getElementById("logout-btn").addEventListener("click", () => {
+  signOut(auth);
+});
+
+// ----------------------------------------------------------------------
+// SALVAR DADOS (ESCRITA FIRESTORE)
+// ----------------------------------------------------------------------
 
 // Salvar Perfil
 async function guardarPerfilEnServidor() {
-    if (!usuarioActual) return;
-    try {
-        const dados = {
-            uid: usuarioActual.uid, edad: edadUsuario, sexo: sexoUsuario, pais: paisUsuario,
-            moneda: monedaUsuario, meta_mensual: metaMensualUsuario, ingreso_mensual: ingresoMensualUsuario,
-            objetivo_nombre: objetivoNombre, objetivo_valor: objetivoValor,
-            objetivo_ahorro_base: Number(objetivoAhorroBase), objetivo_fecha_inicio: objetivoFechaInicio,
-            objetivo_completado: objetivoCompletado, mostro_modal_categorias: yaMostroModalCategorias,
-            objetivos_historial: objetivosHistorial
-        };
-        await setDoc(doc(db, "perfil", usuarioActual.uid), dados, { merge: true });
-        
-        const pm = document.getElementById("perfil-mensaje");
-        if (pm) { pm.textContent = translations[currentLang].msg_guardado; setTimeout(() => pm.textContent = "", 1500); }
-    } catch (e) { console.error(e); }
+  if (!usuarioActual) return;
+  try {
+    const dados = {
+      uid: usuarioActual.uid,
+      edad: edadUsuario,
+      sexo: sexoUsuario,
+      pais: paisUsuario,
+      moneda: monedaUsuario,
+      meta_mensual: metaMensualUsuario,
+      ingreso_mensual: ingresoMensualUsuario,
+      objetivo_nombre: objetivoNombre,
+      objetivo_valor: objetivoValor,
+      objetivo_ahorro_base: Number(objetivoAhorroBase),
+      objetivo_fecha_inicio: objetivoFechaInicio,
+      objetivo_completado: objetivoCompletado,
+      mostro_modal_categorias: yaMostroModalCategorias,
+      objetivos_historial: objetivosHistorial
+    };
+    await setDoc(doc(db, "perfil", usuarioActual.uid), dados, {
+      merge: true
+    });
+
+    const pm = document.getElementById("perfil-mensaje");
+    if (pm) {
+      pm.textContent = translations[currentLang].msg_guardado;
+      setTimeout(() => pm.textContent = "", 1500);
+    }
+  } catch (e) {
+    console.error("Error al guardar perfil", e);
+  }
 }
 
-// Listeners de Formulários de Dados
+// Categorias
 document.getElementById("form-categoria").addEventListener("submit", async (e) => {
-    e.preventDefault(); loading(true);
-    try {
-        await addDoc(collection(db, "categorias"), {
-            uid: usuarioActual.uid, nome: document.getElementById("cat-nome").value.trim(),
-            grupo: document.getElementById("cat-grupo").value, createdAt: serverTimestamp()
-        });
-        document.getElementById("cat-nome").value = "";
-    } catch(e){console.error(e);}
-    loading(false);
-});
-window.eliminarCategoria = async (id) => { if(confirm("Confirm?")) await deleteDoc(doc(db, "categorias", id)); };
+  e.preventDefault();
+  const nome = document.getElementById("cat-nome").value.trim();
+  const grupo = document.getElementById("cat-grupo").value;
+  if (!nome) return;
 
+  loading(true);
+  try {
+    await addDoc(collection(db, "categorias"), {
+      uid: usuarioActual.uid,
+      nome,
+      grupo,
+      createdAt: serverTimestamp()
+    });
+    document.getElementById("cat-nome").value = "";
+  } catch (e) {
+    console.error(e);
+    alert("Error");
+  }
+  loading(false);
+});
+window.eliminarCategoria = async (id) => {
+  if (confirm("Confirm?")) await deleteDoc(doc(db, "categorias", id));
+};
+
+// Gastos Fijos
 document.getElementById("form-fijo").addEventListener("submit", async (e) => {
-    e.preventDefault(); loading(true);
-    try {
-        await addDoc(collection(db, "gastos_fijos"), {
-            uid: usuarioActual.uid, descripcion: document.getElementById("fijo-descripcion").value.trim(),
-            valor: parseNumeroLocal(document.getElementById("fijo-valor").value),
-            vencimiento: parseInt(document.getElementById("fijo-vencimiento").value),
-            mes_inicio: siguienteAnioMes(obtenerAnioMesActual())
-        });
-        document.getElementById("form-fijo").reset();
-    } catch(e){console.error(e);}
-    loading(false);
+  e.preventDefault();
+  const d = document.getElementById("fijo-descripcion").value.trim();
+  const v = parseNumeroLocal(document.getElementById("fijo-valor").value);
+  const ven = parseInt(document.getElementById("fijo-vencimiento").value);
+
+  loading(true);
+  try {
+    await addDoc(collection(db, "gastos_fijos"), {
+      uid: usuarioActual.uid,
+      descripcion: d,
+      valor: v,
+      vencimiento: ven,
+      mes_inicio: siguienteAnioMes(obtenerAnioMesActual())
+    });
+    document.getElementById("form-fijo").reset();
+  } catch (e) {
+    console.error(e);
+  }
+  loading(false);
 });
 window.eliminarFijo = async (id) => await deleteDoc(doc(db, "gastos_fijos", id));
 
+// Tarjetas
 document.getElementById("form-tarjeta").addEventListener("submit", async (e) => {
-    e.preventDefault(); loading(true);
-    try {
-        await addDoc(collection(db, "tarjetas"), {
-            uid: usuarioActual.uid, alias: document.getElementById("tarjeta-alias").value,
-            digitos: document.getElementById("tarjeta-digitos").value, banco: document.getElementById("tarjeta-banco").value
-        });
-        document.getElementById("form-tarjeta").reset();
-    } catch(e){console.error(e);}
-    loading(false);
+  e.preventDefault();
+  const a = document.getElementById("tarjeta-alias").value;
+  const d = document.getElementById("tarjeta-digitos").value;
+  const b = document.getElementById("tarjeta-banco").value;
+
+  loading(true);
+  try {
+    await addDoc(collection(db, "tarjetas"), {
+      uid: usuarioActual.uid,
+      alias: a,
+      digitos: d,
+      banco: b
+    });
+    document.getElementById("form-tarjeta").reset();
+  } catch (e) {
+    console.error(e);
+  }
+  loading(false);
 });
 window.eliminarTarjeta = async (id) => await deleteDoc(doc(db, "tarjetas", id));
 
+// Transações
 document.getElementById("form-transaccion").addEventListener("submit", async (e) => {
-    e.preventDefault(); loading(true);
-    const tipo = document.getElementById("tipo").value;
-    let gfId = null, tId = null, origFinal = null;
-    
-    if (tipo === "salida" && document.getElementById("categoria").value === "__gasto_fijo__") 
-        gfId = document.getElementById("gasto-fijo-select").value;
-    
-    if (tipo === "salida") {
-        if (document.getElementById("origen").value === "tarjeta") tId = document.getElementById("tarjeta-select").value;
-        origFinal = document.getElementById("origen").value;
+  e.preventDefault();
+  const tipo = document.getElementById("tipo").value;
+  const catVal = document.getElementById("categoria").value;
+  const orig = document.getElementById("origen").value;
+  const val = parseNumeroLocal(document.getElementById("valor").value);
+  const fecha = document.getElementById("data").value;
+  const desc = document.getElementById("descripcion").value.trim();
+
+  let gfId = null;
+  if (tipo === "salida" && catVal === "__gasto_fijo__") {
+    gfId = document.getElementById("gasto-fijo-select").value;
+    if (!gfId) {
+      alert("Seleccione gasto fijo");
+      return;
     }
-    
-    try {
-        await addDoc(collection(db, "transacciones"), {
-            uid: usuarioActual.uid, tipo: tipo,
-            categoriaId: (document.getElementById("categoria").value === "__gasto_fijo__") ? null : document.getElementById("categoria").value,
-            gastoFijoId: gfId, tarjetaId: tId, origen: origFinal,
-            valor: parseNumeroLocal(document.getElementById("valor").value),
-            fecha: document.getElementById("data").value,
-            descripcion: document.getElementById("descripcion").value.trim(),
-            createdAt: serverTimestamp()
-        });
-        document.getElementById("valor").value = ""; document.getElementById("descripcion").value = "";
-        actualizarObjetivo();
-    } catch(e){console.error(e);}
-    loading(false);
-});
-window.eliminarTransaccion = async (id) => { await deleteDoc(doc(db, "transacciones", id)); actualizarObjetivo(); };
+  }
+  let tId = null,
+    origFinal = null;
+  if (tipo === "salida") {
+    if (orig === "tarjeta") {
+      tId = document.getElementById("tarjeta-select").value;
+      if (!tId) {
+        alert("Seleccione tarjeta");
+        return;
+      }
+      origFinal = "tarjeta";
+    } else origFinal = "efectivo";
+  }
 
-// Modais e Botões de Boas-vindas
-const modalCategorias = document.getElementById("modal-categorias");
-const modalCategoriasOk = document.getElementById("modal-categorias-ok");
-modalCategoriasOk.addEventListener("click", async () => {
-    modalCategorias.classList.add("hidden");
-    yaMostroModalCategorias = true;
-    await guardarPerfilEnServidor();
-});
+  const catIdDB = (catVal === "__gasto_fijo__") ? null : catVal;
 
-const btnPerfil = document.getElementById("btn-ir-perfil");
-if (btnPerfil) {
-    btnPerfil.addEventListener("click", async () => {
-        modalCategorias.classList.add("hidden");
-        const m = document.querySelector('button[data-section="perfil"]');
-        if(m) m.click();
-        yaMostroModalCategorias = true;
-        await guardarPerfilEnServidor();
+  loading(true);
+  try {
+    await addDoc(collection(db, "transacciones"), {
+      uid: usuarioActual.uid,
+      tipo: tipo,
+      categoriaId: catIdDB,
+      gastoFijoId: gfId,
+      tarjetaId: tId,
+      origen: origFinal,
+      valor: val,
+      fecha: fecha,
+      descripcion: desc,
+      createdAt: serverTimestamp()
     });
-}
+    document.getElementById("valor").value = "";
+    document.getElementById("descripcion").value = "";
+    actualizarObjetivo();
+  } catch (e) {
+    console.error(e);
+    alert("Error");
+  }
+  loading(false);
+});
 
-const btnCat = document.getElementById("btn-ir-categorias");
-if (btnCat) {
-    btnCat.addEventListener("click", async () => {
-        modalCategorias.classList.add("hidden");
-        const m = document.querySelector('button[data-section="categorias"]');
-        if(m) m.click();
-        yaMostroModalCategorias = true;
-        await guardarPerfilEnServidor();
-    });
-}
+window.eliminarTransaccion = async (id) => {
+  await deleteDoc(doc(db, "transacciones", id));
+  actualizarObjetivo();
+};
+// ----------------------------------------------------------------------
+// LÓGICA DE INTERFACE (UI) E TABELAS
+// ----------------------------------------------------------------------
 
-// --- FUNÇÃO QUE ESTAVA FALTANDO (AGORA ESTÁ AQUI!) ---
-function mostrarModalCategoriasSiCorresponde() {
-    if (categoriasLocal && categoriasLocal.length === 0 && !yaMostroModalCategorias) {
-        const m = document.getElementById("modal-categorias");
-        if(m) m.classList.remove("hidden");
-    } else {
-        const m = document.getElementById("modal-categorias");
-        if(m) m.classList.add("hidden");
-    }
-}
-
-// --- INICIALIZAÇÃO GERAL ---
 function inicializarInterfaz() {
-    rellenarSelectCategorias(); rellenarTablaCategorias(); rellenarTablaFijos();
-    rellenarTablaTarjetas(); rellenarTablaTransacciones(); rellenarPerfil();
-    rellenarHistorialObjetivos(); actualizarResumen(); analisisLatam();
-    actualizarObjetivo(); dibujarGraficoViajeroTiempo();
-    actualizarCampoGastoFijo(); actualizarCampoOrigenYTarjeta(); inicializarReporte();
-    
-    mostrarModalCategoriasSiCorresponde();
-    updateLanguage(currentLang);
+  rellenarSelectCategorias();
+  rellenarTablaCategorias();
+  rellenarTablaFijos(); // <-- Usa a nova lógica de status
+  rellenarTablaTarjetas();
+  rellenarTablaTransacciones();
+  rellenarPerfil();
+  rellenarHistorialObjetivos();
+  actualizarResumen();
+  analisisLatam();
+  actualizarObjetivo();
+  dibujarGraficoViajeroTiempo();
+  actualizarCampoGastoFijo();
+  actualizarCampoOrigenYTarjeta();
+  inicializarReporte();
+  mostrarModalCategoriasSiCorresponde();
+  
+  // Reaplica o idioma atual
+  updateLanguage(currentLang);
 }
 
-// Navegação
+// Navegação Sidebar
 const sidebar = document.getElementById("sidebar");
 const menuToggle = document.getElementById("menu-toggle");
-menuToggle.addEventListener("click", () => sidebar.classList.toggle("open"));
-sidebar.addEventListener("click", (e) => {
-    if (e.target.tagName !== "BUTTON") return;
-    sidebar.querySelectorAll("button").forEach(btn => btn.classList.remove("active"));
-    e.target.classList.add("active");
-    document.querySelectorAll("main section").forEach(sec => sec.classList.add("hidden"));
-    document.getElementById("section-" + e.target.getAttribute("data-section")).classList.remove("hidden");
-    sidebar.classList.remove("open");
+
+menuToggle.addEventListener("click", () => {
+  sidebar.classList.toggle("open");
 });
 
-// Listeners UI
-document.getElementById("tipo").addEventListener("change", () => { rellenarSelectCategorias(); actualizarCampoGastoFijo(); actualizarCampoOrigenYTarjeta(); });
+sidebar.addEventListener("click", (e) => {
+  if (e.target.tagName !== "BUTTON") return;
+  const seccion = e.target.getAttribute("data-section");
+  if (!seccion) return;
+
+  sidebar.querySelectorAll("button").forEach(btn => btn.classList.remove("active"));
+  e.target.classList.add("active");
+
+  document.querySelectorAll("main section").forEach(sec => sec.classList.add("hidden"));
+  document.getElementById("section-" + seccion).classList.remove("hidden");
+  sidebar.classList.remove("open");
+});
+
+// Listeners de Campos Dinâmicos
+document.getElementById("tipo").addEventListener("change", () => {
+  rellenarSelectCategorias();
+  actualizarCampoGastoFijo();
+  actualizarCampoOrigenYTarjeta();
+});
 document.getElementById("categoria").addEventListener("change", actualizarCampoGastoFijo);
 document.getElementById("origen").addEventListener("change", actualizarCampoOrigenYTarjeta);
 document.getElementById("filtro-texto").addEventListener("input", rellenarTablaTransacciones);
 document.getElementById("filtro-fecha").addEventListener("change", rellenarTablaTransacciones);
-document.getElementById("btn-limpiar-filtros").addEventListener("click", () => { document.getElementById("filtro-texto").value = ""; document.getElementById("filtro-fecha").value = ""; rellenarTablaTransacciones(); });
+document.getElementById("btn-limpiar-filtros").addEventListener("click", () => {
+  document.getElementById("filtro-texto").value = "";
+  document.getElementById("filtro-fecha").value = "";
+  rellenarTablaTransacciones();
+});
 
+// Salvar Perfil
 document.getElementById("form-perfil").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    edadUsuario = parseInt(document.getElementById("perfil-edad").value);
-    sexoUsuario = document.getElementById("perfil-sexo").value;
-    paisUsuario = document.getElementById("perfil-pais").value;
-    metaMensualUsuario = parseNumeroLocal(document.getElementById("perfil-meta").value);
-    ingresoMensualUsuario = parseNumeroLocal(document.getElementById("perfil-ingreso").value);
-    monedaUsuario = document.getElementById("perfil-moneda").value;
-    objetivoNombre = document.getElementById("perfil-objetivo-nombre").value;
-    objetivoValor = parseNumeroLocal(document.getElementById("perfil-objetivo-valor").value);
-    
-    await guardarPerfilEnServidor();
-    inicializarInterfaz();
+  e.preventDefault();
+  edadUsuario = parseInt(document.getElementById("perfil-edad").value);
+  sexoUsuario = document.getElementById("perfil-sexo").value;
+  paisUsuario = document.getElementById("perfil-pais").value;
+  metaMensualUsuario = parseNumeroLocal(document.getElementById("perfil-meta").value);
+  ingresoMensualUsuario = parseNumeroLocal(document.getElementById("perfil-ingreso").value);
+  monedaUsuario = document.getElementById("perfil-moneda").value;
+  objetivoNombre = document.getElementById("perfil-objetivo-nombre").value;
+
+  const novoValor = parseNumeroLocal(document.getElementById("perfil-objetivo-valor").value);
+  if (novoValor !== objetivoValor && novoValor > 0) {
+    objetivoValor = novoValor;
+  } else {
+    objetivoValor = novoValor;
+  }
+
+  await guardarPerfilEnServidor();
+  inicializarInterfaz();
 });
 
+// Resetar Objetivo
 document.getElementById("perfil-objetivo-reset").addEventListener("click", async () => {
-    if (!confirm("Confirm?")) return;
-    objetivoAhorroBase = calcularAhorroTotal();
-    objetivoFechaInicio = new Date().toISOString().slice(0, 10);
-    objetivoCompletado = false;
-    await guardarPerfilEnServidor();
-    inicializarInterfaz();
+  if (!confirm("Confirm reset?")) return;
+  objetivoAhorroBase = calcularAhorroTotal();
+  objetivoFechaInicio = new Date().toISOString().slice(0, 10);
+  objetivoCompletado = false;
+  await guardarPerfilEnServidor();
+  inicializarInterfaz();
 });
 
-// Simulador
-const modalSim = document.getElementById("modal-simulador");
-document.getElementById("btn-abrir-simulador").addEventListener("click", () => {
-    modalSim.classList.remove("hidden");
-    const res = document.getElementById("simulador-resultado");
-    if(translations[currentLang]) res.textContent = translations[currentLang].sim_msg_initial;
-    document.getElementById("simulador-monto").value = "";
-});
-document.getElementById("btn-cerrar-simulador").addEventListener("click", () => modalSim.classList.add("hidden"));
-document.getElementById("btn-calcular-simulacion").addEventListener("click", () => {
-    const extra = parseNumeroLocal(document.getElementById("simulador-monto").value);
-    const res = document.getElementById("simulador-resultado");
-    if (extra <= 0) return;
-    
-    let totE = 0, totS = 0;
-    transaccionesLocal.forEach(t => { const v = Number(t.valor)||0; if (t.tipo === "entrada") totE+=v; else totS+=v; });
-    const ahorroTotal = Math.max(0, totE - totS);
-    let actual = ahorroTotal - objetivoAhorroBase;
-    if (actual < 0) actual = 0;
-    const restante = objetivoValor - actual;
-    
-    if (restante <= 0) { res.textContent = "Goal!"; return; }
-    
-    const mes = obtenerAnioMesActual();
-    const transMes = transaccionesLocal.filter(t => t.fecha && t.fecha.startsWith(mes));
-    let eM=0, sM=0;
-    transMes.forEach(t => { const v = Number(t.valor)||0; if (t.tipo === "entrada") eM+=v; else sM+=v; });
-    const flujoMes = Math.max(0, eM - sM);
-    const dia = new Date().getDate();
-    const ritmoBase = (flujoMes / dia) * 30;
-    const nuevoRitmo = ritmoBase + extra;
-    const diasAntes = Math.ceil(((restante/ritmoBase)*30) - ((restante/nuevoRitmo)*30));
-    
-    if (ritmoBase <= 0) res.textContent = translations[currentLang].sim_result_fail;
-    else res.innerHTML = `${translations[currentLang].sim_result_success} (${diasAntes} days)`;
-});
 
-// ===============================================================
-// 8. FUNÇÕES DE GRÁFICOS E RENDERIZAÇÃO
-// ===============================================================
+// --- FUNÇÕES DE PREENCHIMENTO (TABELAS) ---
 
-function dibujarGraficoViajeroTiempo() {
-   const canvas = document.getElementById("chart-time-travel"); if(!canvas) return;
-   const ctx = canvas.getContext("2d"); const w = canvas.width; const h = canvas.height;
-   ctx.clearRect(0,0,w,h);
-
-   const hoy = new Date();
-   const meses = [];
-   const localeData = currentLang==="pt"?"pt-BR":"es-ES";
-   for(let i=-2; i<=6; i++) {
-       const d = new Date(hoy.getFullYear(), hoy.getMonth() + i, 1);
-       meses.push({ label: d.toLocaleDateString(localeData,{month:'short'}), dateStr: d.toISOString().slice(0,7), isFuture: i > 0 });
-   }
-
-   let saldoAcumulado = 0;
-   const primerMesMostrado = meses[0].dateStr;
-   transaccionesLocal.forEach(t => { if(t.fecha < primerMesMostrado + "-01") { const v = Number(t.valor)||0; if(t.tipo==="entrada") saldoAcumulado += v; else saldoAcumulado -= v; } });
-
-   const puntos = [];
-   let tendenciaAhorro = 0; let mesesConDatos = 0;
-
-   meses.forEach(m => {
-       if(!m.isFuture) {
-           const trans = transaccionesLocal.filter(t => t.fecha && t.fecha.startsWith(m.dateStr));
-           if (trans.length === 0) puntos.push({ val: null, future: false, label: m.label });
-           else {
-               let e=0, s=0; trans.forEach(t => { const v = Number(t.valor)||0; if(t.tipo==="entrada") e+=v; else s+=v; });
-               saldoAcumulado += (e-s); puntos.push({ val: saldoAcumulado, future: false, label: m.label });
-               tendenciaAhorro += (e-s); mesesConDatos++;
-           }
-       } else {
-           const promedio = mesesConDatos > 0 ? (tendenciaAhorro / mesesConDatos) : 0;
-           saldoAcumulado += promedio; puntos.push({ val: saldoAcumulado, future: true, label: m.label });
-       }
-   });
-
-   const valoresValidos = puntos.map(p => p.val).filter(v => v !== null);
-   if (valoresValidos.length === 0) return;
-
-   const maxVal = Math.max(...valoresValidos) * 1.1;
-   const minVal = Math.min(0, ...valoresValidos);
-   const range = maxVal - minVal || 100;
-
-   const getX = (i) => 40 + (i * ((w-60) / (puntos.length-1)));
-   const getY = (v) => h - 30 - ((v - minVal) / range) * (h - 60);
-
-   ctx.strokeStyle = "rgba(255,255,255,0.1)"; ctx.lineWidth = 1;
-   ctx.beginPath(); ctx.moveTo(40, 20); ctx.lineTo(40, h-30); ctx.lineTo(w-20, h-30); ctx.stroke();
-
-   ctx.lineWidth = 3;
-   for(let i=0; i<puntos.length-1; i++) {
-       const p1 = puntos[i]; const p2 = puntos[i+1];
-       if (p1.val === null || p2.val === null) continue;
-       ctx.beginPath(); ctx.moveTo(getX(i), getY(p1.val)); ctx.lineTo(getX(i+1), getY(p2.val));
-       if(p2.future) { ctx.setLineDash([5, 5]); ctx.strokeStyle = "#06b6d4"; } else { ctx.setLineDash([]); ctx.strokeStyle = "#8b5cf6"; }
-       ctx.stroke();
-   }
-   ctx.setLineDash([]);
-
-   puntos.forEach((p, i) => {
-       if (p.val === null) {
-           const xLabel = getX(i); ctx.fillStyle = "rgba(255,255,255,0.3)"; ctx.font = "10px sans-serif"; ctx.textAlign = "center"; ctx.fillText(p.label, xLabel, h-10); return;
-       }
-       const x = getX(i); const y = getY(p.val);
-       ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI*2);
-       ctx.fillStyle = p.future ? "#06b6d4" : "#8b5cf6"; ctx.fill();
-       ctx.strokeStyle = "rgba(255,255,255,0.5)"; ctx.lineWidth = 2; ctx.stroke();
-       
-       if(i === puntos.length-1 || (i === 2 && !p.future)) { ctx.fillStyle = "#fff"; ctx.fillText(formatearMoneda(p.val), x, y - 15); }
-       ctx.fillStyle = "rgba(255,255,255,0.5)"; ctx.font = "10px sans-serif"; ctx.textAlign = "center"; ctx.fillText(p.label, x, h-10);
-   });
-}
-
-// Preenchimento de Tabelas e Selects
 function rellenarSelectCategorias() {
-    const sel = document.getElementById("categoria"); sel.innerHTML = "";
-    const tipo = document.getElementById("tipo").value;
-    if (tipo === "salida" && fijosLocal.length > 0) { const o = document.createElement("option"); o.value = "__gasto_fijo__"; o.textContent = "Gastos fijos"; sel.appendChild(o); }
-    categoriasLocal.forEach(c => { if(c.grupo !== tipo) return; const o = document.createElement("option"); o.value = c.id; o.textContent = c.nome; sel.appendChild(o); });
+  const sel = document.getElementById("categoria");
+  sel.innerHTML = "";
+  const tipo = document.getElementById("tipo").value;
+
+  if (tipo === "salida" && fijosLocal.length > 0) {
+    const opt = document.createElement("option");
+    opt.value = "__gasto_fijo__";
+    opt.textContent = "Gastos fijos";
+    sel.appendChild(opt);
+  }
+  categoriasLocal.forEach(c => {
+    if (c.grupo !== tipo) return;
+    const opt = document.createElement("option");
+    opt.value = c.id;
+    opt.textContent = c.nome;
+    sel.appendChild(opt);
+  });
 }
 
 function rellenarTablaCategorias() {
-    const tb = document.querySelector("#tabla-categorias tbody"); tb.innerHTML="";
-    categoriasLocal.forEach(c => {
-        const tr = document.createElement("tr"); tr.innerHTML = `<td>${c.nome}</td><td><span class="tag ${c.grupo}">${c.grupo}</span></td><td></td>`;
-        const btn = document.createElement("button"); btn.className="btn-icon btn-icon-danger"; btn.textContent="X"; btn.onclick = () => window.eliminarCategoria(c.id);
-        tr.lastElementChild.appendChild(btn); tb.appendChild(tr);
-    });
+  const tb = document.querySelector("#tabla-categorias tbody");
+  tb.innerHTML = "";
+  categoriasLocal.forEach(c => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${c.nome}</td><td><span class="tag ${c.grupo}">${c.grupo}</span></td><td></td>`;
+    const btn = document.createElement("button");
+    btn.className = "btn-icon btn-icon-danger";
+    btn.textContent = "X";
+    btn.onclick = () => window.eliminarCategoria(c.id);
+    tr.lastElementChild.appendChild(btn);
+    tb.appendChild(tr);
+  });
 }
 
 function rellenarSelectGastosFijos() {
-    const s = document.getElementById("gasto-fijo-select"); s.innerHTML="";
-    fijosLocal.forEach(f => { const o = document.createElement("option"); o.value=f.id; o.textContent=`${f.descripcion} (${formatearMoneda(f.valor)})`; s.appendChild(o); });
+  const s = document.getElementById("gasto-fijo-select");
+  s.innerHTML = "";
+  fijosLocal.forEach(f => {
+    const o = document.createElement("option");
+    o.value = f.id;
+    o.textContent = `${f.descripcion} (${formatearMoneda(f.valor)})`;
+    s.appendChild(o);
+  });
 }
 
+// --- TABELA DE GASTOS FIXOS (COM NOVA LÓGICA) ---
 function rellenarTablaFijos() {
-    const tb = document.querySelector("#tabla-fijos tbody"); tb.innerHTML=""; const mes = obtenerAnioMesActual();
-    fijosLocal.forEach(f => {
-        const st = estadoFijoParaMes(f, mes); const tr = document.createElement("tr"); if(st.claseFila) tr.classList.add(st.claseFila);
-        tr.innerHTML = `<td>${f.descripcion}</td><td>${formatearMoneda(f.valor)}</td><td>Día ${f.vencimiento}</td><td><span class="badge-estado ${st.badgeClase}">${st.texto}</span></td><td></td>`;
-        const btn = document.createElement("button"); btn.className="btn-icon btn-icon-danger"; btn.textContent="X"; btn.onclick=()=>window.eliminarFijo(f.id);
-        tr.lastElementChild.appendChild(btn); tb.appendChild(tr);
-    }); rellenarSelectGastosFijos();
-}
+  const tb = document.querySelector("#tabla-fijos tbody");
+  tb.innerHTML = "";
+  const mes = obtenerAnioMesActual();
 
-function estadoFijoParaMes(fijo, anioMesActual) {
-    const hoy = new Date(); const diaHoy = hoy.getDate(); const venc = fijo.vencimiento; const mesInicio = fijo.mes_inicio || obtenerAnioMesActual();
-    if (anioMesActual < mesInicio) return { claseFila: "", badgeClase: "badge-normal", texto: "Próximo mes" };
-    
-    const transMes = filtrarMesActual(transaccionesLocal, "fecha");
-    let totalPagado = 0; transMes.forEach(t => { if (t.tipo === "salida" && t.gastoFijoId === fijo.id) totalPagado += Number(t.valor)||0; });
-    const pagoCompleto = totalPagado >= (fijo.valor - 0.01);
+  fijosLocal.forEach(f => {
+    // Chama a função de lógica de estado (definida na Parte 2)
+    const estado = estadoFijoParaMes(f, mes);
 
-    if (pagoCompleto) return { claseFila: "fijo-verde", badgeClase: "badge-verde", texto: "Pagado" };
-    if (totalPagado > 0) return { claseFila: (diaHoy >= venc ? "fijo-rojo" : ""), badgeClase: "badge-normal", texto: "Parcial" };
-    
-    if (diaHoy < venc - 7) return { claseFila: "", badgeClase: "badge-normal", texto: "Pendiente" };
-    else if (diaHoy >= venc - 7 && diaHoy < venc) return { claseFila: "fijo-amarillo", badgeClase: "badge-amarillo", texto: "Vence pronto" };
-    else return { claseFila: "fijo-rojo", badgeClase: "badge-rojo", texto: "Vencido" };
-}
+    const tr = document.createElement("tr");
+    // Aplica cor na linha se necessário (vermelho/amarelo)
+    if (estado.claseFila) tr.classList.add(estado.claseFila);
 
-function rellenarSelectTarjetas() {
-    const s = document.getElementById("tarjeta-select"); s.innerHTML="";
-    tarjetasLocal.forEach(t => { const o = document.createElement("option"); o.value=t.id; o.textContent=`${t.alias||""} ${t.digitos||""}`; s.appendChild(o); });
+    tr.innerHTML = `
+       <td>${f.descripcion}</td>
+       <td>${formatearMoneda(f.valor)}</td>
+       <td>Día ${f.vencimiento}</td>
+       <td><span class="badge-estado ${estado.badgeClase}">${estado.texto}</span></td>
+       <td></td>
+    `;
+
+    const btn = document.createElement("button");
+    btn.className = "btn-icon btn-icon-danger";
+    btn.textContent = "X";
+    btn.onclick = () => window.eliminarFijo(f.id);
+    tr.lastElementChild.appendChild(btn);
+    tb.appendChild(tr);
+  });
+  rellenarSelectGastosFijos();
 }
 
 function rellenarTablaTarjetas() {
-    const tb = document.querySelector("#tabla-tarjetas tbody"); tb.innerHTML="";
-    tarjetasLocal.forEach(t => {
-        const tr = document.createElement("tr"); tr.innerHTML = `<td>${t.alias || ""}</td><td>${t.digitos || ""}</td><td>${t.banco || ""}</td><td></td>`;
-        const btn = document.createElement("button"); btn.className="btn-icon btn-icon-danger"; btn.textContent="X"; btn.onclick=()=>window.eliminarTarjeta(t.id);
-        tr.lastElementChild.appendChild(btn); tb.appendChild(tr);
-    }); rellenarSelectTarjetas();
+  const tb = document.querySelector("#tabla-tarjetas tbody");
+  tb.innerHTML = "";
+  tarjetasLocal.forEach(t => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${t.alias || ""}</td><td>${t.digitos || ""}</td><td>${t.banco || ""}</td><td></td>`;
+    const btn = document.createElement("button");
+    btn.className = "btn-icon btn-icon-danger";
+    btn.textContent = "X";
+    btn.onclick = () => window.eliminarTarjeta(t.id);
+    tr.lastElementChild.appendChild(btn);
+    tb.appendChild(tr);
+  });
+  rellenarSelectTarjetas();
+}
+
+function rellenarSelectTarjetas() {
+  const s = document.getElementById("tarjeta-select");
+  s.innerHTML = "";
+  tarjetasLocal.forEach(t => {
+    const o = document.createElement("option");
+    o.value = t.id;
+    o.textContent = `${t.alias || ""} ${t.digitos || ""}`;
+    s.appendChild(o);
+  });
 }
 
 function rellenarTablaTransacciones() {
-    const tb = document.querySelector("#tabla-transacciones tbody"); tb.innerHTML=""; const mes = obtenerAnioMesActual();
-    let l = transaccionesLocal.filter(t => t.fecha && t.fecha.startsWith(mes));
-    const ft = document.getElementById("filtro-texto").value.toLowerCase(); const ff = document.getElementById("filtro-fecha").value;
-    if(ft) l = l.filter(t=>(t.descripcion||"").toLowerCase().includes(ft)); if(ff) l = l.filter(t=>t.fecha===ff);
-    l.sort((a,b) => a.fecha<b.fecha?1:-1);
+  const tb = document.querySelector("#tabla-transacciones tbody");
+  tb.innerHTML = "";
+  const mes = obtenerAnioMesActual();
+  let l = transaccionesLocal.filter(t => t.fecha && t.fecha.startsWith(mes));
+  const ft = document.getElementById("filtro-texto").value.toLowerCase();
+  const ff = document.getElementById("filtro-fecha").value;
 
-    l.forEach(t => {
-        const tr = document.createElement("tr"); let catNombre = "-";
-        if (t.categoriaId === null && t.gastoFijoId) { const f = fijosLocal.find(x => x.id === t.gastoFijoId); catNombre = "Fijo: " + (f ? f.descripcion : ""); }
-        else { const c = categoriasLocal.find(x => x.id === t.categoriaId); catNombre = c ? c.nome : "-"; }
-        
-        let origenTexto = "-";
-        if (t.tipo === "salida") {
-            if(t.origen === "tarjeta" && t.tarjetaId) { const tar = tarjetasLocal.find(x => x.id === t.tarjetaId); origenTexto = "💳 " + (tar ? `${tar.alias}` : ""); }
-            else { origenTexto = "💵 " + (translations[currentLang] ? translations[currentLang].opt_efectivo : "Efectivo"); }
-        }
+  if (ft) l = l.filter(t => (t.descripcion || "").toLowerCase().includes(ft));
+  if (ff) l = l.filter(t => t.fecha === ff);
+  l.sort((a, b) => a.fecha < b.fecha ? 1 : -1);
 
-        tr.innerHTML = `<td>${t.fecha}</td><td><span class="tag ${t.tipo}">${t.tipo}</span></td><td>${catNombre}</td><td>${origenTexto}</td><td>${t.descripcion||""}</td><td>${formatearMoneda(t.valor)}</td><td></td>`;
-        const btn = document.createElement("button"); btn.className="btn-icon btn-icon-danger"; btn.textContent="X"; btn.onclick=()=>window.eliminarTransaccion(t.id);
-        tr.lastElementChild.appendChild(btn); tb.appendChild(tr);
-    });
+  l.forEach(t => {
+    const tr = document.createElement("tr");
+    let catNombre = "-";
+    if (t.categoriaId === null && t.gastoFijoId) {
+      const f = fijosLocal.find(x => x.id === t.gastoFijoId);
+      catNombre = "Fijo: " + (f ? f.descripcion : "");
+    } else {
+      const c = categoriasLocal.find(x => x.id === t.categoriaId);
+      catNombre = c ? c.nome : "-";
+    }
+
+    let origenTexto = "-";
+    if (t.tipo === "salida") {
+      if (t.origen === "tarjeta" && t.tarjetaId) {
+        const tar = tarjetasLocal.find(x => x.id === t.tarjetaId);
+        origenTexto = "💳 " + (tar ? `${tar.alias}` : "");
+      } else {
+        origenTexto = "💵 " + translations[currentLang].opt_efectivo;
+      }
+    }
+
+    tr.innerHTML = `<td>${t.fecha}</td><td><span class="tag ${t.tipo}">${t.tipo}</span></td><td>${catNombre}</td><td>${origenTexto}</td><td>${t.descripcion || ""}</td><td>${formatearMoneda(t.valor)}</td><td></td>`;
+    const btn = document.createElement("button");
+    btn.className = "btn-icon btn-icon-danger";
+    btn.textContent = "X";
+    btn.onclick = () => window.eliminarTransaccion(t.id);
+    tr.lastElementChild.appendChild(btn);
+    tb.appendChild(tr);
+  });
 }
+
+// --- RESUMO E GRÁFICOS ---
 
 function actualizarResumen() {
-    const transMes = filtrarMesActual(transaccionesLocal, "fecha");
-    let e=0, s=0; transMes.forEach(t => { const v = Number(t.valor)||0; if(t.tipo==="entrada") e+=v; else s+=v; });
-    const saldo = e - s;
+  const transMes = filtrarMesActual(transaccionesLocal, "fecha");
+  let totalEntradas = 0;
+  let totalSalidas = 0;
+  let totalSalidasFijos = 0;
+  let totalSalidasOtros = 0;
 
-    document.getElementById("stat-entradas").textContent = formatearMoneda(e);
-    document.getElementById("stat-salidas").textContent = formatearMoneda(s);
-    document.getElementById("stat-saldo").textContent = formatearMoneda(saldo);
-    const st = document.getElementById("stat-saldo-texto");
-    if (saldo > 0) st.textContent = "Ok :)"; else if (saldo < 0) st.textContent = "Alert :("; else st.textContent = "-";
+  transMes.forEach(t => {
+    const v = Number(t.valor) || 0;
+    if (t.tipo === "entrada") {
+      totalEntradas += v;
+    } else if (t.tipo === "salida") {
+      totalSalidas += v;
+      if (t.gastoFijoId) totalSalidasFijos += v;
+      else totalSalidasOtros += v;
+    }
+  });
 
-    const cont = document.getElementById("contenedor-distribucion"); cont.innerHTML = "";
-    let gp = {}; let totG = 0;
-    transMes.forEach(t => {
-        if(t.tipo === "salida") {
-            let nm = "Sin categoría";
-            if(t.gastoFijoId) nm = "Fijos";
-            else if(t.categoriaId) { const c = categoriasLocal.find(x => x.id === t.categoriaId); if(c) nm = c.nome; }
-            const v = Number(t.valor)||0; if(!gp[nm]) gp[nm]=0; gp[nm]+=v; totG+=v;
-        }
+  const saldo = totalEntradas - totalSalidas;
+
+  document.getElementById("stat-entradas").textContent = formatearMoneda(totalEntradas);
+  document.getElementById("stat-salidas").textContent = formatearMoneda(totalSalidas);
+  document.getElementById("stat-saldo").textContent = formatearMoneda(saldo);
+
+  const saldoTexto = document.getElementById("stat-saldo-texto");
+  if (saldo > 0) saldoTexto.textContent = "Ok :)";
+  else if (saldo < 0) saldoTexto.textContent = "Alert :(";
+  else saldoTexto.textContent = "-";
+
+  // Distribuição
+  const contenedorDist = document.getElementById("contenedor-distribucion");
+  contenedorDist.innerHTML = "";
+  let gastosPorCat = {};
+  let totalGastado = 0;
+
+  transMes.forEach(t => {
+    if (t.tipo === "salida") {
+      let nombreCat = "Sin categoría";
+      if (t.gastoFijoId) {
+        nombreCat = "Fijos";
+      } else if (t.categoriaId) {
+        const c = categoriasLocal.find(cat => cat.id === t.categoriaId);
+        if (c) nombreCat = c.nome;
+      }
+      const v = Number(t.valor) || 0;
+      if (!gastosPorCat[nombreCat]) gastosPorCat[nombreCat] = 0;
+      gastosPorCat[nombreCat] += v;
+      totalGastado += v;
+    }
+  });
+
+  if (totalGastado === 0) {
+    contenedorDist.innerHTML = '<div style="text-align:center; color:#64748b; font-size:0.9rem; padding:1rem;">...</div>';
+  } else {
+    const ordenados = Object.keys(gastosPorCat).sort((a, b) => gastosPorCat[b] - gastosPorCat[a]);
+    ordenados.forEach(cat => {
+      const valor = gastosPorCat[cat];
+      const porcentaje = (valor / totalGastado) * 100;
+      const row = document.createElement("div");
+      row.className = "dist-row";
+      row.innerHTML = `
+         <span style="width:100px; color:#cbd5e1;">${cat}</span>
+         <div class="dist-bar-bg">
+             <div class="dist-bar-fill" style="width:${porcentaje}%; background:${getColorParaCategoria(cat)}"></div>
+         </div>
+         <span style="width:60px; text-align:right; color:#fff;">${Math.round(porcentaje)}%</span>
+     `;
+      contenedorDist.appendChild(row);
     });
+  }
 
-    if(totG === 0) cont.innerHTML = '<div style="text-align:center; color:#64748b; padding:1rem;">...</div>';
+  // Meta
+  const lblMeta = document.getElementById("stat-meta-uso");
+  if (metaMensualUsuario > 0) {
+    const uso = (totalSalidas / metaMensualUsuario) * 100;
+    const restanteMeta = metaMensualUsuario - totalSalidas;
+    dibujarGraficoMeta(uso, formatearMoneda(restanteMeta));
+    lblMeta.textContent = `Meta: ${formatearMoneda(metaMensualUsuario)}`;
+    lblMeta.className = "stat-small";
+    if (uso < 50) lblMeta.classList.add("semaforo-verde");
+    else if (uso >= 50 && uso < 80) lblMeta.classList.add("semaforo-amarillo");
     else {
-        const ord = Object.keys(gp).sort((a,b) => gp[b] - gp[a]);
-        ord.forEach(cat => {
-            const v = gp[cat]; const pct = (v/totG)*100;
-            const r = document.createElement("div"); r.className = "dist-row";
-            r.innerHTML = `<span style="width:100px; color:#cbd5e1;">${cat}</span><div class="dist-bar-bg"><div class="dist-bar-fill" style="width:${pct}%; background:${getColorParaCategoria(cat)}"></div></div><span style="width:60px; text-align:right; color:#fff;">${Math.round(pct)}%</span>`;
-            cont.appendChild(r);
-        });
+      lblMeta.classList.add("semaforo-rojo");
     }
-
-    const lblMeta = document.getElementById("stat-meta-uso");
-    if(metaMensualUsuario > 0) {
-        const uso = (s/metaMensualUsuario)*100;
-        dibujarGraficoMeta(uso, formatearMoneda(metaMensualUsuario - s));
-        lblMeta.textContent = `Meta: ${formatearMoneda(metaMensualUsuario)}`;
-        lblMeta.className = "stat-small " + (uso < 50 ? "semaforo-verde" : (uso < 80 ? "semaforo-amarillo" : "semaforo-rojo"));
-    } else {
-        dibujarGraficoMeta(0, "");
-        lblMeta.textContent = "Definir meta en Perfil";
-        lblMeta.className = "stat-small";
-    }
+  } else {
+    dibujarGraficoMeta(0, "");
+    lblMeta.textContent = "Define una meta mensual en Perfil.";
+    lblMeta.className = "stat-small";
+  }
 }
 
-function calcularAhorroTotal() { let e=0, s=0; transaccionesLocal.forEach(t => { const v = Number(t.valor)||0; if(t.tipo==="entrada") e+=v; else s+=v; }); return e - s; }
+function getColorParaCategoria(nombre) {
+  let hash = 0;
+  for (let i = 0; i < nombre.length; i++) {
+    hash = nombre.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
+  return "#" + "00000".substring(0, 6 - c.length) + c;
+}
+
+function calcularAhorroTotal() {
+  let e = 0,
+    s = 0;
+  transaccionesLocal.forEach(t => {
+    const v = Number(t.valor) || 0;
+    if (t.tipo === "entrada") e += v;
+    else s += v;
+  });
+  return e - s;
+}
 
 function actualizarObjetivo() {
-    if(!objetivoNombre || !objetivoValor || objetivoValor <= 0) {
-        document.getElementById("obj-nombre").textContent = "-"; document.getElementById("obj-meta").textContent = "-";
-        document.getElementById("obj-ahorrado").textContent = formatearMoneda(0); document.getElementById("obj-restante").textContent = formatearMoneda(0);
-        dibujarGraficoObjetivo(0, ""); return;
+  if (!objetivoNombre || !objetivoValor || objetivoValor <= 0) {
+    document.getElementById("obj-nombre").textContent = "-";
+    dibujarGraficoObjetivo(0, "");
+    return;
+  }
+
+  const ahorroTotal = calcularAhorroTotal();
+  const base = Number(objetivoAhorroBase) || 0;
+  let ahorroObjetivo = ahorroTotal - base;
+  if (ahorroObjetivo < 0) ahorroObjetivo = 0;
+
+  if (!objetivoCompletado && ahorroObjetivo >= objetivoValor) {
+    objetivoCompletado = true;
+    const hoy = new Date().toISOString().slice(0, 10);
+    objetivosHistorial.push({
+      nombre: objetivoNombre,
+      valorMeta: objetivoValor,
+      ahorroFinal: ahorroObjetivo,
+      fechaInicio: objetivoFechaInicio,
+      fechaConclusion: hoy
+    });
+    guardarPerfilEnServidor();
+  }
+
+  const pct = (ahorroObjetivo / objetivoValor) * 100;
+  const restante = Math.max(0, objetivoValor - ahorroObjetivo);
+
+  document.getElementById("obj-nombre").textContent = objetivoNombre;
+  document.getElementById("obj-meta").textContent = formatearMoneda(objetivoValor);
+  document.getElementById("obj-ahorrado").textContent = formatearMoneda(ahorroObjetivo);
+  document.getElementById("obj-restante").textContent = formatearMoneda(restante);
+
+  if (restante <= 0) {
+    document.getElementById("obj-texto").textContent = "100%";
+  } else {
+    document.getElementById("obj-texto").textContent = `${pct.toFixed(1)}%`;
+    const transMes = filtrarMesActual(transaccionesLocal, "fecha");
+    let eMes = 0;
+    let sMes = 0;
+    transMes.forEach(t => {
+      const v = Number(t.valor) || 0;
+      if (t.tipo === "entrada") eMes += v;
+      else sMes += v;
+    });
+    let saldoMes = eMes - sMes;
+    const diaHoy = new Date().getDate();
+    const ritmoDiario = saldoMes / (diaHoy || 1);
+    const ahorroProyectadoMensual = ritmoDiario * 30;
+
+    const elProyeccion = document.getElementById("obj-proyeccion");
+    if (ahorroProyectadoMensual <= 0) {
+      elProyeccion.textContent = "";
+    } else {
+      const mesesFaltantes = restante / ahorroProyectadoMensual;
+      const diasFaltantes = Math.ceil(mesesFaltantes * 30);
+      elProyeccion.textContent = `~ ${diasFaltantes} days left`;
     }
-    const total = calcularAhorroTotal();
-    const base = Number(objetivoAhorroBase)||0;
-    let atual = total - base; if(atual<0) atual=0;
-    
-    if(!objetivoCompletado && atual >= objetivoValor) {
-        objetivoCompletado = true;
-        const hoy = new Date().toISOString().slice(0,10);
-        objetivosHistorial.push({ nombre: objetivoNombre, valorMeta: objetivoValor, ahorroFinal: atual, fechaInicio: objetivoFechaInicio, fechaConclusion: hoy });
-        guardarPerfilEnServidor();
-    }
+  }
 
-    const pct = (atual/objetivoValor)*100;
-    const rest = Math.max(0, objetivoValor - atual);
-
-    document.getElementById("obj-nombre").textContent = objetivoNombre;
-    document.getElementById("obj-meta").textContent = formatearMoneda(objetivoValor);
-    document.getElementById("obj-ahorrado").textContent = formatearMoneda(atual);
-    document.getElementById("obj-restante").textContent = formatearMoneda(rest);
-    document.getElementById("obj-texto").textContent = rest <= 0 ? "100%" : `${pct.toFixed(1)}%`;
-
-    dibujarGraficoObjetivo(pct, formatearMoneda(rest));
-    rellenarHistorialObjetivos();
+  dibujarGraficoObjetivo(pct, formatearMoneda(restante));
+  rellenarHistorialObjetivos();
 }
 
 function rellenarHistorialObjetivos() {
-    const tb = document.querySelector("#tabla-historial-objetivos tbody"); tb.innerHTML="";
-    objetivosHistorial.forEach(o => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `<td>${o.nombre}</td><td>${formatearMoneda(o.valorMeta)}</td><td>${formatearMoneda(o.ahorroFinal)}</td><td>${o.fechaInicio}</td><td>${o.fechaConclusion}</td>`;
-        tb.appendChild(tr);
-    });
-}
-
-function analisisLatam() {
-    if (!metaMensualUsuario || !paisUsuario) return;
-    // Lógica simplificada
-    document.getElementById("perfil-analisis").textContent = "Análisis activo.";
-}
-
-function actualizarCampoGastoFijo() {
-    const t = document.getElementById("tipo").value; const c = document.getElementById("categoria").value;
-    const el = document.getElementById("campo-gasto-fijo");
-    if(el) el.classList.toggle("hidden", !(t==="salida" && c==="__gasto_fijo__"));
-}
-function actualizarCampoOrigenYTarjeta() {
-    const t = document.getElementById("tipo").value; const o = document.getElementById("origen").value;
-    const divO = document.getElementById("campo-origen"); const divT = document.getElementById("campo-tarjeta");
-    if(t==="salida") { divO.classList.remove("hidden"); divT.classList.toggle("hidden", o!=="tarjeta"); }
-    else { divO.classList.add("hidden"); divT.classList.add("hidden"); }
-}
-
-function dibujarGraficoMeta(pct, txt) {
-    const cv = document.getElementById("meta-chart"); if(!cv) return;
-    const ctx = cv.getContext("2d"); const w = cv.width; const h = cv.height;
-    const cx = w/2; const cy = h/2; const r = Math.min(w,h)/2 - 10;
-    ctx.clearRect(0,0,w,h);
-    
-    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.fillStyle = "rgba(255,255,255,0.05)"; ctx.fill();
-    const end = -Math.PI/2 + (Math.PI*2 * (Math.min(pct,100)/100));
-    
-    ctx.beginPath(); ctx.arc(cx, cy, r, -Math.PI/2, end);
-    ctx.lineWidth = 12; ctx.lineCap = "round";
-    ctx.strokeStyle = pct > 80 ? "#f87171" : (pct > 50 ? "#facc15" : "#4ade80");
-    ctx.stroke();
-    
-    ctx.beginPath(); ctx.arc(cx, cy, r*0.6, 0, Math.PI*2); ctx.fillStyle = "#020617"; ctx.fill();
-    
-    if(txt) {
-        ctx.fillStyle = txt.includes("-") ? "#f87171" : "#fff";
-        ctx.font = "bold 12px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-        ctx.fillText(txt, cx, cy);
-        ctx.fillStyle = "#94a3b8"; ctx.font = "10px sans-serif";
-        const label = (translations[currentLang] && translations[currentLang].chart_restante) ? translations[currentLang].chart_restante : "Restante";
-        ctx.fillText(label, cx, cy+15);
-    }
-}
-
-function dibujarGraficoObjetivo(pct, txt) {
-    const cv = document.getElementById("objetivo-chart"); if(!cv) return;
-    const ctx = cv.getContext("2d"); const w = cv.width; const h = cv.height;
-    const cx = w/2; const cy = h/2; const r = Math.min(w,h)/2 - 10;
-    ctx.clearRect(0,0,w,h);
-    
-    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.fillStyle = "rgba(255,255,255,0.05)"; ctx.fill();
-    const end = -Math.PI/2 + (Math.PI*2 * (Math.min(pct,100)/100));
-    
-    const g = ctx.createLinearGradient(0,0,w,h); g.addColorStop(0,"#ec4899"); g.addColorStop(1,"#8b5cf6");
-    ctx.beginPath(); ctx.arc(cx, cy, r, -Math.PI/2, end);
-    ctx.lineWidth = 12; ctx.lineCap = "round"; ctx.strokeStyle = g; ctx.stroke();
-    
-    ctx.beginPath(); ctx.arc(cx, cy, r*0.6, 0, Math.PI*2); ctx.fillStyle = "#020617"; ctx.fill();
-    
-    if(txt) {
-        ctx.fillStyle = "#fff"; ctx.font = "bold 12px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-        ctx.fillText(txt, cx, cy);
-        ctx.fillStyle = "#94a3b8"; ctx.font = "10px sans-serif";
-        const label = (translations[currentLang] && translations[currentLang].chart_falta) ? translations[currentLang].chart_falta : "Falta";
-        ctx.fillText(label, cx, cy+15);
-    }
+  const tb = document.querySelector("#tabla-historial-objetivos tbody");
+  tb.innerHTML = "";
+  objetivosHistorial.forEach(o => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${o.nombre}</td><td>${formatearMoneda(o.valorMeta)}</td><td>${formatearMoneda(o.ahorroFinal)}</td><td>${o.fechaInicio}</td><td>${o.fechaConclusion}</td>`;
+    tb.appendChild(tr);
+  });
 }
 
 function rellenarPerfil() {
-    document.getElementById("perfil-edad").value = edadUsuario||"";
-    document.getElementById("perfil-sexo").value = sexoUsuario||"";
-    document.getElementById("perfil-pais").value = paisUsuario||"";
-    document.getElementById("perfil-meta").value = metaMensualUsuario||"";
-    document.getElementById("perfil-ingreso").value = ingresoMensualUsuario||"";
-    document.getElementById("perfil-moneda").value = monedaUsuario||"";
-    document.getElementById("perfil-objetivo-nombre").value = objetivoNombre||"";
-    document.getElementById("perfil-objetivo-valor").value = objetivoValor||"";
+  document.getElementById("perfil-edad").value = edadUsuario || "";
+  document.getElementById("perfil-sexo").value = sexoUsuario || "";
+  document.getElementById("perfil-pais").value = paisUsuario || "";
+  document.getElementById("perfil-meta").value = metaMensualUsuario || "";
+  document.getElementById("perfil-ingreso").value = ingresoMensualUsuario || "";
+  document.getElementById("perfil-moneda").value = monedaUsuario || "";
+  document.getElementById("perfil-objetivo-nombre").value = objetivoNombre || "";
+  document.getElementById("perfil-objetivo-valor").value = objetivoValor || "";
+}
+
+function analisisLatam() {
+  const edad = edadUsuario;
+  const pais = paisUsuario;
+  if (!metaMensualUsuario || !pais || !edad) {
+    document.getElementById("perfil-analisis").textContent = "Completa perfil para análisis.";
+    return;
+  }
+  const base = {
+    bo: 1500,
+    br: 3000,
+    ar: 250000,
+    cl: 400000,
+    mx: 9000,
+    otro: 700
+  };
+  const basePais = base[pais] || base.otro;
+  const referencia = basePais;
+  const ratio = referencia > 0 ? (metaMensualUsuario / referencia) * 100 : 0;
+  let mensaje;
+  if (ratio < 70) mensaje = "Tu meta es baja comparada al promedio.";
+  else if (ratio <= 120) mensaje = "Tu meta es razonable.";
+  else mensaje = "Tu meta es alta.";
+  document.getElementById("perfil-analisis").textContent = mensaje;
+}
+
+function actualizarCampoGastoFijo() {
+  const t = document.getElementById("tipo").value;
+  const c = document.getElementById("categoria").value;
+  const el = document.getElementById("campo-gasto-fijo");
+  if (el) el.classList.toggle("hidden", !(t === "salida" && c === "__gasto_fijo__"));
+}
+
+function actualizarCampoOrigenYTarjeta() {
+  const t = document.getElementById("tipo").value;
+  const o = document.getElementById("origen").value;
+  const divO = document.getElementById("campo-origen");
+  const divT = document.getElementById("campo-tarjeta");
+  if (t === "salida") {
+    divO.classList.remove("hidden");
+    divT.classList.toggle("hidden", o !== "tarjeta");
+  } else {
+    divO.classList.add("hidden");
+    divT.classList.add("hidden");
+  }
+}
+
+// --- DESENHO DE GRÁFICOS ---
+
+function dibujarGraficoMeta(porcentajeUsado, textoCentro) {
+  const canvas = document.getElementById("meta-chart");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  const w = canvas.width;
+  const h = canvas.height;
+  const cx = w / 2;
+  const cy = h / 2;
+  const radio = Math.min(w, h) / 2 - 10;
+  const innerRadio = radio * 0.6;
+  ctx.clearRect(0, 0, w, h);
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, radio, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(255,255,255,0.05)";
+  ctx.fill();
+
+  const clamped = Math.max(0, Math.min(porcentajeUsado, 100)) / 100;
+  const inicio = -Math.PI / 2;
+  const fin = inicio + Math.PI * 2 * clamped;
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, radio, inicio, fin);
+  ctx.lineCap = "round";
+  ctx.lineWidth = 12;
+
+  let color = "#4ade80";
+  if (porcentajeUsado > 80) color = "#f87171";
+  else if (porcentajeUsado > 50) color = "#facc15";
+
+  ctx.strokeStyle = color;
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, innerRadio, 0, Math.PI * 2);
+  ctx.fillStyle = "#020617";
+  ctx.fill();
+
+  if (textoCentro) {
+    const esNegativo = textoCentro.includes("-");
+    ctx.fillStyle = esNegativo ? "#f87171" : "#fff";
+    ctx.font = "bold 12px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(textoCentro, cx, cy);
+    ctx.fillStyle = "#94a3b8";
+    ctx.font = "10px sans-serif";
+    ctx.fillText(translations[currentLang].chart_restante, cx, cy + 15);
+  }
+}
+
+function dibujarGraficoObjetivo(porcentaje, textoCentro) {
+  const canvas = document.getElementById("objetivo-chart");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  const w = canvas.width;
+  const h = canvas.height;
+  const cx = w / 2;
+  const cy = h / 2;
+  const radio = Math.min(w, h) / 2 - 10;
+  const innerRadio = radio * 0.6;
+  ctx.clearRect(0, 0, w, h);
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, radio, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(255,255,255,0.05)";
+  ctx.fill();
+  const end = -Math.PI / 2 + (Math.PI * 2 * (Math.min(porcentaje, 100) / 100));
+
+  const grad = ctx.createLinearGradient(0, 0, w, h);
+  grad.addColorStop(0, "#ec4899");
+  grad.addColorStop(1, "#8b5cf6");
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, radio, -Math.PI / 2, end);
+  ctx.lineCap = "round";
+  ctx.lineWidth = 12;
+  ctx.strokeStyle = grad;
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, innerRadio, 0, Math.PI * 2);
+  ctx.fillStyle = "#020617";
+  ctx.fill();
+
+  if (textoCentro) {
+    ctx.fillStyle = "#fff";
+    ctx.font = "bold 12px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(textoCentro, cx, cy);
+    ctx.fillStyle = "#94a3b8";
+    ctx.font = "10px sans-serif";
+    ctx.fillText(translations[currentLang].chart_falta, cx, cy + 15);
+  }
+}
+
+function dibujarGraficoViajeroTiempo() {
+  const canvas = document.getElementById("chart-time-travel");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  const w = canvas.width;
+  const h = canvas.height;
+
+  ctx.clearRect(0, 0, w, h);
+
+  const hoy = new Date();
+  const meses = [];
+  for (let i = -2; i <= 6; i++) {
+    const d = new Date(hoy.getFullYear(), hoy.getMonth() + i, 1);
+    const localeData = currentLang === "pt" ? "pt-BR" : "es-ES";
+    meses.push({
+      label: d.toLocaleDateString(localeData, {
+        month: 'short'
+      }),
+      dateStr: d.toISOString().slice(0, 7),
+      isFuture: i > 0
+    });
+  }
+
+  let saldoAcumulado = 0;
+  const primerMesMostrado = meses[0].dateStr;
+  transaccionesLocal.forEach(t => {
+    if (t.fecha < primerMesMostrado + "-01") {
+      const v = Number(t.valor) || 0;
+      if (t.tipo === "entrada") saldoAcumulado += v;
+      else saldoAcumulado -= v;
+    }
+  });
+
+  const puntos = [];
+  let tendenciaAhorro = 0;
+  let mesesConDatos = 0;
+
+  meses.forEach(m => {
+    if (!m.isFuture) {
+      const trans = transaccionesLocal.filter(t => t.fecha && t.fecha.startsWith(m.dateStr));
+      if (trans.length === 0) {
+        puntos.push({
+          val: null,
+          future: false,
+          label: m.label
+        });
+      } else {
+        let e = 0,
+          s = 0;
+        trans.forEach(t => {
+          const v = Number(t.valor) || 0;
+          if (t.tipo === "entrada") e += v;
+          else s += v;
+        });
+        saldoAcumulado += (e - s);
+        puntos.push({
+          val: saldoAcumulado,
+          future: false,
+          label: m.label
+        });
+        tendenciaAhorro += (e - s);
+        mesesConDatos++;
+      }
+    } else {
+      const promedio = mesesConDatos > 0 ? (tendenciaAhorro / mesesConDatos) : 0;
+      saldoAcumulado += promedio;
+      puntos.push({
+        val: saldoAcumulado,
+        future: true,
+        label: m.label
+      });
+    }
+  });
+
+  const valoresValidos = puntos.map(p => p.val).filter(v => v !== null);
+  if (valoresValidos.length === 0) return;
+
+  const maxVal = Math.max(...valoresValidos) * 1.1;
+  const minVal = Math.min(0, ...valoresValidos);
+  const range = maxVal - minVal || 100;
+
+  const getX = (i) => 40 + (i * ((w - 60) / (puntos.length - 1)));
+  const getY = (v) => h - 30 - ((v - minVal) / range) * (h - 60);
+
+  ctx.strokeStyle = "rgba(255,255,255,0.1)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(40, 20);
+  ctx.lineTo(40, h - 30);
+  ctx.lineTo(w - 20, h - 30);
+  ctx.stroke();
+
+  ctx.lineWidth = 3;
+  for (let i = 0; i < puntos.length - 1; i++) {
+    const p1 = puntos[i];
+    const p2 = puntos[i + 1];
+
+    if (p1.val === null || p2.val === null) continue;
+
+    ctx.beginPath();
+    ctx.moveTo(getX(i), getY(p1.val));
+    ctx.lineTo(getX(i + 1), getY(p2.val));
+
+    if (p2.future) {
+      ctx.setLineDash([5, 5]);
+      ctx.strokeStyle = "#06b6d4";
+    } else {
+      ctx.setLineDash([]);
+      ctx.strokeStyle = "#8b5cf6";
+    }
+    ctx.stroke();
+  }
+  ctx.setLineDash([]);
+
+  puntos.forEach((p, i) => {
+    if (p.val === null) {
+      const xLabel = getX(i);
+      ctx.fillStyle = "rgba(255,255,255,0.3)";
+      ctx.font = "10px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(p.label, xLabel, h - 10);
+      return;
+    }
+
+    const x = getX(i);
+    const y = getY(p.val);
+    ctx.beginPath();
+    ctx.arc(x, y, 6, 0, Math.PI * 2);
+    ctx.fillStyle = p.future ? "#06b6d4" : "#8b5cf6";
+    ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,0.5)";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.fillStyle = "rgba(255,255,255,0.5)";
+    ctx.font = "10px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(p.label, x, h - 10);
+
+    if (i === puntos.length - 1 || (i === 2 && !p.future)) {
+      ctx.fillStyle = "#fff";
+      ctx.fillText(formatearMoneda(p.val), x, y - 15);
+    }
+  });
 }
 
 function inicializarReporte() {
-    const sel = document.getElementById("reporte-mes"); sel.innerHTML="";
-    const meses = new Set(); meses.add(obtenerAnioMesActual());
-    transaccionesLocal.forEach(t => { if(t.fecha && t.fecha.length>=7) meses.add(t.fecha.slice(0,7)); });
-    Array.from(meses).sort().reverse().forEach(m => {
-        const o = document.createElement("option"); o.value=m; o.textContent=`${nombreMes(m)} (${m})`; sel.appendChild(o);
-    });
-    sel.onchange = () => cargarDatosReporte(sel.value);
-    if(meses.size>0) cargarDatosReporte(sel.value);
+  const sel = document.getElementById("reporte-mes");
+  sel.innerHTML = "";
+  const meses = new Set();
+  meses.add(obtenerAnioMesActual());
+  transaccionesLocal.forEach(t => {
+    if (t.fecha && t.fecha.length >= 7) meses.add(t.fecha.slice(0, 7));
+  });
+
+  const ordenados = Array.from(meses).sort().reverse();
+  ordenados.forEach(m => {
+    const opt = document.createElement("option");
+    opt.value = m;
+    opt.textContent = nombreMes(m) + " (" + m + ")";
+    sel.appendChild(opt);
+  });
+
+  sel.onchange = () => cargarDatosReporte(sel.value);
+  if (ordenados.length > 0) cargarDatosReporte(ordenados[0]);
 }
 
 function cargarDatosReporte(mes) {
-    const l = transaccionesLocal.filter(t => t.fecha && t.fecha.startsWith(mes));
-    let e=0, s=0; let gp = {};
-    l.forEach(t => {
-        const v = Number(t.valor)||0;
-        if(t.tipo==="entrada") e+=v;
-        else {
-            s+=v;
-            let nm = "Sin categoría";
-            if(t.gastoFijoId) nm = "Fijo";
-            else if(t.categoriaId) { const c = categoriasLocal.find(x=>x.id===t.categoriaId); if(c) nm=c.nome; }
-            if(!gp[nm]) gp[nm]=0; gp[nm]+=v;
-        }
-    });
-    document.getElementById("rep-entradas").textContent = formatearMoneda(e);
-    document.getElementById("rep-salidas").textContent = formatearMoneda(s);
-    document.getElementById("rep-saldo").textContent = formatearMoneda(e-s);
-    
-    const tb = document.querySelector("#reporte-tabla-categorias tbody"); tb.innerHTML="";
-    Object.keys(gp).forEach(k => {
-        const v = gp[k]; const p = s>0?(v/s)*100:0;
-        const tr = document.createElement("tr");
-        tr.innerHTML = `<td>${k}</td><td>Salida</td><td>${formatearMoneda(v)}</td><td>${p.toFixed(1)}%</td>`;
-        tb.appendChild(tr);
-    });
+  const filtradas = transaccionesLocal.filter(t => t.fecha && t.fecha.startsWith(mes));
+  let e = 0,
+    s = 0;
+  let gastosPorCat = {};
+
+  filtradas.forEach(t => {
+    const v = Number(t.valor) || 0;
+    if (t.tipo === "entrada") e += v;
+    else {
+      s += v;
+      let catName = "Sin categoría";
+      if (t.gastoFijoId) catName = "Gasto Fijo";
+      else if (t.categoriaId) {
+        const c = categoriasLocal.find(x => x.id === t.categoriaId);
+        if (c) catName = c.nome;
+      }
+      if (!gastosPorCat[catName]) gastosPorCat[catName] = 0;
+      gastosPorCat[catName] += v;
+    }
+  });
+
+  document.getElementById("rep-entradas").textContent = formatearMoneda(e);
+  document.getElementById("rep-salidas").textContent = formatearMoneda(s);
+  document.getElementById("rep-saldo").textContent = formatearMoneda(e - s);
+
+  const tb = document.querySelector("#reporte-tabla-categorias tbody");
+  tb.innerHTML = "";
+
+  Object.keys(gastosPorCat).forEach(k => {
+    const v = gastosPorCat[k];
+    const pct = s > 0 ? (v / s) * 100 : 0;
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${k}</td><td>Salida</td><td>${formatearMoneda(v)}</td><td>${pct.toFixed(1)}%</td>`;
+    tb.appendChild(tr);
+  });
 }
+
 document.getElementById("reporte-mes-actual").addEventListener("click", () => {
-    const c = obtenerAnioMesActual();
-    document.getElementById("reporte-mes").value = c;
-    cargarDatosReporte(c);
+  const current = obtenerAnioMesActual();
+  const sel = document.getElementById("reporte-mes");
+  sel.value = current;
+  cargarDatosReporte(current);
 });
 
-// Corrigido: Garantir que essa função existe no escopo global
-function getColorParaCategoria(nombre) {
- let hash = 0;
- for (let i = 0; i < nombre.length; i++) {
-     hash = nombre.charCodeAt(i) + ((hash << 5) - hash);
- }
- const c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
- return "#" + "00000".substring(0, 6 - c.length) + c;
+// MODAIS E SIMULADOR
+const modalCategorias = document.getElementById("modal-categorias");
+document.getElementById("modal-categorias-ok").addEventListener("click", async () => {
+  modalCategorias.classList.add("hidden");
+  yaMostroModalCategorias = true;
+  await guardarPerfilEnServidor();
+});
+
+const btnPerfil = document.getElementById("btn-ir-perfil");
+if (btnPerfil) {
+  btnPerfil.addEventListener("click", async () => {
+    modalCategorias.classList.add("hidden");
+    document.querySelector('button[data-section="perfil"]').click();
+    yaMostroModalCategorias = true;
+    await guardarPerfilEnServidor();
+  });
 }
+
+const btnCategorias = document.getElementById("btn-ir-categorias");
+if (btnCategorias) {
+  btnCategorias.addEventListener("click", async () => {
+    modalCategorias.classList.add("hidden");
+    document.querySelector('button[data-section="categorias"]').click();
+    yaMostroModalCategorias = true;
+    await guardarPerfilEnServidor();
+  });
+}
+
+function mostrarModalCategoriasSiCorresponde() {
+  if (categoriasLocal.length === 0 && !yaMostroModalCategorias) {
+    modalCategorias.classList.remove("hidden");
+  } else {
+    modalCategorias.classList.add("hidden");
+  }
+}
+
+const modalSim = document.getElementById("modal-simulador");
+document.getElementById("btn-abrir-simulador").addEventListener("click", () => {
+  modalSim.classList.remove("hidden");
+  document.getElementById("simulador-resultado").textContent = translations[currentLang].sim_msg_initial;
+  document.getElementById("simulador-monto").value = "";
+});
+
+document.getElementById("btn-cerrar-simulador").addEventListener("click", () => {
+  modalSim.classList.add("hidden");
+});
+
+document.getElementById("btn-calcular-simulacion").addEventListener("click", () => {
+  const extra = parseNumeroLocal(document.getElementById("simulador-monto").value);
+  const res = document.getElementById("simulador-resultado");
+
+  if (extra <= 0) {
+    res.textContent = "Ingresa un monto válido.";
+    return;
+  }
+
+  let totE = 0,
+    totS = 0;
+  transaccionesLocal.forEach(t => {
+    const v = Number(t.valor) || 0;
+    if (t.tipo === "entrada") totE += v;
+    else totS += v;
+  });
+  const ahorroTotal = Math.max(0, totE - totS);
+  let actual = ahorroTotal - objetivoAhorroBase;
+  if (actual < 0) actual = 0;
+  const restante = objetivoValor - actual;
+
+  if (restante <= 0) {
+    res.textContent = "Goal reached!";
+    return;
+  }
+
+  const mes = obtenerAnioMesActual();
+  const transMes = transaccionesLocal.filter(t => t.fecha && t.fecha.startsWith(mes));
+  let eM = 0,
+    sM = 0;
+  transMes.forEach(t => {
+    const v = Number(t.valor) || 0;
+    if (t.tipo === "entrada") eM += v;
+    else sM += v;
+  });
+  const flujoMes = Math.max(0, eM - sM);
+  const dia = new Date().getDate();
+  const ritmoBase = (flujoMes / dia) * 30;
+
+  const tiempoActual = ritmoBase > 0 ? (restante / ritmoBase) : 9999;
+  const nuevoRitmo = ritmoBase + extra;
+  const tiempoNuevo = restante / nuevoRitmo;
+
+  const diasAntes = Math.ceil((tiempoActual * 30) - (tiempoNuevo * 30));
+
+  if (ritmoBase <= 0) {
+    res.textContent = translations[currentLang].sim_result_fail;
+  } else {
+    res.innerHTML = `${translations[currentLang].sim_result_success} (${diasAntes} days)`;
+  }
+});
 
 </script>
 </body>
 </html>
-
