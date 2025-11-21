@@ -2880,6 +2880,73 @@ function getColorParaCategoria(nombre) {
  return "#" + "00000".substring(0, 6 - c.length) + c;
 }
 
+// --- FUNÇÃO QUE FALTA: CALCULA ESTADO DO GASTO FIXO ---
+function estadoFijoParaMes(gasto, anioMes) {
+    // Verifica se já foi pago neste mês
+    // Procura nas transações locais uma saída que tenha o ID deste gasto fixo e seja deste mês
+    const estaPagado = transaccionesLocal.some(t => 
+        t.tipo === "salida" && 
+        t.gastoFijoId === gasto.id && 
+        t.fecha && t.fecha.startsWith(anioMes)
+    );
+
+    if (estaPagado) {
+        return { 
+            texto: "Pago", 
+            badgeClase: "badge-verde", 
+            claseFila: "fijo-verde" 
+        };
+    }
+
+    // Se não está pago, verifica a data
+    const hoy = new Date();
+    const diaHoy = hoy.getDate();
+    // Assume que o anioMes é o atual para calcular alertas visuais de dia
+    const [anio, mes] = anioMes.split("-");
+    
+    // Se estivermos olhando histórico passado e não pagou:
+    if (anioMes < obtenerAnioMesActual()) {
+         return { 
+            texto: "Vencido", 
+            badgeClase: "badge-rojo", 
+            claseFila: "fijo-rojo" 
+        };
+    }
+
+    // Se for mês futuro
+    if (anioMes > obtenerAnioMesActual()) {
+        return { 
+            texto: "Pendiente", 
+            badgeClase: "badge-normal", 
+            claseFila: "" 
+        };
+    }
+
+    // Mês atual: verifica dia
+    const diaVenc = gasto.vencimiento;
+    
+    if (diaHoy > diaVenc) {
+        return { 
+            texto: "Vencido", 
+            badgeClase: "badge-rojo", 
+            claseFila: "fijo-rojo" 
+        };
+    } else if (diaVenc - diaHoy <= 3) {
+        // Faltam 3 dias ou menos
+        return { 
+            texto: "Vence pronto", 
+            badgeClase: "badge-amarillo", 
+            claseFila: "fijo-amarillo" 
+        };
+    } else {
+        return { 
+            texto: "Pendiente", 
+            badgeClase: "badge-normal", 
+            claseFila: "" 
+        };
+    }
+}
+
 
 </script>
 </body>
