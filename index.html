@@ -712,6 +712,8 @@ tr:last-child td {
     gap: 0.5rem;
   }
 }
+
+
 </style>
 </head>
 <body>
@@ -782,6 +784,7 @@ tr:last-child td {
 <button data-section="categorias" data-i18n="menu_categorias">Categorías</button>
 <button data-section="perfil" data-i18n="menu_perfil">Perfil</button>
 </nav>
+
 <main>
 <div class="main-inner">
 
@@ -987,7 +990,7 @@ tr:last-child td {
               <th data-i18n="lbl_desc">Descripción</th>
               <th data-i18n="lbl_valor">Valor</th>
               <th data-i18n="lbl_fecha">Vencimiento</th>
-              <th data-i18n="lbl_estado">Estado</th>
+              <th>Estado</th>
               <th>#</th>
             </tr>
           </thead>
@@ -1226,13 +1229,13 @@ Para comenzar, elige por dónde quieres empezar a configurar tu cuenta:
 <div style="display:flex; flex-direction:column; gap:1rem;">
   <div style="background:rgba(255,255,255,0.05); padding:1rem; border-radius:16px; display:flex; justify-content:space-between; align-items:center;">
     <div style="margin-right:1rem;">
-      <strong style="color:var(--accent-cyan);" data-i18n="btn_ir_perfil">1. Configurar Perfil ⚙️</strong>
+      <strong style="color:var(--accent-cyan);" data-i18n="btn_ir_perfil">1. Configurar Perfil</strong>
     </div>
     <button type="button" class="secondary" id="btn-ir-perfil">Go</button>
   </div>
   <div style="background:rgba(255,255,255,0.05); padding:1rem; border-radius:16px; display:flex; justify-content:space-between; align-items:center;">
     <div style="margin-right:1rem;">
-      <strong style="color:var(--secondary-glow);" data-i18n="btn_ir_cat">2. Crear Categorías 📂</strong>
+      <strong style="color:var(--secondary-glow);" data-i18n="btn_ir_cat">2. Crear Categorías</strong>
     </div>
     <button type="button" class="secondary" id="btn-ir-categorias">Go</button>
   </div>
@@ -1267,35 +1270,35 @@ Para comenzar, elige por dónde quieres empezar a configurar tu cuenta:
 // ===============================================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
-    getAuth,
-    createUserWithEmailAndPassword,
-    signInWithEmailAndPassword,
-    signOut,
-    onAuthStateChanged
+getAuth,
+createUserWithEmailAndPassword,
+signInWithEmailAndPassword,
+signOut,
+onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import {
-    getFirestore,
-    collection,
-    addDoc,
-    getDocs,
-    getDoc,
-    setDoc,
-    deleteDoc,
-    doc,
-    query,
-    where,
-    onSnapshot,
-    orderBy,
-    serverTimestamp
+getFirestore,
+collection,
+addDoc,
+getDocs,
+getDoc,
+setDoc,
+deleteDoc,
+doc,
+query,
+where,
+onSnapshot,
+orderBy,
+serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyC2SYOIRUVXWxRZjZXJaFX2hFID1izQks4",
-    authDomain: "controlefinanceiro-7f8f1.firebaseapp.com",
-    projectId: "controlefinanceiro-7f8f1",
-    storageBucket: "controlefinanceiro-7f8f1.firebasestorage.app",
-    messagingSenderId: "438314445354",
-    appId: "1:438314445354:web:e4551a6f467b20e9cfb153"
+apiKey: "AIzaSyC2SYOIRUVXWxRZjZXJaFX2hFID1izQks4",
+authDomain: "controlefinanceiro-7f8f1.firebaseapp.com",
+projectId: "controlefinanceiro-7f8f1",
+storageBucket: "controlefinanceiro-7f8f1.firebasestorage.app",
+messagingSenderId: "438314445354",
+appId: "1:438314445354:web:e4551a6f467b20e9cfb153"
 };
 
 // Inicializar Firebase
@@ -1311,6 +1314,7 @@ let currentLang = (savedLang === 'es' || savedLang === 'pt') ? savedLang : 'es';
 
 const translations = {
     es: {
+        // Login
         login_title: "Control Financiero",
         login_subtitle: "Inicia sesión (Prism Edition)",
         lbl_email: "Correo electrónico",
@@ -1320,6 +1324,8 @@ const translations = {
         btn_create: "Crear cuenta",
         msg_no_account: "¿No tienes cuenta?",
         msg_has_account: "¿Ya tienes cuenta?",
+        
+        // Menu
         menu_title: "MENÚ",
         menu_dashboard: "Inicio",
         menu_transacciones: "Transacciones",
@@ -1329,6 +1335,8 @@ const translations = {
         menu_categorias: "Categorías",
         menu_perfil: "Perfil",
         btn_logout: "Salir",
+
+        // Dashboard
         dash_resumen_title: "Resumen del mes actual",
         stat_entradas: "Entradas",
         stat_salidas: "Salidas",
@@ -1342,6 +1350,8 @@ const translations = {
         lbl_detalle: "Detalle y Proyección",
         dash_travel_title: "Proyección Financiera (Viajero en el Tiempo)",
         dash_dist_title: "Distribución de salidas del mes",
+        
+        // Transacciones
         trans_new_title: "Nueva transacción",
         lbl_tipo: "Tipo",
         lbl_cat: "Categoría",
@@ -1353,22 +1363,23 @@ const translations = {
         trans_list_title: "Transacciones del mes",
         placeholder_search: "Ej: mercado, cine...",
         btn_clean_filter: "Limpiar filtros",
-        lbl_estado: "Estado",
-        st_pago: "Pago",
-        st_vencido: "Vencido",
-        st_hoy: "Vence hoy",
-        st_proximo: "Próximo",
+        
+        // Cards & Labels Gerais
         opt_entrada: "Entrada",
         opt_salida: "Salida",
         opt_efectivo: "Efectivo",
         opt_tarjeta: "Tarjeta",
-        alert_restric: "🚫 ACCESO RESTRINGIDO\n\nEste correo no tiene permisos activos.",
-        alert_permiso: "🚫 ERROR DE PERMISOS",
+
+        // Alertas
+        alert_restric: "🚫 ACCESO RESTRINGIDO\n\nEste correo no tiene permisos activos.\nTu cuenta ha sido creada, pero necesitas que el administrador habilite tu acceso.",
+        alert_permiso: "🚫 ERROR DE PERMISOS\n\nNo tienes autorización para verificar la licencia.",
         alert_bienvenida_title: "👋 ¡Bienvenido/a!",
         alert_bienvenida_text: "Para comenzar, elige por dónde quieres empezar a configurar tu cuenta:",
         btn_ir_perfil: "1. Configurar Perfil ⚙️",
         btn_ir_cat: "2. Crear Categorías 📂",
         msg_guardado: "Guardado.",
+        
+        // Perfil
         perf_title: "Perfil financiero",
         lbl_edad: "Edad",
         lbl_sexo: "Sexo",
@@ -1380,19 +1391,25 @@ const translations = {
         lbl_obj_val: "Valor objetivo",
         btn_save_perf: "Guardar perfil",
         btn_reset_obj: "Reiniciar progreso",
+        
+                // Simulador
         sim_title: "🔮 Simulador",
         sim_lbl_monto: "Monto mensual extra:",
         sim_btn_calc: "Calcular",
         sim_btn_close: "Cerrar",
         sim_result_fail: "Actualmente no ahorras.",
         sim_result_success: "¡Terminarías antes!",
-        sim_msg_initial: "Ingresa un valor arriba para ver el impacto.",
+        sim_msg_initial: "Ingresa un valor arriba para ver el impacto.", // <--- NOVA LINHA
+
+        
+        // Gráficos
         chart_restante: "Restante",
         chart_falta: "Falta",
         loading_check: "Validando acceso...",
         loading_data: "Cargando datos..."
     },
     pt: {
+        // Login
         login_title: "Controle Financeiro",
         login_subtitle: "Faça login (Prism Edition)",
         lbl_email: "E-mail",
@@ -1402,6 +1419,8 @@ const translations = {
         btn_create: "Criar conta",
         msg_no_account: "Não tem conta?",
         msg_has_account: "Já tem conta?",
+        
+        // Menu
         menu_title: "MENU",
         menu_dashboard: "Início",
         menu_transacciones: "Transações",
@@ -1411,6 +1430,8 @@ const translations = {
         menu_categorias: "Categorias",
         menu_perfil: "Perfil",
         btn_logout: "Sair",
+
+        // Dashboard
         dash_resumen_title: "Resumo do mês atual",
         stat_entradas: "Entradas",
         stat_salidas: "Saídas",
@@ -1424,6 +1445,8 @@ const translations = {
         lbl_detalle: "Detalhe e Projeção",
         dash_travel_title: "Projeção Financeira (Viajante do Tempo)",
         dash_dist_title: "Distribuição de saídas do mês",
+
+        // Transacciones
         trans_new_title: "Nova transação",
         lbl_tipo: "Tipo",
         lbl_cat: "Categoria",
@@ -1435,22 +1458,23 @@ const translations = {
         trans_list_title: "Transações do mês",
         placeholder_search: "Ex: mercado, cinema...",
         btn_clean_filter: "Limpar filtros",
-        lbl_estado: "Estado",
-        st_pago: "Pago",
-        st_vencido: "Vencido",
-        st_hoy: "Vence hoje",
-        st_proximo: "Próximo",
+
+        // Cards & Labels Gerais
         opt_entrada: "Entrada",
         opt_salida: "Saída",
         opt_efectivo: "Dinheiro",
         opt_tarjeta: "Cartão",
-        alert_restric: "🚫 ACESSO RESTRITO\n\nEste e-mail não tem permissões ativas.",
-        alert_permiso: "🚫 ERRO DE PERMISSÃO",
+
+        // Alertas
+        alert_restric: "🚫 ACESSO RESTRITO\n\nEste e-mail não tem permissões ativas.\nSua conta foi criada, mas você precisa que o administrador habilite seu acesso.",
+        alert_permiso: "🚫 ERRO DE PERMISSÃO\n\nVocê não tem autorização para verificar a licença.",
         alert_bienvenida_title: "👋 Bem-vindo(a)!",
         alert_bienvenida_text: "Para começar, escolha por onde quer iniciar a configuração:",
         btn_ir_perfil: "1. Configurar Perfil ⚙️",
         btn_ir_cat: "2. Criar Categorias 📂",
         msg_guardado: "Salvo.",
+        
+        // Perfil
         perf_title: "Perfil Financeiro",
         lbl_edad: "Idade",
         lbl_sexo: "Sexo",
@@ -1462,13 +1486,18 @@ const translations = {
         lbl_obj_val: "Valor do objetivo",
         btn_save_perf: "Salvar perfil",
         btn_reset_obj: "Reiniciar progresso",
+        
+                // Simulador
         sim_title: "🔮 Simulador",
         sim_lbl_monto: "Valor mensal extra:",
         sim_btn_calc: "Calcular",
         sim_btn_close: "Fechar",
         sim_result_fail: "Atualmente você não economiza.",
         sim_result_success: "Terminaria antes!",
-        sim_msg_initial: "Insira um valor acima para ver o impacto.",
+        sim_msg_initial: "Insira um valor acima para ver o impacto.", // <--- NOVA LINHA
+
+        
+        // Gráficos
         chart_restante: "Restante",
         chart_falta: "Falta",
         loading_check: "Verificando acesso...",
@@ -1476,47 +1505,56 @@ const translations = {
     }
 };
 
+// Função Principal de Troca de Idioma (VERSÃO BLINDADA)
 function updateLanguage(lang) {
-    if (lang !== 'es' && lang !== 'pt') {
-        lang = 'es';
-    }
+    // Segurança extra: se chegar algo inválido, força espanhol
+    if (lang !== 'es' && lang !== 'pt') lang = 'es';
+    
     currentLang = lang;
     try {
         localStorage.setItem('app_lang', lang);
-    } catch (e) {}
+    } catch (e) { console.warn("Sem acesso ao localStorage"); }
 
+    // Atualiza textos estáticos (HTML)
     const elements = document.querySelectorAll('[data-i18n]');
-    elements.forEach(el => {
-        const key = el.getAttribute('data-i18n');
-        if (translations[lang][key]) {
-            if (el.tagName === "INPUT" && el.hasAttribute("placeholder")) {
-                el.placeholder = translations[lang][key];
-            } else {
-                el.textContent = translations[lang][key];
+    if (elements) {
+        elements.forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            // Verifica se a tradução existe antes de tentar usar
+            if (translations[lang] && translations[lang][key]) {
+                if(el.tagName === "INPUT" && el.hasAttribute("placeholder")) {
+                    el.placeholder = translations[lang][key];
+                } else {
+                    el.textContent = translations[lang][key];
+                }
             }
-        }
-    });
+        });
+    }
 
+    // Sincroniza os seletores
     const selLogin = document.getElementById("lang-select-login");
     const selApp = document.getElementById("lang-select-app");
-    if (selLogin) selLogin.value = lang;
-    if (selApp) selApp.value = lang;
-
-    // Correção para não chamar função de UI antes do login
-    if (usuarioActual && typeof inicializarInterfaz === "function") {
-        inicializarInterfaz();
+    if(selLogin) selLogin.value = lang;
+    if(selApp) selApp.value = lang;
+    
+    // ATUALIZAÇÃO SEGURA DOS GRÁFICOS
+    // Só tenta atualizar se as funções já estiverem carregadas
+    if (typeof actualizarResumen === "function") {
+        try { actualizarResumen(); } catch(e) { console.error("Erro ao atualizar resumo", e); }
+    }
+    if (typeof actualizarObjetivo === "function") {
+        try { actualizarObjetivo(); } catch(e) { console.error("Erro ao atualizar objetivo", e); }
     }
 }
+
+
 
 // --- UTILITÁRIOS VISUAIS ---
 function loading(show) {
     const el = document.getElementById('loading-overlay');
     if (el) {
-        if (show) {
-            el.classList.remove('hidden');
-        } else {
-            el.classList.add('hidden');
-        }
+        if (show) el.classList.remove('hidden');
+        else el.classList.add('hidden');
     }
 }
 
@@ -1548,11 +1586,10 @@ let monedaUsuario = "USD";
 function formatearMoneda(valor) {
     const currency = monedaUsuario || "USD";
     let locale = "en-US";
-    if (currentLang === "pt") {
-        locale = "pt-BR";
-    } else {
-        locale = "es-ES";
-    }
+    
+    // Ajuste fino de locale baseado no idioma escolhido
+    if (currentLang === "pt") locale = "pt-BR";
+    else locale = "es-ES";
 
     switch (currency) {
         case "BRL": locale = "pt-BR"; break;
@@ -1583,6 +1620,7 @@ function nombreMes(anioMes) {
     if (!anioMes) return "";
     const [anio, mes] = anioMes.split("-");
     const fecha = new Date(parseInt(anio), parseInt(mes) - 1, 1);
+    // Usa o idioma selecionado para a data
     const langLocale = currentLang === "pt" ? "pt-BR" : "es-ES";
     return fecha.toLocaleDateString(langLocale, { month: "long", year: "numeric" });
 }
@@ -1593,10 +1631,7 @@ function siguienteAnioMes(anioMes) {
     let anio = parseInt(anioStr, 10);
     let mes = parseInt(mesStr, 10);
     mes += 1;
-    if (mes === 13) {
-        mes = 1;
-        anio += 1;
-    }
+    if (mes === 13) { mes = 1; anio += 1; }
     return anio.toString().padStart(4, "0") + "-" + mes.toString().padStart(2, "0");
 }
 
@@ -1624,288 +1659,187 @@ let unsubs = [];
 
 function limparMemoriaGlobal() {
     usuarioActual = null;
-    categoriasLocal = [];
-    transaccionesLocal = [];
-    fijosLocal = [];
-    tarjetasLocal = [];
-    metaMensualUsuario = 0;
-    ingresoMensualUsuario = 0;
-    edadUsuario = null;
-    sexoUsuario = "";
-    paisUsuario = "";
-    monedaUsuario = "USD";
-    objetivoNombre = "";
-    objetivoValor = 0;
-    objetivoAhorroBase = 0;
-    objetivoFechaInicio = null;
-    objetivoCompletado = false;
-    objetivosHistorial = [];
+    categoriasLocal = []; transaccionesLocal = []; fijosLocal = []; tarjetasLocal = [];
+    metaMensualUsuario = 0; ingresoMensualUsuario = 0; edadUsuario = null;
+    sexoUsuario = ""; paisUsuario = ""; monedaUsuario = "USD"; 
+    objetivoNombre = ""; objetivoValor = 0; objetivoAhorroBase = 0;
+    objetivoFechaInicio = null; objetivoCompletado = false; objetivosHistorial = [];
     yaMostroModalCategorias = false;
 }
 
-// --- LÓGICA NOVA: ESTADO DO GASTO FIXO ---
-function estadoFijoParaMes(fijo, anioMes) {
-    // 1. Verifica se foi pago neste mês
-    const pago = transaccionesLocal.some(t =>
-        t.gastoFijoId === fijo.id &&
-        t.fecha && t.fecha.startsWith(anioMes)
-    );
-
-    if (pago) {
-        return {
-            texto: translations[currentLang].st_pago,
-            badgeClase: "badge-verde",
-            claseFila: "fijo-verde"
-        };
-    }
-
-    // 2. Se não pago, verifica datas
-    const hoje = new Date();
-    const mesAtualStr = obtenerAnioMesActual();
-
-    // Só alerta vencimento se estivermos olhando para o mês atual ou passado
-    if (anioMes > mesAtualStr) {
-        return {
-            texto: "-",
-            badgeClase: "badge-normal",
-            claseFila: ""
-        };
-    }
-
-    const diaAtual = hoje.getDate();
-    const diaVencimento = parseInt(fijo.vencimiento);
-
-    // Se o mês do filtro for anterior ao atual e não está pago -> Vencido
-    if (anioMes < mesAtualStr) {
-        return {
-            texto: translations[currentLang].st_vencido,
-            badgeClase: "badge-rojo",
-            claseFila: "fijo-rojo"
-        };
-    }
-
-    // Estamos no mês atual
-    if (diaAtual > diaVencimento) {
-        return {
-            texto: translations[currentLang].st_vencido,
-            badgeClase: "badge-rojo",
-            claseFila: "fijo-rojo"
-        };
-    } else if (diaAtual === diaVencimento) {
-        return {
-            texto: translations[currentLang].st_hoy,
-            badgeClase: "badge-amarillo",
-            claseFila: "fijo-amarillo"
-        };
-    } else if (diaVencimento - diaAtual <= 3) {
-        return {
-            texto: translations[currentLang].st_proximo,
-            badgeClase: "badge-amarillo",
-            claseFila: ""
-        };
-    }
-
-    return {
-        texto: "Pend.",
-        badgeClase: "badge-normal",
-        claseFila: ""
-    };
-}
-
 // ----------------------------------------------------------------------
-// AUTENTICACIÓN COM WHITELIST E IDIOMA (CORRIGIDO)
+// AUTENTICACIÓN COM WHITELIST E IDIOMA
 // ----------------------------------------------------------------------
 onAuthStateChanged(auth, async (user) => {
-    updateLanguage(currentLang);
+  // Inicializa idioma
+  updateLanguage(currentLang);
+  
+  // Listeners de troca de idioma
+  const selLogin = document.getElementById("lang-select-login");
+  const selApp = document.getElementById("lang-select-app");
+  if(selLogin) selLogin.onchange = (e) => updateLanguage(e.target.value);
+  if(selApp) selApp.onchange = (e) => updateLanguage(e.target.value);
 
-    const selLogin = document.getElementById("lang-select-login");
-    const selApp = document.getElementById("lang-select-app");
-    if (selLogin) selLogin.onchange = (e) => updateLanguage(e.target.value);
-    if (selApp) selApp.onchange = (e) => updateLanguage(e.target.value);
+  if (user) {
+     loading(true);
+     const loadingText = document.getElementById('loading-overlay');
+     if(loadingText) loadingText.textContent = translations[currentLang].loading_check;
+     
+     try {
+         const docRef = doc(db, "clientes_permitidos", user.email); 
+         const docSnap = await getDoc(docRef);
 
-    if (user) {
-        loading(true);
-        const loadingText = document.getElementById('loading-overlay');
-        if (loadingText) loadingText.textContent = translations[currentLang].loading_check;
+         if (docSnap.exists() && docSnap.data().ativo === true) {
+             if(loadingText) loadingText.textContent = translations[currentLang].loading_data;
+             
+             usuarioActual = user;
+             document.getElementById("user-email").textContent = user.email;
+             document.getElementById("login-screen").classList.add("hidden");
+             document.getElementById("app").classList.remove("hidden");
+             
+             // Atualiza selects do app
+             if(selApp) selApp.value = currentLang;
 
-        try {
-            const docRef = doc(db, "clientes_permitidos", user.email);
-            const docSnap = await getDoc(docRef);
+             iniciarListeners(user.uid);
+         } else {
+             console.warn("Acesso negado:", user.email);
+             // USA A MENSAGEM TRADUZIDA
+             alert(translations[currentLang].alert_restric);
+             await signOut(auth);
+             window.location.reload();
+         }
+     } catch (error) {
+         console.error("Erro whitelist:", error);
+         if (error.code === 'permission-denied') {
+            alert(translations[currentLang].alert_permiso);
+         } else {
+            alert("Error de conexión / Erro de conexão.");
+         }
+         await signOut(auth);
+         window.location.reload();
+     }
 
-            if (docSnap.exists() && docSnap.data().ativo === true) {
-                if (loadingText) loadingText.textContent = translations[currentLang].loading_data;
+  } else {
+     if (usuarioActual) {
+         window.location.reload();
+         return;
+     }
+     limparMemoriaGlobal();
+     unsubs.forEach(u => u());
+     unsubs = [];
 
-                usuarioActual = user;
-                document.getElementById("user-email").textContent = user.email;
-                document.getElementById("login-screen").classList.add("hidden");
-                document.getElementById("app").classList.remove("hidden");
-
-                if (selApp) selApp.value = currentLang;
-
-                iniciarListeners(user.uid);
-            } else {
-                alert(translations[currentLang].alert_restric);
-                await signOut(auth);
-                window.location.reload();
-            }
-        } catch (error) {
-            console.error("Erro whitelist:", error);
-            if (error.code === 'permission-denied') {
-                alert(translations[currentLang].alert_permiso);
-            } else {
-                alert("Error de conexión.");
-            }
-            await signOut(auth);
-            window.location.reload();
-        }
-
-    } else {
-        if (usuarioActual) {
-            window.location.reload();
-            return;
-        }
-        limparMemoriaGlobal();
-        unsubs.forEach(u => u());
-        unsubs = [];
-
-        document.getElementById("app").classList.add("hidden");
-        document.getElementById("login-screen").classList.remove("hidden");
-        // Correção: Esconder modal de boas-vindas se estiver no login
-        document.getElementById("modal-categorias").classList.add("hidden");
-
-        if (selLogin) selLogin.value = currentLang;
-
-        loading(false);
-    }
+     document.getElementById("app").classList.add("hidden");
+     document.getElementById("login-screen").classList.remove("hidden");
+     
+     // Atualiza select do login
+     if(selLogin) selLogin.value = currentLang;
+     
+     loading(false);
+  }
 });
 
 // ----------------------------------------------------------------------
-// CARGA DE DATOS (LISTENERS)
+// CARGA DE DATOS
 // ----------------------------------------------------------------------
 function iniciarListeners(uid) {
-    loading(true);
+loading(true);
 
-    // Carregamento paralelo para evitar espera sequencial
-    const unsubCat = onSnapshot(query(collection(db, "categorias"), where("uid", "==", uid)), (snapshot) => {
-        categoriasLocal = [];
-        snapshot.forEach(doc => {
-            categoriasLocal.push({
-                id: doc.id,
-                ...doc.data()
-            });
-        });
-        inicializarInterfaz();
-        
-        // CORREÇÃO: Só verificar o modal depois que os dados carregarem E o usuário estiver logado
-        if (categoriasLocal.length === 0 && !yaMostroModalCategorias) {
-            document.getElementById("modal-categorias").classList.remove("hidden");
-        } else {
-            document.getElementById("modal-categorias").classList.add("hidden");
-        }
-    });
-    unsubs.push(unsubCat);
+const unsubCat = onSnapshot(query(collection(db, "categorias"), where("uid", "==", uid)), (snapshot) => {
+   categoriasLocal = [];
+   snapshot.forEach(doc => { categoriasLocal.push({ id: doc.id, ...doc.data() }); });
+   inicializarInterfaz();
+   mostrarModalCategoriasSiCorresponde();
+});
+unsubs.push(unsubCat);
 
-    const unsubTrans = onSnapshot(query(collection(db, "transacciones"), where("uid", "==", uid)), (snapshot) => {
-        transaccionesLocal = [];
-        snapshot.forEach(doc => {
-            transaccionesLocal.push({
-                id: doc.id,
-                ...doc.data()
-            });
-        });
-        inicializarInterfaz();
-    });
-    unsubs.push(unsubTrans);
+const unsubTrans = onSnapshot(query(collection(db, "transacciones"), where("uid", "==", uid)), (snapshot) => {
+   transaccionesLocal = [];
+   snapshot.forEach(doc => { transaccionesLocal.push({ id: doc.id, ...doc.data() }); });
+   inicializarInterfaz();
+});
+unsubs.push(unsubTrans);
 
-    const unsubFijos = onSnapshot(query(collection(db, "gastos_fijos"), where("uid", "==", uid)), (snapshot) => {
-        fijosLocal = [];
-        snapshot.forEach(doc => {
-            fijosLocal.push({
-                id: doc.id,
-                ...doc.data()
-            });
-        });
-        inicializarInterfaz();
-    });
-    unsubs.push(unsubFijos);
+const unsubFijos = onSnapshot(query(collection(db, "gastos_fijos"), where("uid", "==", uid)), (snapshot) => {
+   fijosLocal = [];
+   snapshot.forEach(doc => { fijosLocal.push({ id: doc.id, ...doc.data() }); });
+   inicializarInterfaz();
+});
+unsubs.push(unsubFijos);
 
-    const unsubTarj = onSnapshot(query(collection(db, "tarjetas"), where("uid", "==", uid)), (snapshot) => {
-        tarjetasLocal = [];
-        snapshot.forEach(doc => {
-            tarjetasLocal.push({
-                id: doc.id,
-                ...doc.data()
-            });
-        });
-        inicializarInterfaz();
-    });
-    unsubs.push(unsubTarj);
+const unsubTarj = onSnapshot(query(collection(db, "tarjetas"), where("uid", "==", uid)), (snapshot) => {
+   tarjetasLocal = [];
+   snapshot.forEach(doc => { tarjetasLocal.push({ id: doc.id, ...doc.data() }); });
+   inicializarInterfaz();
+});
+unsubs.push(unsubTarj);
 
-    const docRef = doc(db, "perfil", uid);
-    const unsubPerfil = onSnapshot(docRef, (docSnap) => {
-        if (docSnap.exists()) {
-            const p = docSnap.data();
-            edadUsuario = p.edad;
-            sexoUsuario = p.sexo;
-            paisUsuario = p.pais;
-            monedaUsuario = p.moneda || "USD";
-            metaMensualUsuario = Number(p.meta_mensual) || 0;
-            ingresoMensualUsuario = Number(p.ingreso_mensual) || 0;
-            objetivoNombre = p.objetivo_nombre || "";
-            objetivoValor = Number(p.objetivo_valor) || 0;
-            objetivoAhorroBase = Number(p.objetivo_ahorro_base) || 0;
-            objetivoFechaInicio = p.objetivo_fecha_inicio;
-            objetivoCompletado = p.objetivo_completado;
-            yaMostroModalCategorias = p.mostro_modal_categorias;
-            objetivosHistorial = p.objetivos_historial || [];
-
-            if (!monedaUsuario && paisUsuario) monedaUsuario = monedaPorDefectoParaPais(paisUsuario);
-        } else {
-            // Padrões se não houver perfil
-            metaMensualUsuario = 0;
-            ingresoMensualUsuario = 0;
-            objetivoNombre = "";
-            objetivoValor = 0;
-            objetivoAhorroBase = 0;
-            yaMostroModalCategorias = false;
-        }
-        inicializarInterfaz();
-        loading(false);
-    });
-    unsubs.push(unsubPerfil);
+const docRef = doc(db, "perfil", uid);
+const unsubPerfil = onSnapshot(docRef, (docSnap) => {
+   if (docSnap.exists()) {
+       const p = docSnap.data();
+       edadUsuario = p.edad;
+       sexoUsuario = p.sexo;
+       paisUsuario = p.pais;
+       monedaUsuario = p.moneda || "USD";
+       metaMensualUsuario = Number(p.meta_mensual) || 0;
+       ingresoMensualUsuario = Number(p.ingreso_mensual) || 0;
+       objetivoNombre = p.objetivo_nombre || "";
+       objetivoValor = Number(p.objetivo_valor) || 0;
+       objetivoAhorroBase = Number(p.objetivo_ahorro_base) || 0;
+       objetivoFechaInicio = p.objetivo_fecha_inicio;
+       objetivoCompletado = p.objetivo_completado;
+       yaMostroModalCategorias = p.mostro_modal_categorias;
+       objetivosHistorial = p.objetivos_historial || [];
+ 
+       if(!monedaUsuario && paisUsuario) monedaUsuario = monedaPorDefectoParaPais(paisUsuario);
+   } else {
+       metaMensualUsuario = 0; ingresoMensualUsuario = 0;
+       objetivoNombre = ""; objetivoValor = 0; objetivoAhorroBase = 0;
+       yaMostroModalCategorias = false;
+   }
+   inicializarInterfaz();
+   loading(false);
+});
+unsubs.push(unsubPerfil);
 }
-
 // ----------------------------------------------------------------------
-// LÓGICA DE LOGIN UI
+// LÓGICA DE LOGIN E REGISTRO UI
 // ----------------------------------------------------------------------
 const loginForm = document.getElementById("login-form");
+const loginEmail = document.getElementById("login-email");
+const loginPassword = document.getElementById("login-password");
+const loginSubmit = document.getElementById("login-submit");
 const toggleModeBtn = document.getElementById("toggle-mode");
+const toggleText = document.getElementById("toggle-text");
+const loginMessage = document.getElementById("login-message");
+const registerExtra = document.getElementById("register-extra");
+
 let modoRegistro = false;
 
 toggleModeBtn.addEventListener("click", () => {
     modoRegistro = !modoRegistro;
+    // Atualiza textos baseado no idioma atual
     if (modoRegistro) {
-        document.getElementById("login-submit").textContent = translations[currentLang].btn_create;
-        document.getElementById("toggle-text").textContent = translations[currentLang].msg_has_account;
+        loginSubmit.textContent = translations[currentLang].btn_create;
+        toggleText.textContent = translations[currentLang].msg_has_account;
         toggleModeBtn.textContent = translations[currentLang].btn_enter;
-        document.getElementById("register-extra").classList.remove("hidden");
+        registerExtra.classList.remove("hidden");
     } else {
-        document.getElementById("login-submit").textContent = translations[currentLang].btn_enter;
-        document.getElementById("toggle-text").textContent = translations[currentLang].msg_no_account;
+        loginSubmit.textContent = translations[currentLang].btn_enter;
+        toggleText.textContent = translations[currentLang].msg_no_account;
         toggleModeBtn.textContent = translations[currentLang].btn_create;
-        document.getElementById("register-extra").classList.add("hidden");
+        registerExtra.classList.add("hidden");
     }
-    document.getElementById("login-message").textContent = "";
+    loginMessage.textContent = "";
 });
 
 loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const email = document.getElementById("login-email").value;
-    const pass = document.getElementById("login-password").value;
-    const msg = document.getElementById("login-message");
+    const email = loginEmail.value;
+    const pass = loginPassword.value;
 
-    msg.style.color = "#f97316";
-    msg.textContent = "Procesando...";
+    loginMessage.style.color = "#f97316";
+    loginMessage.textContent = "Procesando...";
 
     try {
         if (modoRegistro) {
@@ -1915,7 +1849,7 @@ loginForm.addEventListener("submit", async (e) => {
         }
     } catch (error) {
         console.error(error);
-        msg.textContent = "Error: " + error.message;
+        loginMessage.textContent = "Error: " + error.message;
     }
 });
 
@@ -1923,7 +1857,6 @@ document.getElementById("logout-btn").addEventListener("click", () => {
     signOut(auth);
 });
 
-// Continua na Parte 3...
 // ----------------------------------------------------------------------
 // SALVAR DADOS (ESCRITA FIRESTORE)
 // ----------------------------------------------------------------------
@@ -1958,7 +1891,7 @@ async function guardarPerfilEnServidor() {
     } catch (e) { console.error("Error al guardar perfil", e); }
 }
 
-// Formulários de Adição
+// Categorias
 const formCategoria = document.getElementById("form-categoria");
 formCategoria.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -1979,9 +1912,11 @@ formCategoria.addEventListener("submit", async (e) => {
     loading(false);
 });
 window.eliminarCategoria = async (id) => {
-    if (confirm("Confirm?")) await deleteDoc(doc(db, "categorias", id));
+    if (!confirm("Confirm?")) return;
+    await deleteDoc(doc(db, "categorias", id));
 };
 
+// Gastos Fijos
 const formFijo = document.getElementById("form-fijo");
 formFijo.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -2004,6 +1939,7 @@ formFijo.addEventListener("submit", async (e) => {
 });
 window.eliminarFijo = async (id) => await deleteDoc(doc(db, "gastos_fijos", id));
 
+// Tarjetas
 const formTarjeta = document.getElementById("form-tarjeta");
 formTarjeta.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -2025,6 +1961,7 @@ formTarjeta.addEventListener("submit", async (e) => {
 });
 window.eliminarTarjeta = async (id) => await deleteDoc(doc(db, "tarjetas", id));
 
+// Transações
 const formTransaccion = document.getElementById("form-transaccion");
 formTransaccion.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -2077,20 +2014,53 @@ window.eliminarTransaccion = async (id) => {
 };
 
 // ----------------------------------------------------------------------
-// LÓGICA DE INTERFACE (UI)
+// LÓGICA DE INTERFACE
 // ----------------------------------------------------------------------
-// ----------------------------------------------------------------------
-// LÓGICA DE INTERFACE (UI)
-// ----------------------------------------------------------------------
+
+// Botões e Modais
+const modalCategorias = document.getElementById("modal-categorias");
+const modalCategoriasOk = document.getElementById("modal-categorias-ok");
+modalCategoriasOk.addEventListener("click", async () => {
+    modalCategorias.classList.add("hidden");
+    yaMostroModalCategorias = true;
+    await guardarPerfilEnServidor();
+});
+
+// Lógica dos botões de boas-vindas
+const btnPerfil = document.getElementById("btn-ir-perfil");
+if (btnPerfil) {
+    btnPerfil.addEventListener("click", async () => {
+        document.getElementById("modal-categorias").classList.add("hidden");
+        const menuPerfil = document.querySelector('button[data-section="perfil"]');
+        if (menuPerfil) menuPerfil.click();
+        yaMostroModalCategorias = true;
+        await guardarPerfilEnServidor();
+    });
+}
+
+const btnCategorias = document.getElementById("btn-ir-categorias");
+if (btnCategorias) {
+    btnCategorias.addEventListener("click", async () => {
+        document.getElementById("modal-categorias").classList.add("hidden");
+        const menuCategorias = document.querySelector('button[data-section="categorias"]');
+        if (menuCategorias) menuCategorias.click();
+        yaMostroModalCategorias = true;
+        await guardarPerfilEnServidor();
+    });
+}
+
+function mostrarModalCategoriasSiCorresponde() {
+    if (categoriasLocal.length === 0 && !yaMostroModalCategorias) {
+        document.getElementById("modal-categorias").classList.remove("hidden");
+    } else {
+        document.getElementById("modal-categorias").classList.add("hidden");
+    }
+}
 
 function inicializarInterfaz() {
-    // TRAVA DE SEGURANÇA: Se não houver usuário, não desenha nada.
-    // Isso corrige o bug da tela "bagunçada" no login.
-    if (!usuarioActual) return;
-
     rellenarSelectCategorias();
     rellenarTablaCategorias();
-    rellenarTablaFijos(); // <-- Nova lógica de Vencimento aplicada aqui
+    rellenarTablaFijos();
     rellenarTablaTarjetas();
     rellenarTablaTransacciones();
     rellenarPerfil();
@@ -2103,11 +2073,14 @@ function inicializarInterfaz() {
     actualizarCampoOrigenYTarjeta();
     inicializarReporte();
     
-    // Verifica se deve abrir o modal de boas-vindas (apenas se logado)
+    // Força atualização do modal
     mostrarModalCategoriasSiCorresponde();
+    
+    // Reaplica idioma para garantir textos dinâmicos (tabelas/gráficos)
+    updateLanguage(currentLang);
 }
 
-// Sidebar Toggle
+// Navegação Lateral
 const sidebar = document.getElementById("sidebar");
 const menuToggle = document.getElementById("menu-toggle");
 menuToggle.addEventListener("click", () => sidebar.classList.toggle("open"));
@@ -2122,7 +2095,7 @@ sidebar.addEventListener("click", (e) => {
     sidebar.classList.remove("open");
 });
 
-// Listeners Dinâmicos
+// Listeners de campos dinâmicos
 document.getElementById("tipo").addEventListener("change", () => {
     rellenarSelectCategorias();
     actualizarCampoGastoFijo();
@@ -2138,7 +2111,7 @@ document.getElementById("btn-limpiar-filtros").addEventListener("click", () => {
     rellenarTablaTransacciones();
 });
 
-// Perfil & Reset
+// Salvar perfil
 document.getElementById("form-perfil").addEventListener("submit", async (e) => {
     e.preventDefault();
     edadUsuario = parseInt(document.getElementById("perfil-edad").value);
@@ -2148,41 +2121,234 @@ document.getElementById("form-perfil").addEventListener("submit", async (e) => {
     ingresoMensualUsuario = parseNumeroLocal(document.getElementById("perfil-ingreso").value);
     monedaUsuario = document.getElementById("perfil-moneda").value;
     objetivoNombre = document.getElementById("perfil-objetivo-nombre").value;
-    objetivoValor = parseNumeroLocal(document.getElementById("perfil-objetivo-valor").value);
+
+    const novoValor = parseNumeroLocal(document.getElementById("perfil-objetivo-valor").value);
+    if (novoValor !== objetivoValor && novoValor > 0) {
+        objetivoValor = novoValor;
+    } else {
+        objetivoValor = novoValor;
+    }
+
     await guardarPerfilEnServidor();
     inicializarInterfaz();
 });
+
+// Resetar Objetivo
 document.getElementById("perfil-objetivo-reset").addEventListener("click", async () => {
     if (!confirm("Confirm reset?")) return;
+
     objetivoAhorroBase = calcularAhorroTotal();
     objetivoFechaInicio = new Date().toISOString().slice(0, 10);
     objetivoCompletado = false;
+
     await guardarPerfilEnServidor();
     inicializarInterfaz();
 });
 
-// --- FUNÇÕES DE PREENCHIMENTO (UI) ---
+// --- SIMULADOR ---
+const modalSim = document.getElementById("modal-simulador");
 
-// NOVA FUNÇÃO: preencher o formulário de Perfil com os dados carregados
-function rellenarPerfil() {
-    const edadInput = document.getElementById("perfil-edad");
-    if (!edadInput) return; // segurança
+// Botão de Abrir (Com Reset de Texto)
+document.getElementById("btn-abrir-simulador").addEventListener("click", () => {
+    modalSim.classList.remove("hidden");
+    // Reseta o texto para a instrução inicial ao abrir
+    const res = document.getElementById("simulador-resultado");
+    const input = document.getElementById("simulador-monto");
+    
+    if(translations[currentLang] && translations[currentLang].sim_msg_initial) {
+        res.textContent = translations[currentLang].sim_msg_initial;
+    } else {
+        res.textContent = "...";
+    }
+    input.value = ""; // Limpa o número anterior
+});
 
-    document.getElementById("perfil-edad").value = (edadUsuario ?? "") || "";
-    document.getElementById("perfil-sexo").value = sexoUsuario || "";
-    document.getElementById("perfil-pais").value = paisUsuario || "";
+document.getElementById("btn-cerrar-simulador").addEventListener("click", () => modalSim.classList.add("hidden"));
 
-    // Campos numéricos: usa valor bruto em string simples
-    document.getElementById("perfil-meta").value =
-        metaMensualUsuario ? metaMensualUsuario.toFixed(2) : "";
-    document.getElementById("perfil-ingreso").value =
-        ingresoMensualUsuario ? ingresoMensualUsuario.toFixed(2) : "";
+document.getElementById("btn-calcular-simulacion").addEventListener("click", () => {
+    const extra = parseNumeroLocal(document.getElementById("simulador-monto").value);
+    const res = document.getElementById("simulador-resultado");
 
-    document.getElementById("perfil-moneda").value = monedaUsuario || "";
-    document.getElementById("perfil-objetivo-nombre").value = objetivoNombre || "";
-    document.getElementById("perfil-objetivo-valor").value =
-        objetivoValor ? objetivoValor.toFixed(2) : "";
+    if (extra <= 0) {
+        res.textContent = "Ingresa un monto válido.";
+        return;
+    }
+
+    let totE = 0, totS = 0;
+    transaccionesLocal.forEach(t => {
+        const v = Number(t.valor) || 0;
+        if (t.tipo === "entrada") totE += v; else totS += v;
+    });
+    const ahorroTotal = Math.max(0, totE - totS);
+    let actual = ahorroTotal - objetivoAhorroBase;
+    if (actual < 0) actual = 0;
+    const restante = objetivoValor - actual;
+
+    if (restante <= 0) {
+        res.textContent = "Goal reached!";
+        return;
+    }
+
+    const mes = obtenerAnioMesActual();
+    const transMes = transaccionesLocal.filter(t => t.fecha && t.fecha.startsWith(mes));
+    let eM = 0, sM = 0;
+    transMes.forEach(t => {
+        const v = Number(t.valor) || 0;
+        if (t.tipo === "entrada") eM += v; else sM += v;
+    });
+    const flujoMes = Math.max(0, eM - sM);
+    const dia = new Date().getDate();
+    const ritmoBase = (flujoMes / dia) * 30;
+
+    const tiempoActual = ritmoBase > 0 ? (restante / ritmoBase) : 9999;
+    const nuevoRitmo = ritmoBase + extra;
+    const tiempoNuevo = restante / nuevoRitmo;
+
+    const diasAntes = Math.ceil((tiempoActual * 30) - (tiempoNuevo * 30));
+
+    if (ritmoBase <= 0) {
+        res.textContent = translations[currentLang].sim_result_fail;
+    } else {
+        res.innerHTML = `${translations[currentLang].sim_result_success} (${diasAntes} days)`;
+    }
+});
+
+
+// --- GRÁFICOS (Completo e Expandido) ---
+
+function dibujarGraficoViajeroTiempo() {
+    const canvas = document.getElementById("chart-time-travel");
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const w = canvas.width;
+    const h = canvas.height;
+
+    ctx.clearRect(0, 0, w, h);
+
+    const hoy = new Date();
+    const meses = [];
+    // Histórico de 3 meses atrás + 6 futuros
+    for (let i = -2; i <= 6; i++) {
+        const d = new Date(hoy.getFullYear(), hoy.getMonth() + i, 1);
+        // TRADUÇÃO DA DATA NO EIXO X
+        const localeData = currentLang === "pt" ? "pt-BR" : "es-ES";
+        meses.push({
+            label: d.toLocaleDateString(localeData, { month: 'short' }),
+            dateStr: d.toISOString().slice(0, 7),
+            isFuture: i > 0
+        });
+    }
+
+    let saldoAcumulado = 0;
+    const primerMesMostrado = meses[0].dateStr;
+    transaccionesLocal.forEach(t => {
+        if (t.fecha < primerMesMostrado + "-01") {
+            const v = Number(t.valor) || 0;
+            if (t.tipo === "entrada") saldoAcumulado += v; else saldoAcumulado -= v;
+        }
+    });
+
+    const puntos = [];
+    let tendenciaAhorro = 0;
+    let mesesConDatos = 0;
+
+    meses.forEach(m => {
+        if (!m.isFuture) {
+            const trans = transaccionesLocal.filter(t => t.fecha && t.fecha.startsWith(m.dateStr));
+
+            if (trans.length === 0) {
+                puntos.push({ val: null, future: false, label: m.label });
+            } else {
+                let e = 0, s = 0;
+                trans.forEach(t => {
+                    const v = Number(t.valor) || 0;
+                    if (t.tipo === "entrada") e += v; else s += v;
+                });
+                saldoAcumulado += (e - s);
+                puntos.push({ val: saldoAcumulado, future: false, label: m.label });
+                tendenciaAhorro += (e - s);
+                mesesConDatos++;
+            }
+        } else {
+            const promedio = mesesConDatos > 0 ? (tendenciaAhorro / mesesConDatos) : 0;
+            saldoAcumulado += promedio;
+            puntos.push({ val: saldoAcumulado, future: true, label: m.label });
+        }
+    });
+
+    const valoresValidos = puntos.map(p => p.val).filter(v => v !== null);
+    if (valoresValidos.length === 0) return;
+
+    const maxVal = Math.max(...valoresValidos) * 1.1;
+    const minVal = Math.min(0, ...valoresValidos);
+    const range = maxVal - minVal || 100;
+
+    const getX = (i) => 40 + (i * ((w - 60) / (puntos.length - 1)));
+    const getY = (v) => h - 30 - ((v - minVal) / range) * (h - 60);
+
+    ctx.strokeStyle = "rgba(255,255,255,0.1)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(40, 20);
+    ctx.lineTo(40, h - 30);
+    ctx.lineTo(w - 20, h - 30);
+    ctx.stroke();
+
+    ctx.lineWidth = 3;
+    for (let i = 0; i < puntos.length - 1; i++) {
+        const p1 = puntos[i];
+        const p2 = puntos[i + 1];
+
+        if (p1.val === null || p2.val === null) continue;
+
+        ctx.beginPath();
+        ctx.moveTo(getX(i), getY(p1.val));
+        ctx.lineTo(getX(i + 1), getY(p2.val));
+
+        if (p2.future) {
+            ctx.setLineDash([5, 5]);
+            ctx.strokeStyle = "#06b6d4";
+        } else {
+            ctx.setLineDash([]);
+            ctx.strokeStyle = "#8b5cf6";
+        }
+        ctx.stroke();
+    }
+    ctx.setLineDash([]);
+
+    puntos.forEach((p, i) => {
+        if (p.val === null) {
+            const xLabel = getX(i);
+            ctx.fillStyle = "rgba(255,255,255,0.3)";
+            ctx.font = "10px sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText(p.label, xLabel, h - 10);
+            return;
+        }
+
+        const x = getX(i);
+        const y = getY(p.val);
+        ctx.beginPath();
+        ctx.arc(x, y, 6, 0, Math.PI * 2);
+        ctx.fillStyle = p.future ? "#06b6d4" : "#8b5cf6";
+        ctx.fill();
+        ctx.strokeStyle = "rgba(255,255,255,0.5)";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.fillStyle = "rgba(255,255,255,0.5)";
+        ctx.font = "10px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(p.label, x, h - 10);
+
+        if (i === puntos.length - 1 || (i === 2 && !p.future)) {
+            ctx.fillStyle = "#fff";
+            ctx.fillText(formatearMoneda(p.val), x, y - 15);
+        }
+    });
 }
+
+// --- AUXILIARES DE UI ---
 
 function rellenarSelectCategorias() {
     const sel = document.getElementById("categoria");
@@ -2208,7 +2374,12 @@ function rellenarTablaCategorias() {
     tb.innerHTML = "";
     categoriasLocal.forEach(c => {
         const tr = document.createElement("tr");
-        tr.innerHTML = `<td>${c.nome}</td><td><span class="tag ${c.grupo}">${c.grupo}</span></td><td><button class="btn-icon btn-icon-danger" onclick="eliminarCategoria('${c.id}')">X</button></td>`;
+        tr.innerHTML = `<td>${c.nome}</td><td><span class="tag ${c.grupo}">${c.grupo}</span></td><td></td>`;
+        const btn = document.createElement("button");
+        btn.className = "btn-icon btn-icon-danger";
+        btn.textContent = "X";
+        btn.onclick = () => window.eliminarCategoria(c.id);
+        tr.lastElementChild.appendChild(btn);
         tb.appendChild(tr);
     });
 }
@@ -2224,23 +2395,21 @@ function rellenarSelectGastosFijos() {
     });
 }
 
-// --- TABELA GASTOS FIXOS (COM VENCIMENTO) ---
 function rellenarTablaFijos() {
     const tb = document.querySelector("#tabla-fijos tbody");
     tb.innerHTML = "";
     const mes = obtenerAnioMesActual();
     fijosLocal.forEach(f => {
-        // Chama a função de status criada na Parte 2
         const estado = estadoFijoParaMes(f, mes);
-        
         const tr = document.createElement("tr");
         if (estado.claseFila) tr.classList.add(estado.claseFila);
-        
-        tr.innerHTML = `<td>${f.descripcion}</td>
-                        <td>${formatearMoneda(f.valor)}</td>
-                        <td>Día ${f.vencimiento}</td>
-                        <td><span class="badge-estado ${estado.badgeClase}">${estado.texto}</span></td>
-                        <td><button class="btn-icon btn-icon-danger" onclick="eliminarFijo('${f.id}')">X</button></td>`;
+        tr.innerHTML = `<td>${f.descripcion}</td><td>${formatearMoneda(f.valor)}</td><td>Día ${f.vencimiento}</td>
+                   <td><span class="badge-estado ${estado.badgeClase}">${estado.texto}</span></td><td></td>`;
+        const btn = document.createElement("button");
+        btn.className = "btn-icon btn-icon-danger";
+        btn.textContent = "X";
+        btn.onclick = () => window.eliminarFijo(f.id);
+        tr.lastElementChild.appendChild(btn);
         tb.appendChild(tr);
     });
     rellenarSelectGastosFijos();
@@ -2262,7 +2431,12 @@ function rellenarTablaTarjetas() {
     tb.innerHTML = "";
     tarjetasLocal.forEach(t => {
         const tr = document.createElement("tr");
-        tr.innerHTML = `<td>${t.alias || ""}</td><td>${t.digitos || ""}</td><td>${t.banco || ""}</td><td><button class="btn-icon btn-icon-danger" onclick="eliminarTarjeta('${t.id}')">X</button></td>`;
+        tr.innerHTML = `<td>${t.alias || ""}</td><td>${t.digitos || ""}</td><td>${t.banco || ""}</td><td></td>`;
+        const btn = document.createElement("button");
+        btn.className = "btn-icon btn-icon-danger";
+        btn.textContent = "X";
+        btn.onclick = () => window.eliminarTarjeta(t.id);
+        tr.lastElementChild.appendChild(btn);
         tb.appendChild(tr);
     });
     rellenarSelectTarjetas();
@@ -2295,10 +2469,17 @@ function rellenarTablaTransacciones() {
                 const tar = tarjetasLocal.find(x => x.id === t.tarjetaId);
                 origenTexto = "💳 " + (tar ? `${tar.alias}` : "");
             } else {
+                // TRADUÇÃO APLICADA AQUI:
                 origenTexto = "💵 " + translations[currentLang].opt_efectivo;
             }
         }
-        tr.innerHTML = `<td>${t.fecha}</td><td><span class="tag ${t.tipo}">${t.tipo}</span></td><td>${catNombre}</td><td>${origenTexto}</td><td>${t.descripcion || ""}</td><td>${formatearMoneda(t.valor)}</td><td><button class="btn-icon btn-icon-danger" onclick="eliminarTransaccion('${t.id}')">X</button></td>`;
+
+        tr.innerHTML = `<td>${t.fecha}</td><td><span class="tag ${t.tipo}">${t.tipo}</span></td><td>${catNombre}</td><td>${origenTexto}</td><td>${t.descripcion || ""}</td><td>${formatearMoneda(t.valor)}</td><td></td>`;
+        const btn = document.createElement("button");
+        btn.className = "btn-icon btn-icon-danger";
+        btn.textContent = "X";
+        btn.onclick = () => window.eliminarTransaccion(t.id);
+        tr.lastElementChild.appendChild(btn);
         tb.appendChild(tr);
     });
 }
@@ -2322,6 +2503,7 @@ function actualizarResumen() {
     });
 
     const saldo = totalEntradas - totalSalidas;
+
     document.getElementById("stat-entradas").textContent = formatearMoneda(totalEntradas);
     document.getElementById("stat-salidas").textContent = formatearMoneda(totalSalidas);
     document.getElementById("stat-saldo").textContent = formatearMoneda(saldo);
@@ -2333,6 +2515,7 @@ function actualizarResumen() {
 
     const contenedorDist = document.getElementById("contenedor-distribucion");
     contenedorDist.innerHTML = "";
+
     let gastosPorCat = {};
     let totalGastado = 0;
 
@@ -2356,30 +2539,53 @@ function actualizarResumen() {
         contenedorDist.innerHTML = '<div style="text-align:center; color:#64748b; font-size:0.9rem; padding:1rem;">...</div>';
     } else {
         const ordenados = Object.keys(gastosPorCat).sort((a, b) => gastosPorCat[b] - gastosPorCat[a]);
+
         ordenados.forEach(cat => {
             const valor = gastosPorCat[cat];
             const porcentaje = (valor / totalGastado) * 100;
+
             const row = document.createElement("div");
             row.className = "dist-row";
-            row.innerHTML = `<span style="width:100px; color:#cbd5e1;">${cat}</span><div class="dist-bar-bg"><div class="dist-bar-fill" style="width:${porcentaje}%; background:${getColorParaCategoria(cat)}"></div></div><span style="width:60px; text-align:right; color:#fff;">${Math.round(porcentaje)}%</span>`;
+            row.innerHTML = `
+         <span style="width:100px; color:#cbd5e1;">${cat}</span>
+         <div class="dist-bar-bg">
+             <div class="dist-bar-fill" style="width:${porcentaje}%; background:${getColorParaCategoria(cat)}"></div>
+         </div>
+         <span style="width:60px; text-align:right; color:#fff;">${Math.round(porcentaje)}%</span>
+     `;
             contenedorDist.appendChild(row);
         });
     }
 
     const lblMeta = document.getElementById("stat-meta-uso");
+    const lblIngreso = document.getElementById("stat-ingreso-alerta");
+
     if (metaMensualUsuario > 0) {
         const uso = (totalSalidas / metaMensualUsuario) * 100;
         const restanteMeta = metaMensualUsuario - totalSalidas;
+
         dibujarGraficoMeta(uso, formatearMoneda(restanteMeta));
+
         lblMeta.textContent = `Meta: ${formatearMoneda(metaMensualUsuario)}`;
+
         lblMeta.className = "stat-small";
         if (uso < 50) lblMeta.classList.add("semaforo-verde");
         else if (uso >= 50 && uso < 80) lblMeta.classList.add("semaforo-amarillo");
-        else lblMeta.classList.add("semaforo-rojo");
+        else {
+            lblMeta.classList.add("semaforo-rojo");
+            if ("vibrate" in navigator && uso >= 80) navigator.vibrate(200);
+        }
     } else {
         dibujarGraficoMeta(0, "");
-        lblMeta.textContent = "Define una meta en Perfil.";
+        lblMeta.textContent = "Define una meta mensual en Perfil.";
         lblMeta.className = "stat-small";
+    }
+
+    if (ingresoMensualUsuario > 0) {
+        const ratio = (totalSalidas / ingresoMensualUsuario) * 100;
+        lblIngreso.textContent = `Ratio: ${ratio.toFixed(1)}%`;
+    } else {
+        lblIngreso.textContent = "";
     }
 }
 
@@ -2387,26 +2593,31 @@ function calcularAhorroTotal() {
     let e = 0, s = 0;
     transaccionesLocal.forEach(t => {
         const v = Number(t.valor) || 0;
-        if (t.tipo === "entrada") e += v; else s += v;
+        if (t.tipo === "entrada") e += v;
+        else s += v;
     });
     return e - s;
 }
 
 function actualizarObjetivo() {
-    if (!objetivoNombre && !objetivoNombre) {
-        // segurança se variável errada for usada em algum lugar antigo
-    }
+    const elProyeccion = document.getElementById("obj-proyeccion");
+    elProyeccion.textContent = "";
+
     if (!objetivoNombre || !objetivoValor || objetivoValor <= 0) {
         document.getElementById("obj-nombre").textContent = "-";
         document.getElementById("obj-meta").textContent = "-";
         document.getElementById("obj-ahorrado").textContent = formatearMoneda(0);
         document.getElementById("obj-restante").textContent = formatearMoneda(0);
+        document.getElementById("obj-texto").textContent = "Define un objetivo en Perfil.";
         dibujarGraficoObjetivo(0, "");
+        rellenarHistorialObjetivos();
         return;
     }
+
     const ahorroTotal = calcularAhorroTotal();
     const base = Number(objetivoAhorroBase) || 0;
     let ahorroObjetivo = ahorroTotal - base;
+
     if (ahorroObjetivo < 0) ahorroObjetivo = 0;
 
     if (!objetivoCompletado && ahorroObjetivo >= objetivoValor) {
@@ -2424,32 +2635,38 @@ function actualizarObjetivo() {
     document.getElementById("obj-ahorrado").textContent = formatearMoneda(ahorroObjetivo);
     document.getElementById("obj-restante").textContent = formatearMoneda(restante);
 
-    const elProyeccion = document.getElementById("obj-proyeccion");
     if (restante <= 0) {
         document.getElementById("obj-texto").textContent = "100%";
-        elProyeccion.textContent = "";
     } else {
         document.getElementById("obj-texto").textContent = `${pct.toFixed(1)}%`;
+
         const transMes = filtrarMesActual(transaccionesLocal, "fecha");
-        let eM = 0, sM = 0;
-        transMes.forEach(t => { const v = Number(t.valor) || 0; if (t.tipo === "entrada") eM += v; else sM += v; });
-        const saldoMes = eM - sM;
+        let eMes = 0; let sMes = 0;
+        transMes.forEach(t => {
+            const v = Number(t.valor) || 0;
+            if (t.tipo === "entrada") eMes += v; else sMes += v;
+        });
+        let saldoMes = eMes - sMes;
+
         const diaHoy = new Date().getDate();
-        const ritmo = saldoMes / (diaHoy || 1);
-        const ahorroMen = ritmo * 30;
-        if (ahorroMen <= 0) elProyeccion.textContent = "";
-        else {
-            const diasF = Math.ceil((restante / ahorroMen) * 30);
-            elProyeccion.textContent = `~ ${diasF} days left`;
+        const ritmoDiario = saldoMes / (diaHoy || 1);
+        const ahorroProyectadoMensual = ritmoDiario * 30;
+
+        if (ahorroProyectadoMensual <= 0) {
+            elProyeccion.textContent = "";
+        } else {
+            const mesesFaltantes = restante / ahorroProyectadoMensual;
+            const diasFaltantes = Math.ceil(mesesFaltantes * 30);
+            elProyeccion.textContent = `~ ${diasFaltantes} days left`;
         }
     }
+
     dibujarGraficoObjetivo(pct, formatearMoneda(restante));
     rellenarHistorialObjetivos();
 }
 
 function rellenarHistorialObjetivos() {
-    const tb = document.querySelector("#tabla-historial-objetivos tbody");
-    tb.innerHTML = "";
+    const tb = document.querySelector("#tabla-historial-objetivos tbody"); tb.innerHTML = "";
     objetivosHistorial.forEach(o => {
         const tr = document.createElement("tr");
         tr.innerHTML = `<td>${o.nombre}</td><td>${formatearMoneda(o.valorMeta)}</td><td>${formatearMoneda(o.ahorroFinal)}</td><td>${o.fechaInicio}</td><td>${o.fechaConclusion}</td>`;
@@ -2458,189 +2675,212 @@ function rellenarHistorialObjetivos() {
 }
 
 function analisisLatam() {
-    const r = document.getElementById("perfil-analisis");
-    if (!metaMensualUsuario) { r.textContent = "Completa perfil."; return; }
-    const base = { bo: 1500, br: 3000, ar: 250000, cl: 400000, mx: 9000, otro: 700 }[paisUsuario || "otro"];
-    const ratio = (metaMensualUsuario / base) * 100;
-    let msg;
-    if (ratio < 70) msg = "Tu meta es baja comparada al promedio.";
-    else if (ratio <= 120) msg = "Tu meta es razonable.";
-    else msg = "Tu meta es alta.";
-    r.textContent = msg;
+    const edad = edadUsuario;
+    const pais = paisUsuario;
+    if (!metaMensualUsuario || !pais || !edad) {
+        document.getElementById("perfil-analisis").textContent = "Completa perfil para análisis.";
+        return;
+    }
+    const base = { bo: 1500, br: 3000, ar: 250000, cl: 400000, mx: 9000, otro: 700 };
+    const basePais = base[pais] || base.otro;
+    const referencia = basePais;
+    const ratio = referencia > 0 ? (metaMensualUsuario / referencia) * 100 : 0;
+    let mensaje;
+    if (ratio < 70) mensaje = "Tu meta es baja comparada al promedio.";
+    else if (ratio <= 120) mensaje = "Tu meta es razonable.";
+    else mensaje = "Tu meta es alta.";
+    document.getElementById("perfil-analisis").textContent = mensaje;
 }
 
 function actualizarCampoGastoFijo() {
     const t = document.getElementById("tipo").value;
     const c = document.getElementById("categoria").value;
-    document.getElementById("campo-gasto-fijo").classList.toggle("hidden", !(t === "salida" && c === "__gasto_fijo__"));
+    const el = document.getElementById("campo-gasto-fijo");
+    if (el) el.classList.toggle("hidden", !(t === "salida" && c === "__gasto_fijo__"));
 }
 function actualizarCampoOrigenYTarjeta() {
     const t = document.getElementById("tipo").value;
     const o = document.getElementById("origen").value;
-    document.getElementById("campo-origen").classList.toggle("hidden", t !== "salida");
-    document.getElementById("campo-tarjeta").classList.toggle("hidden", !(t === "salida" && o === "tarjeta"));
-}
-
-function dibujarGraficoMeta(porcentaje, texto) {
-    const c = document.getElementById("meta-chart");
-    if (!c) return;
-    const ctx = c.getContext("2d"), w = c.width, h = c.height, cx = w / 2, cy = h / 2, r = w / 2 - 10;
-    ctx.clearRect(0, 0, w, h);
-    ctx.beginPath(); ctx.arc(cx, cy, r, 0, 2 * Math.PI); ctx.fillStyle = "rgba(255,255,255,0.05)"; ctx.fill();
-    const end = -Math.PI / 2 + 2 * Math.PI * (Math.min(porcentaje, 100) / 100);
-    ctx.beginPath(); ctx.arc(cx, cy, r, -Math.PI / 2, end); ctx.lineWidth = 12;
-    ctx.strokeStyle = porcentaje > 80 ? "#f87171" : porcentaje > 50 ? "#facc15" : "#4ade80"; ctx.stroke();
-    ctx.beginPath(); ctx.arc(cx, cy, r * 0.6, 0, 2 * Math.PI); ctx.fillStyle = "#020617"; ctx.fill();
-    if (texto) {
-        ctx.fillStyle = "#fff"; ctx.font = "bold 12px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(texto, cx, cy);
-        ctx.fillStyle = "#94a3b8"; ctx.font = "10px sans-serif"; ctx.fillText(translations[currentLang].chart_restante, cx, cy + 15);
+    const divO = document.getElementById("campo-origen");
+    const divT = document.getElementById("campo-tarjeta");
+    if (t === "salida") {
+        divO.classList.remove("hidden");
+        divT.classList.toggle("hidden", o !== "tarjeta");
+    } else {
+        divO.classList.add("hidden");
+        divT.classList.add("hidden");
     }
 }
 
-function dibujarGraficoObjetivo(porcentaje, texto) {
-    const c = document.getElementById("objetivo-chart");
-    if (!c) return;
-    const ctx = c.getContext("2d"), w = c.width, h = c.height, cx = w / 2, cy = h / 2, r = w / 2 - 10;
+function dibujarGraficoMeta(porcentajeUsado, textoCentro) {
+    const canvas = document.getElementById("meta-chart");
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const w = canvas.width; const h = canvas.height;
+    const cx = w / 2; const cy = h / 2;
+    const radio = Math.min(w, h) / 2 - 10;
+    const innerRadio = radio * 0.6;
     ctx.clearRect(0, 0, w, h);
-    ctx.beginPath(); ctx.arc(cx, cy, r, 0, 2 * Math.PI); ctx.fillStyle = "rgba(255,255,255,0.05)"; ctx.fill();
-    const end = -Math.PI / 2 + 2 * Math.PI * (Math.min(porcentaje, 100) / 100);
-    const grad = ctx.createLinearGradient(0, 0, w, h); grad.addColorStop(0, "#ec4899"); grad.addColorStop(1, "#8b5cf6");
-    ctx.beginPath(); ctx.arc(cx, cy, r, -Math.PI / 2, end); ctx.lineWidth = 12; ctx.strokeStyle = grad; ctx.stroke();
-    ctx.beginPath(); ctx.arc(cx, cy, r * 0.6, 0, 2 * Math.PI); ctx.fillStyle = "#020617"; ctx.fill();
-    if (texto) {
-        ctx.fillStyle = "#fff"; ctx.font = "bold 12px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(texto, cx, cy);
-        ctx.fillStyle = "#94a3b8"; ctx.font = "10px sans-serif"; ctx.fillText(translations[currentLang].chart_falta, cx, cy + 15);
+
+    ctx.beginPath(); ctx.arc(cx, cy, radio, 0, Math.PI * 2); ctx.fillStyle = "rgba(255,255,255,0.05)"; ctx.fill();
+
+    const clamped = Math.max(0, Math.min(porcentajeUsado, 100)) / 100;
+    const inicio = -Math.PI / 2;
+    const fin = inicio + Math.PI * 2 * clamped;
+
+    ctx.beginPath(); ctx.arc(cx, cy, radio, inicio, fin);
+    ctx.lineCap = "round";
+    ctx.lineWidth = 12;
+
+    let color = "#4ade80";
+    if (porcentajeUsado > 80) color = "#f87171";
+    else if (porcentajeUsado > 50) color = "#facc15";
+
+    ctx.strokeStyle = color;
+    ctx.stroke();
+
+    ctx.beginPath(); ctx.arc(cx, cy, innerRadio, 0, Math.PI * 2); ctx.fillStyle = "#020617"; ctx.fill();
+
+    if (textoCentro) {
+        const esNegativo = textoCentro.includes("-");
+        ctx.fillStyle = esNegativo ? "#f87171" : "#fff";
+        ctx.font = "bold 12px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(textoCentro, cx, cy);
+
+        ctx.fillStyle = "#94a3b8";
+        ctx.font = "10px sans-serif";
+        // TRADUÇÃO DO TEXTO 'RESTANTE'
+        ctx.fillText(translations[currentLang].chart_restante, cx, cy + 15);
     }
 }
 
-function dibujarGraficoViajeroTiempo() {
-    const c = document.getElementById("chart-time-travel");
-    if (!c) return;
-    const ctx = c.getContext("2d"), w = c.width, h = c.height;
+function dibujarGraficoObjetivo(porcentaje, textoCentro) {
+    const canvas = document.getElementById("objetivo-chart");
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const w = canvas.width; const h = canvas.height;
+    const cx = w / 2; const cy = h / 2;
+    const radio = Math.min(w, h) / 2 - 10;
+    const innerRadio = radio * 0.6;
     ctx.clearRect(0, 0, w, h);
-    const hoy = new Date(), meses = [];
-    for (let i = -2; i <= 6; i++) {
-        const d = new Date(hoy.getFullYear(), hoy.getMonth() + i, 1);
-        const locale = currentLang === "pt" ? "pt-BR" : "es-ES";
-        meses.push({ l: d.toLocaleDateString(locale, { month: 'short' }), d: d.toISOString().slice(0, 7), f: i > 0 });
-    }
-    let sa = 0;
-    transaccionesLocal.forEach(t => {
-        if (t.fecha < meses[0].d + "-01") sa += (t.tipo === "entrada" ? Number(t.valor) : -Number(t.valor));
-    });
-    const pts = []; let trend = 0, mc = 0;
-    meses.forEach(m => {
-        if (!m.f) {
-            const tr = transaccionesLocal.filter(t => t.fecha && t.fecha.startsWith(m.d));
-            if (tr.length === 0) pts.push({ v: null, f: false, l: m.l });
-            else {
-                let e = 0, s = 0; tr.forEach(t => { const v = Number(t.valor) || 0; if (t.tipo === "entrada") e += v; else s += v; });
-                sa += (e - s); pts.push({ v: sa, f: false, l: m.l }); trend += (e - s); mc++;
-            }
-        } else {
-            const avg = mc > 0 ? trend / mc : 0; sa += avg; pts.push({ v: sa, f: true, l: m.l });
-        }
-    });
-    const vals = pts.map(p => p.v).filter(v => v !== null);
-    if (vals.length === 0) return;
-    const max = Math.max(...vals) * 1.1, min = Math.min(0, ...vals), rng = max - min || 100;
-    const gx = i => 40 + (i * ((w - 60) / (pts.length - 1)));
-    const gy = v => h - 30 - ((v - min) / rng) * (h - 60);
 
-    ctx.strokeStyle = "rgba(255,255,255,0.1)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(40, 20); ctx.lineTo(40, h - 30); ctx.lineTo(w - 20, h - 30); ctx.stroke();
-    ctx.lineWidth = 3;
-    for (let i = 0; i < pts.length - 1; i++) {
-        if (pts[i].v === null || pts[i + 1].v === null) continue;
-        ctx.beginPath(); ctx.moveTo(gx(i), gy(pts[i].v)); ctx.lineTo(gx(i + 1), gy(pts[i + 1].v));
-        ctx.setLineDash(pts[i + 1].f ? [5, 5] : []); ctx.strokeStyle = pts[i + 1].f ? "#06b6d4" : "#8b5cf6"; ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx, cy, radio, 0, Math.PI * 2); ctx.fillStyle = "rgba(255,255,255,0.05)"; ctx.fill();
+    const end = -Math.PI / 2 + (Math.PI * 2 * (Math.min(porcentaje, 100) / 100));
+
+    const grad = ctx.createLinearGradient(0, 0, w, h);
+    grad.addColorStop(0, "#ec4899");
+    grad.addColorStop(1, "#8b5cf6");
+
+    ctx.beginPath(); ctx.arc(cx, cy, radio, -Math.PI / 2, end);
+    ctx.lineCap = "round";
+    ctx.lineWidth = 12;
+    ctx.strokeStyle = grad;
+    ctx.stroke();
+
+    ctx.beginPath(); ctx.arc(cx, cy, innerRadio, 0, Math.PI * 2); ctx.fillStyle = "#020617"; ctx.fill();
+
+    if (textoCentro) {
+        ctx.fillStyle = "#fff";
+        ctx.font = "bold 12px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(textoCentro, cx, cy);
+
+        ctx.fillStyle = "#94a3b8";
+        ctx.font = "10px sans-serif";
+        // TRADUÇÃO DO TEXTO 'FALTA'
+        ctx.fillText(translations[currentLang].chart_falta, cx, cy + 15);
     }
-    ctx.setLineDash([]);
-    pts.forEach((p, i) => {
-        if (p.v !== null) {
-            const x = gx(i), y = gy(p.v);
-            ctx.beginPath(); ctx.arc(x, y, 6, 0, 2 * Math.PI); ctx.fillStyle = p.f ? "#06b6d4" : "#8b5cf6"; ctx.fill();
-            ctx.fillStyle = "rgba(255,255,255,0.5)"; ctx.fillText(p.l, x - 10, h - 10);
-            if (i === pts.length - 1 || (i === 2 && !p.f)) { ctx.fillStyle = "#fff"; ctx.fillText(formatearMoneda(p.v), x - 15, y - 15); }
-        }
-    });
+}
+
+function rellenarPerfil() {
+    document.getElementById("perfil-edad").value = edadUsuario || "";
+    document.getElementById("perfil-sexo").value = sexoUsuario || "";
+    document.getElementById("perfil-pais").value = paisUsuario || "";
+    document.getElementById("perfil-meta").value = metaMensualUsuario || "";
+    document.getElementById("perfil-ingreso").value = ingresoMensualUsuario || "";
+    document.getElementById("perfil-moneda").value = monedaUsuario || "";
+    document.getElementById("perfil-objetivo-nombre").value = objetivoNombre || "";
+    document.getElementById("perfil-objetivo-valor").value = objetivoValor || "";
 }
 
 function inicializarReporte() {
-    const sel = document.getElementById("reporte-mes"); sel.innerHTML = "";
-    const m = new Set(); m.add(obtenerAnioMesActual());
-    transaccionesLocal.forEach(t => { if (t.fecha && t.fecha.length >= 7) m.add(t.fecha.slice(0, 7)); });
-    Array.from(m).sort().reverse().forEach(x => { const o = document.createElement("option"); o.value = x; o.textContent = nombreMes(x) + " (" + x + ")"; sel.appendChild(o); });
-    sel.onchange = () => cargarDadosReporte(sel.value); if (m.size > 0) cargarDadosReporte(Array.from(m).sort().reverse()[0]);
+    const sel = document.getElementById("reporte-mes");
+    sel.innerHTML = "";
+    const meses = new Set();
+    meses.add(obtenerAnioMesActual());
+    transaccionesLocal.forEach(t => {
+        if (t.fecha && t.fecha.length >= 7) meses.add(t.fecha.slice(0, 7));
+    });
+
+    const ordenados = Array.from(meses).sort().reverse();
+    ordenados.forEach(m => {
+        const opt = document.createElement("option");
+        opt.value = m;
+        opt.textContent = nombreMes(m) + " (" + m + ")";
+        sel.appendChild(opt);
+    });
+
+    sel.onchange = () => cargarDatosReporte(sel.value);
+    if (ordenados.length > 0) cargarDatosReporte(ordenados[0]);
 }
 
-function cargarDadosReporte(mes) {
-    const fl = transaccionesLocal.filter(t => t.fecha && t.fecha.startsWith(mes));
-    let e = 0, s = 0, gc = {};
-    fl.forEach(t => {
+function cargarDatosReporte(mes) {
+    const filtradas = transaccionesLocal.filter(t => t.fecha && t.fecha.startsWith(mes));
+    let e = 0, s = 0;
+    let gastosPorCat = {};
+
+    filtradas.forEach(t => {
         const v = Number(t.valor) || 0;
         if (t.tipo === "entrada") e += v;
         else {
-            s += v; let n = "Sin categoría";
-            if (t.gastoFijoId) n = "Gasto Fijo"; else if (t.categoriaId) { const c = categoriasLocal.find(x => x.id === t.categoriaId); if (c) n = c.nome; }
-            if (!gc[n]) gc[n] = 0; gc[n] += v;
+            s += v;
+            let catName = "Sin categoría";
+            if (t.gastoFijoId) catName = "Gasto Fijo";
+            else if (t.categoriaId) {
+                const c = categoriasLocal.find(x => x.id === t.categoriaId);
+                if (c) catName = c.nome;
+            }
+            if (!gastosPorCat[catName]) gastosPorCat[catName] = 0;
+            gastosPorCat[catName] += v;
         }
     });
+
     document.getElementById("rep-entradas").textContent = formatearMoneda(e);
     document.getElementById("rep-salidas").textContent = formatearMoneda(s);
     document.getElementById("rep-saldo").textContent = formatearMoneda(e - s);
-    const tb = document.querySelector("#reporte-tabla-categorias tbody"); tb.innerHTML = "";
-    Object.keys(gc).forEach(k => {
-        const v = gc[k], p = s > 0 ? (v / s) * 100 : 0;
-        const tr = document.createElement("tr"); tr.innerHTML = `<td>${k}</td><td>Salida</td><td>${formatearMoneda(v)}</td><td>${p.toFixed(1)}%</td>`;
+
+    const tb = document.querySelector("#reporte-tabla-categorias tbody");
+    tb.innerHTML = "";
+
+    Object.keys(gastosPorCat).forEach(k => {
+        const v = gastosPorCat[k];
+        const pct = s > 0 ? (v / s) * 100 : 0;
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${k}</td><td>Salida</td><td>${formatearMoneda(v)}</td><td>${pct.toFixed(1)}%</td>`;
         tb.appendChild(tr);
     });
 }
-document.getElementById("reporte-mes-actual").addEventListener("click", () => { const c = obtenerAnioMesActual(); document.getElementById("reporte-mes").value = c; cargarDadosReporte(c); });
 
-// MODAIS
-const modalCategorias = document.getElementById("modal-categorias");
-document.getElementById("modal-categorias-ok").addEventListener("click", async () => { modalCategorias.classList.add("hidden"); yaMostroModalCategorias = true; await guardarPerfilEnServidor(); });
-const btnPerfil = document.getElementById("btn-ir-perfil");
-if (btnPerfil) btnPerfil.addEventListener("click", async () => { modalCategorias.classList.add("hidden"); document.querySelector('button[data-section="perfil"]').click(); yaMostroModalCategorias = true; await guardarPerfilEnServidor(); });
-const btnCategorias = document.getElementById("btn-ir-categorias");
-if (btnCategorias) btnCategorias.addEventListener("click", async () => { modalCategorias.classList.add("hidden"); document.querySelector('button[data-section="categorias"]').click(); yaMostroModalCategorias = true; await guardarPerfilEnServidor(); });
-
-function mostrarModalCategoriasSiCorresponde() {
-    // Só exibe o modal se houver usuário logado
-    if (usuarioActual && categoriasLocal.length === 0 && !yaMostroModalCategorias) {
-        modalCategorias.classList.remove("hidden");
-    } else {
-        modalCategorias.classList.add("hidden");
-    }
-}
-
-const modalSim = document.getElementById("modal-simulador");
-document.getElementById("btn-abrir-simulador").addEventListener("click", () => { modalSim.classList.remove("hidden"); document.getElementById("simulador-resultado").textContent = translations[currentLang].sim_msg_initial; document.getElementById("simulador-monto").value = ""; });
-document.getElementById("btn-cerrar-simulador").addEventListener("click", () => modalSim.classList.add("hidden"));
-document.getElementById("btn-calcular-simulacion").addEventListener("click", () => {
-    const ex = parseNumeroLocal(document.getElementById("simulador-monto").value);
-    const res = document.getElementById("simulador-resultado");
-    if (ex <= 0) { res.textContent = "Ingresa un monto válido."; return; }
-    let cur = calcularAhorroTotal() - objetivoAhorroBase; if (cur < 0) cur = 0;
-    const rest = objetivoValor - cur;
-    if (rest <= 0) { res.textContent = "Goal reached!"; return; }
-    const tm = filtrarMesActual(transaccionesLocal, "fecha");
-    let e = 0, s = 0; tm.forEach(t => { const v = Number(t.valor) || 0; if (t.tipo === "entrada") e += v; else s += v; });
-    const ritmo = ((Math.max(0, e - s)) / new Date().getDate()) * 30;
-    if (ritmo <= 0) { res.textContent = translations[currentLang].sim_result_fail; }
-    else {
-        const tAtual = rest / ritmo; const tNovo = rest / (ritmo + ex);
-        const dias = Math.ceil((tAtual * 30) - (tNovo * 30));
-        res.innerHTML = `${translations[currentLang].sim_result_success} (${dias} days)`;
-    }
+document.getElementById("reporte-mes-actual").addEventListener("click", () => {
+    const current = obtenerAnioMesActual();
+    const sel = document.getElementById("reporte-mes");
+    sel.value = current;
+    cargarDatosReporte(current);
 });
-
-// Cores
-function getColorParaCategoria(n) {
-    let h = 0; for (let i = 0; i < n.length; i++) h = n.charCodeAt(i) + ((h << 5) - h);
-    const c = (h & 0x00FFFFFF).toString(16).toUpperCase();
-    return "#" + "00000".substring(0, 6 - c.length) + c;
+// --- FUNÇÃO DE CORES (QUE ESTAVA FALTANDO) ---
+function getColorParaCategoria(nombre) {
+ let hash = 0;
+ for (let i = 0; i < nombre.length; i++) {
+     hash = nombre.charCodeAt(i) + ((hash << 5) - hash);
+ }
+ const c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
+ return "#" + "00000".substring(0, 6 - c.length) + c;
 }
+
+
 </script>
 </body>
 </html>
