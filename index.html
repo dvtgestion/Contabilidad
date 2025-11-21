@@ -2096,13 +2096,18 @@ if (btnCategorias) {
     });
 }
 
+// --- FUNÇÃO QUE ESTAVA FALTANDO (COLE AQUI) ---
 function mostrarModalCategoriasSiCorresponde() {
-    if (categoriasLocal.length === 0 && !yaMostroModalCategorias) {
-        document.getElementById("modal-categorias").classList.remove("hidden");
+    // Verifica se o array existe antes de ler o length para não dar erro
+    if (categoriasLocal && categoriasLocal.length === 0 && !yaMostroModalCategorias) {
+        const modal = document.getElementById("modal-categorias");
+        if(modal) modal.classList.remove("hidden");
     } else {
-        document.getElementById("modal-categorias").classList.add("hidden");
+        const modal = document.getElementById("modal-categorias");
+        if(modal) modal.classList.add("hidden");
     }
 }
+// ----------------------------------------------
 
 function inicializarInterfaz() {
     rellenarSelectCategorias();
