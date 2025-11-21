@@ -990,8 +990,7 @@ tr:last-child td {
               <th data-i18n="lbl_desc">Descripción</th>
               <th data-i18n="lbl_valor">Valor</th>
               <th data-i18n="lbl_fecha">Vencimiento</th>
-              <th data-i18n="lbl_estado">Estado</th>
-              <th>#</th>
+              <th data-i18n="lbl_estado">Estado</th> <th>#</th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -1306,7 +1305,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 // ===============================================================
-// SISTEMA DE IDIOMAS (i18n) - DICIONÁRIO COMPLETO
+// SISTEMA DE IDIOMAS (i18n)
 // ===============================================================
 let savedLang = localStorage.getItem('app_lang');
 let currentLang = (savedLang === 'es' || savedLang === 'pt') ? savedLang : 'es';
@@ -1479,9 +1478,7 @@ const translations = {
 };
 
 function updateLanguage(lang) {
-    if (lang !== 'es' && lang !== 'pt') {
-        lang = 'es';
-    }
+    if (lang !== 'es' && lang !== 'pt') lang = 'es';
     currentLang = lang;
     try {
         localStorage.setItem('app_lang', lang);
@@ -1504,7 +1501,7 @@ function updateLanguage(lang) {
     if (selLogin) selLogin.value = lang;
     if (selApp) selApp.value = lang;
 
-    // Correção para não chamar função de UI antes do login
+    // TRAVA DE SEGURANÇA: Só tenta atualizar a interface se o usuário estiver logado
     if (usuarioActual && typeof inicializarInterfaz === "function") {
         inicializarInterfaz();
     }
@@ -1715,7 +1712,7 @@ function estadoFijoParaMes(fijo, anioMes) {
 }
 
 // ----------------------------------------------------------------------
-// AUTENTICACIÓN COM WHITELIST E IDIOMA (CORRIGIDO)
+// AUTENTICACIÓN (CORRIGIDA - EVITA TRAVAMENTO)
 // ----------------------------------------------------------------------
 onAuthStateChanged(auth, async (user) => {
     updateLanguage(currentLang);
@@ -1772,7 +1769,8 @@ onAuthStateChanged(auth, async (user) => {
 
         document.getElementById("app").classList.add("hidden");
         document.getElementById("login-screen").classList.remove("hidden");
-        // Correção: Esconder modal de boas-vindas se estiver no login
+        
+        // CORREÇÃO: Garante que o modal de boas-vindas esteja escondido ao fazer logout
         document.getElementById("modal-categorias").classList.add("hidden");
 
         if (selLogin) selLogin.value = currentLang;
@@ -1787,7 +1785,6 @@ onAuthStateChanged(auth, async (user) => {
 function iniciarListeners(uid) {
     loading(true);
 
-    // Carregamento paralelo para evitar espera sequencial
     const unsubCat = onSnapshot(query(collection(db, "categorias"), where("uid", "==", uid)), (snapshot) => {
         categoriasLocal = [];
         snapshot.forEach(doc => {
@@ -1797,13 +1794,8 @@ function iniciarListeners(uid) {
             });
         });
         inicializarInterfaz();
-        
-        // CORREÇÃO: Só verificar o modal depois que os dados carregarem E o usuário estiver logado
-        if (categoriasLocal.length === 0 && !yaMostroModalCategorias) {
-            document.getElementById("modal-categorias").classList.remove("hidden");
-        } else {
-            document.getElementById("modal-categorias").classList.add("hidden");
-        }
+        // O modal só é verificado aqui, depois do login
+        mostrarModalCategoriasSiCorresponde();
     });
     unsubs.push(unsubCat);
 
@@ -1863,7 +1855,6 @@ function iniciarListeners(uid) {
 
             if (!monedaUsuario && paisUsuario) monedaUsuario = monedaPorDefectoParaPais(paisUsuario);
         } else {
-            // Padrões se não houver perfil
             metaMensualUsuario = 0;
             ingresoMensualUsuario = 0;
             objetivoNombre = "";
@@ -1918,6 +1909,8 @@ loginForm.addEventListener("submit", async (e) => {
     } catch (error) {
         console.error(error);
         msg.textContent = "Error: " + error.message;
+        // CORREÇÃO: Garante que destrava o botão se der erro
+        loading(false);
     }
 });
 
@@ -2079,17 +2072,17 @@ window.eliminarTransaccion = async (id) => {
 };
 
 // ----------------------------------------------------------------------
-// LÓGICA DE INTERFACE (UI)
+// LÓGICA DE INTERFACE (UI) - CORRIGIDA
 // ----------------------------------------------------------------------
 
 function inicializarInterfaz() {
-    // TRAVA DE SEGURANÇA: Se não houver usuário, não desenha nada.
-    // Isso corrige o bug da tela "bagunçada" no login.
+    // CORREÇÃO CRÍTICA: Se não houver usuário logado,
+    // esta função PARA aqui e não desenha o painel.
     if (!usuarioActual) return;
 
     rellenarSelectCategorias();
     rellenarTablaCategorias();
-    rellenarTablaFijos(); // <-- Nova lógica de Vencimento aplicada aqui
+    rellenarTablaFijos(); // <-- Lógica de vencimento aplicada aqui
     rellenarTablaTarjetas();
     rellenarTablaTransacciones();
     rellenarPerfil();
@@ -2102,9 +2095,7 @@ function inicializarInterfaz() {
     actualizarCampoOrigenYTarjeta();
     inicializarReporte();
     
-    // Verifica se deve abrir o modal de boas-vindas (apenas se logado)
-    mostrarModalCategoriasSiCorresponde();
-    
+    // Reaplica idioma para garantir textos dinâmicos
     updateLanguage(currentLang);
 }
 
@@ -2210,7 +2201,7 @@ function rellenarTablaFijos() {
     tb.innerHTML = "";
     const mes = obtenerAnioMesActual();
     fijosLocal.forEach(f => {
-        // Chama a função de status criada na Parte 2
+        // Chama a função de status definida na Parte 2
         const estado = estadoFijoParaMes(f, mes);
         
         const tr = document.createElement("tr");
