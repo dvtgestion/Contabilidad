@@ -1668,18 +1668,8 @@ function limparMemoriaGlobal() {
 }
 
 // ----------------------------------------------------------------------
-// AUTENTICACIÓN COM WHITELIST E IDIOMA
-// ----------------------------------------------------------------------
+// 👇👇👇 VERSÃO FINAL PADRONIZADA (BUSCA 'data_vencimento') 👇👇👇
 onAuthStateChanged(auth, async (user) => {
-  // Inicializa idioma
-  updateLanguage(currentLang);
-  
-  // Listeners de troca de idioma
-  const selLogin = document.getElementById("lang-select-login");
-  const selApp = document.getElementById("lang-select-app");
-  if(selLogin) selLogin.onchange = (e) => updateLanguage(e.target.value);
-  if(selApp) selApp.onchange = (e) => updateLanguage(e.target.value);
-
   if (user) {
      loading(true);
      const loadingText = document.getElementById('loading-overlay');
@@ -1692,10 +1682,9 @@ onAuthStateChanged(auth, async (user) => {
          if (docSnap.exists()) {
              const dadosUser = docSnap.data();
 
-             // --- DEBUG: ISSO VAI TE MOSTRAR O QUE O FIREBASE MANDOU ---
-             // (Depois que funcionar, você pode apagar essa linha do alert)
-             alert(`DEBUG (Apagar depois):\nStatus Ativo: ${dadosUser.ativo}\nVencimento Lido: [${dadosUser.data_vencimento}]`);
-             // -----------------------------------------------------------
+             // --- DEBUG (Mostra o que leu do Firebase) ---
+             alert(`DEBUG (Apagar depois):\nStatus Ativo: ${dadosUser.ativo}\nVencimento: [${dadosUser.data_vencimento}]`);
+             // ---------------------------------------------
 
              // 1. BLOQUEIO MANUAL
              if (dadosUser.ativo !== true) {
@@ -1705,19 +1694,19 @@ onAuthStateChanged(auth, async (user) => {
                  return;
              }
 
-             // 2. BLOQUEIO POR DATA 📅
+             // 2. BLOQUEIO POR DATA (Campo: data_vencimento) 📅
              if (dadosUser.data_vencimento) {
                  const hoy = new Date();
                  hoy.setHours(0, 0, 0, 0);
 
-                 // LIMPEZA: Converte barras em traços e remove espaços extras
-                 // Ex: "2025/11/20 " vira "2025-11-20"
+                 // LIMPEZA: Remove espaços e troca barra por traço
+                 // Lê o campo PADRÃO 'data_vencimento'
                  let dataLimpa = dadosUser.data_vencimento.toString().trim().replace(/\//g, "-");
                  
                  const partes = dataLimpa.split('-');
                  
-                 // Garante que temos 3 partes (Ano, Mês, Dia)
                  if (partes.length === 3) {
+                     // Cria data (Ano, Mês-1, Dia)
                      const dataVenc = new Date(partes[0], partes[1] - 1, partes[2]);
 
                      // A) BLOQUEIO 🚫
@@ -1737,6 +1726,7 @@ onAuthStateChanged(auth, async (user) => {
                      const diffTempo = dataVenc - hoy;
                      const diffDias = Math.ceil(diffTempo / (1000 * 60 * 60 * 24));
 
+                     // Se faltar 5 dias ou menos
                      if (diffDias <= 5 && diffDias >= 0) {
                          setTimeout(() => mostrarAvisoVencimento(diffDias), 2000);
                      }
