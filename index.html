@@ -1917,12 +1917,25 @@ window.eliminarCategoria = async (id) => {
 };
 
 // Gastos Fijos
+// Procure esta parte no seu código e SUBSTITUA por isso:
 const formFijo = document.getElementById("form-fijo");
 formFijo.addEventListener("submit", async (e) => {
     e.preventDefault();
     const d = document.getElementById("fijo-descripcion").value.trim();
     const v = parseNumeroLocal(document.getElementById("fijo-valor").value);
     const ven = parseInt(document.getElementById("fijo-vencimiento").value);
+
+    // --- LÓGICA NOVA: CALCULA O MÊS DE INÍCIO ---
+    const hoje = new Date();
+    const diaAtual = hoje.getDate();
+    let mesInicio = obtenerAnioMesActual(); // Tenta começar este mês
+
+    // Se o dia de vencimento (ex: 19) for menor que hoje (ex: 21), 
+    // então já venceu este mês, jogamos para o próximo.
+    if (ven < diaAtual) {
+        mesInicio = siguienteAnioMes(mesInicio);
+    }
+    // ---------------------------------------------
 
     loading(true);
     try {
@@ -1931,13 +1944,12 @@ formFijo.addEventListener("submit", async (e) => {
             descripcion: d,
             valor: v,
             vencimiento: ven,
-            mes_inicio: siguienteAnioMes(obtenerAnioMesActual())
+            mes_inicio: mesInicio // Usa o mês calculado acima
         });
         formFijo.reset();
     } catch (e) { console.error(e); }
     loading(false);
 });
-window.eliminarFijo = async (id) => await deleteDoc(doc(db, "gastos_fijos", id));
 
 // Tarjetas
 const formTarjeta = document.getElementById("form-tarjeta");
@@ -2880,10 +2892,20 @@ function getColorParaCategoria(nombre) {
  return "#" + "00000".substring(0, 6 - c.length) + c;
 }
 
-// --- FUNÇÃO QUE FALTA: CALCULA ESTADO DO GASTO FIXO ---
+// SUBSTITUA a função 'estadoFijoParaMes' inteira por esta:
 function estadoFijoParaMes(gasto, anioMes) {
-    // Verifica se já foi pago neste mês
-    // Procura nas transações locais uma saída que tenha o ID deste gasto fixo e seja deste mês
+    
+    // 1. NOVO: Verifica se este gasto só começa no futuro
+    // Se o mês atual (anioMes) for ANTERIOR ao mês de início gravado no banco
+    if (gasto.mes_inicio && anioMes < gasto.mes_inicio) {
+        return { 
+            texto: "Próx. Mês", 
+            badgeClase: "badge-normal", 
+            claseFila: "" // Fica cinza/transparente, sem alerta
+        };
+    }
+
+    // 2. Verifica se já foi pago
     const estaPagado = transaccionesLocal.some(t => 
         t.tipo === "salida" && 
         t.gastoFijoId === gasto.id && 
@@ -2891,59 +2913,32 @@ function estadoFijoParaMes(gasto, anioMes) {
     );
 
     if (estaPagado) {
-        return { 
-            texto: "Pago", 
-            badgeClase: "badge-verde", 
-            claseFila: "fijo-verde" 
-        };
+        return { texto: "Pago", badgeClase: "badge-verde", claseFila: "fijo-verde" };
     }
 
-    // Se não está pago, verifica a data
+    // 3. Lógica de datas
     const hoy = new Date();
     const diaHoy = hoy.getDate();
-    // Assume que o anioMes é o atual para calcular alertas visuais de dia
     const [anio, mes] = anioMes.split("-");
     
-    // Se estivermos olhando histórico passado e não pagou:
+    // Histórico passado
     if (anioMes < obtenerAnioMesActual()) {
-         return { 
-            texto: "Vencido", 
-            badgeClase: "badge-rojo", 
-            claseFila: "fijo-rojo" 
-        };
+         return { texto: "Vencido", badgeClase: "badge-rojo", claseFila: "fijo-rojo" };
     }
-
-    // Se for mês futuro
+    // Futuro (além do mes_inicio já verificado)
     if (anioMes > obtenerAnioMesActual()) {
-        return { 
-            texto: "Pendiente", 
-            badgeClase: "badge-normal", 
-            claseFila: "" 
-        };
+        return { texto: "Pendiente", badgeClase: "badge-normal", claseFila: "" };
     }
 
     // Mês atual: verifica dia
     const diaVenc = gasto.vencimiento;
     
     if (diaHoy > diaVenc) {
-        return { 
-            texto: "Vencido", 
-            badgeClase: "badge-rojo", 
-            claseFila: "fijo-rojo" 
-        };
+        return { texto: "Vencido", badgeClase: "badge-rojo", claseFila: "fijo-rojo" };
     } else if (diaVenc - diaHoy <= 3) {
-        // Faltam 3 dias ou menos
-        return { 
-            texto: "Vence pronto", 
-            badgeClase: "badge-amarillo", 
-            claseFila: "fijo-amarillo" 
-        };
+        return { texto: "Vence pronto", badgeClase: "badge-amarillo", claseFila: "fijo-amarillo" };
     } else {
-        return { 
-            texto: "Pendiente", 
-            badgeClase: "badge-normal", 
-            claseFila: "" 
-        };
+        return { texto: "Pendiente", badgeClase: "badge-normal", claseFila: "" };
     }
 }
 
