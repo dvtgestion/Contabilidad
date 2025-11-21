@@ -2012,6 +2012,8 @@ formFijo.addEventListener("submit", async (e) => {
     } catch (e) { console.error(e); }
     loading(false);
 });
+// 👇👇👇 COLE ESTA LINHA QUE ESTAVA FALTANDO 👇👇👇
+window.eliminarFijo = async (id) => await deleteDoc(doc(db, "gastos_fijos", id));
 
 // Tarjetas
 const formTarjeta = document.getElementById("form-tarjeta");
