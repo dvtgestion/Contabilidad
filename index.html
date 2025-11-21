@@ -1668,8 +1668,11 @@ function limparMemoriaGlobal() {
 }
 
 // ----------------------------------------------------------------------
-// 👇👇👇 VERSÃO FINAL PADRONIZADA (BUSCA 'data_vencimento') 👇👇👇
+// 👇👇👇 SUBSTITUA SEU BLOCO ATUAL POR ESTE AQUI 👇👇👇
 onAuthStateChanged(auth, async (user) => {
+  // 1. CORREÇÃO DE IDIOMA: Força atualização assim que o firebase conecta
+  updateLanguage(currentLang);
+
   if (user) {
      loading(true);
      const loadingText = document.getElementById('loading-overlay');
@@ -1682,10 +1685,6 @@ onAuthStateChanged(auth, async (user) => {
          if (docSnap.exists()) {
              const dadosUser = docSnap.data();
 
-             // --- DEBUG (Mostra o que leu do Firebase) ---
-             alert(`DEBUG (Apagar depois):\nStatus Ativo: ${dadosUser.ativo}\nVencimento: [${dadosUser.data_vencimento}]`);
-             // ---------------------------------------------
-
              // 1. BLOQUEIO MANUAL
              if (dadosUser.ativo !== true) {
                  alert(translations[currentLang].alert_restric);
@@ -1694,23 +1693,21 @@ onAuthStateChanged(auth, async (user) => {
                  return;
              }
 
-             // 2. BLOQUEIO POR DATA (Campo: data_vencimento) 📅
+             // 2. BLOQUEIO POR DATA
              if (dadosUser.data_vencimento) {
                  const hoy = new Date();
                  hoy.setHours(0, 0, 0, 0);
 
-                 // LIMPEZA: Remove espaços e troca barra por traço
-                 // Lê o campo PADRÃO 'data_vencimento'
+                 // Limpeza da data
                  let dataLimpa = dadosUser.data_vencimento.toString().trim().replace(/\//g, "-");
-                 
                  const partes = dataLimpa.split('-');
                  
                  if (partes.length === 3) {
-                     // Cria data (Ano, Mês-1, Dia)
                      const dataVenc = new Date(partes[0], partes[1] - 1, partes[2]);
 
                      // A) BLOQUEIO 🚫
                      if (hoy > dataVenc) {
+                         // Define mensagem no idioma correto
                          const esPt = currentLang === 'pt';
                          const msgBloqueio = esPt
                             ? `🚫 ACESSO SUSPENSO\n\nSua assinatura venceu dia: ${dataLimpa}.\nRegularize para acessar.`
@@ -1726,9 +1723,9 @@ onAuthStateChanged(auth, async (user) => {
                      const diffTempo = dataVenc - hoy;
                      const diffDias = Math.ceil(diffTempo / (1000 * 60 * 60 * 24));
 
-                     // Se faltar 5 dias ou menos
                      if (diffDias <= 5 && diffDias >= 0) {
-                         setTimeout(() => mostrarAvisoVencimento(diffDias), 2000);
+                         // Chama a barra visual
+                         setTimeout(() => mostrarAvisoVencimento(diffDias), 1500);
                      }
                  }
              }
@@ -1739,8 +1736,11 @@ onAuthStateChanged(auth, async (user) => {
              document.getElementById("user-email").textContent = user.email;
              document.getElementById("login-screen").classList.add("hidden");
              document.getElementById("app").classList.remove("hidden");
+             
+             // Atualiza o seletor visual do app
              const selApp = document.getElementById("lang-select-app");
              if(selApp) selApp.value = currentLang;
+             
              iniciarListeners(user.uid);
 
          } else {
@@ -1766,6 +1766,7 @@ onAuthStateChanged(auth, async (user) => {
 
      document.getElementById("app").classList.add("hidden");
      document.getElementById("login-screen").classList.remove("hidden");
+     
      const selLogin = document.getElementById("lang-select-login");
      if(selLogin) selLogin.value = currentLang;
      loading(false);
@@ -2978,8 +2979,11 @@ function estadoFijoParaMes(gasto, anioMes) {
     }
 }
 
-// --- FUNÇÃO: MOSTRAR BARRA DE VENCIMENTO (BILÍNGUE) ---
+// --- FUNÇÃO: MOSTRAR BARRA DE VENCIMENTO (LAYOUT CORRIGIDO + BOTÃO X) ---
 function mostrarAvisoVencimento(diasRestantes) {
+    // Evita criar duas barras se já tiver uma
+    if(document.getElementById("barra-aviso-vencimento")) return;
+
     // 1. Define o texto baseado no idioma atual
     const esPt = currentLang === 'pt';
     let textoMensagem = "";
@@ -2990,28 +2994,47 @@ function mostrarAvisoVencimento(diasRestantes) {
             : "⚠️ ATENCIÓN: ¡Tu suscripción vence HOY!";
     } else {
         textoMensagem = esPt 
-            ? `⚠️ ATENÇÃO: Sua assinatura vence em ${diasRestantes} dias. Evite o bloqueio!` 
-            : `⚠️ ATENCIÓN: Tu suscripción vence en ${diasRestantes} días. ¡Evita el bloqueo!`;
+            ? `⚠️ ATENÇÃO: Sua assinatura vence em ${diasRestantes} dias.` 
+            : `⚠️ ATENCIÓN: Tu suscripción vence en ${diasRestantes} días.`;
     }
 
-    // 2. Cria a barra visual
+    // 2. Cria a barra visual (Agora com position: relative para não cobrir o menu)
     const aviso = document.createElement("div");
+    aviso.id = "barra-aviso-vencimento";
     aviso.style.cssText = `
-        position: fixed; top: 0; left: 0; width: 100%;
         background: linear-gradient(90deg, #ef4444, #b91c1c);
-        color: #fff; text-align: center; padding: 10px;
-        z-index: 9999; font-weight: bold; font-size: 0.9rem;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        display: flex; justify-content: center; align-items: center; gap: 10px;
+        color: #fff; 
+        text-align: center; 
+        padding: 12px;
+        width: 100%;
+        position: relative; /* Empurra o site para baixo */
+        z-index: 99999; 
+        display: flex; 
+        justify-content: center; 
+        align-items: center; 
+        gap: 15px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
     `;
     
-    aviso.innerHTML = `<span>${textoMensagem}</span>`;
-    document.body.appendChild(aviso);
+    aviso.innerHTML = `
+        <span style="font-weight:600; font-size: 0.9rem; line-height: 1.2;">${textoMensagem}</span>
+        <button onclick="this.parentElement.remove()" style="
+            background: rgba(0,0,0,0.2); 
+            border: none; 
+            color: #fff; 
+            border-radius: 50%; 
+            width: 28px; 
+            height: 28px; 
+            cursor: pointer; 
+            font-weight: bold;
+            min-width: 28px;
+            display: flex; align-items: center; justify-content: center;
+        ">✕</button>
+    `;
     
-    const header = document.querySelector("header");
-    if(header) header.style.marginTop = "40px";
+    // Insere no topo absoluto do corpo do site
+    document.body.prepend(aviso);
 }
-
 
 
 </script>
