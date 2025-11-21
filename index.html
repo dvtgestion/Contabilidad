@@ -1505,7 +1505,7 @@ const translations = {
     }
 };
 
-// Função Principal de Troca de Idioma (VERSÃO BLINDADA)
+// Função Principal de Troca de Idioma (VERSÃO COMPLETA COM FAIXA VERMELHA)
 function updateLanguage(lang) {
     // Segurança extra: se chegar algo inválido, força espanhol
     if (lang !== 'es' && lang !== 'pt') lang = 'es';
@@ -1520,7 +1520,6 @@ function updateLanguage(lang) {
     if (elements) {
         elements.forEach(el => {
             const key = el.getAttribute('data-i18n');
-            // Verifica se a tradução existe antes de tentar usar
             if (translations[lang] && translations[lang][key]) {
                 if(el.tagName === "INPUT" && el.hasAttribute("placeholder")) {
                     el.placeholder = translations[lang][key];
@@ -1537,8 +1536,29 @@ function updateLanguage(lang) {
     if(selLogin) selLogin.value = lang;
     if(selApp) selApp.value = lang;
     
-    // ATUALIZAÇÃO SEGURA DOS GRÁFICOS
-    // Só tenta atualizar se as funções já estiverem carregadas
+    // --- NOVO: TRADUÇÃO DA FAIXA VERMELHA (AQUI ESTÁ A CORREÇÃO) ---
+    const avisoBar = document.getElementById("barra-aviso-vencimento");
+    if (avisoBar) {
+        // Lê quantos dias faltam (salvo no dataset)
+        const dias = parseInt(avisoBar.dataset.dias);
+        const spanTexto = avisoBar.querySelector(".msg-texto");
+        
+        if (spanTexto) {
+            const esPt = lang === 'pt';
+            if (dias === 0) {
+                spanTexto.textContent = esPt 
+                    ? "⚠️ ATENÇÃO: Sua assinatura vence HOJE!" 
+                    : "⚠️ ATENCIÓN: ¡Tu suscripción vence HOY!";
+            } else {
+                spanTexto.textContent = esPt 
+                    ? `⚠️ ATENÇÃO: Sua assinatura vence em ${dias} dias.` 
+                    : `⚠️ ATENCIÓN: Tu suscripción vence en ${dias} días.`;
+            }
+        }
+    }
+    // ----------------------------------------------------------------
+
+    // ATUALIZAÇÃO DOS GRÁFICOS
     if (typeof actualizarResumen === "function") {
         try { actualizarResumen(); } catch(e) { console.error("Erro ao atualizar resumo", e); }
     }
@@ -1546,8 +1566,6 @@ function updateLanguage(lang) {
         try { actualizarObjetivo(); } catch(e) { console.error("Erro ao atualizar objetivo", e); }
     }
 }
-
-
 
 // --- UTILITÁRIOS VISUAIS ---
 function loading(show) {
@@ -2986,12 +3004,12 @@ function estadoFijoParaMes(gasto, anioMes) {
     }
 }
 
-// --- FUNÇÃO: MOSTRAR BARRA DE VENCIMENTO (LAYOUT CORRIGIDO + BOTÃO X) ---
+// --- FUNÇÃO: MOSTRAR BARRA DE VENCIMENTO (LAYOUT CORRIGIDO + SUPORTE A TRADUÇÃO) ---
 function mostrarAvisoVencimento(diasRestantes) {
     // Evita criar duas barras se já tiver uma
     if(document.getElementById("barra-aviso-vencimento")) return;
 
-    // 1. Define o texto baseado no idioma atual
+    // 1. Define o texto inicial baseado no idioma atual
     const esPt = currentLang === 'pt';
     let textoMensagem = "";
 
@@ -3005,16 +3023,20 @@ function mostrarAvisoVencimento(diasRestantes) {
             : `⚠️ ATENCIÓN: Tu suscripción vence en ${diasRestantes} días.`;
     }
 
-    // 2. Cria a barra visual (Agora com position: relative para não cobrir o menu)
+    // 2. Cria a barra visual
     const aviso = document.createElement("div");
     aviso.id = "barra-aviso-vencimento";
+    
+    // IMPORTANTE: Salvamos os dias aqui para a tradução funcionar depois
+    aviso.dataset.dias = diasRestantes; 
+
     aviso.style.cssText = `
         background: linear-gradient(90deg, #ef4444, #b91c1c);
         color: #fff; 
         text-align: center; 
         padding: 12px;
         width: 100%;
-        position: relative; /* Empurra o site para baixo */
+        position: relative;
         z-index: 99999; 
         display: flex; 
         justify-content: center; 
@@ -3023,8 +3045,9 @@ function mostrarAvisoVencimento(diasRestantes) {
         box-shadow: 0 2px 10px rgba(0,0,0,0.2);
     `;
     
+    // Adicionei a classe 'msg-texto' no span para podermos trocar o texto via código depois
     aviso.innerHTML = `
-        <span style="font-weight:600; font-size: 0.9rem; line-height: 1.2;">${textoMensagem}</span>
+        <span class="msg-texto" style="font-weight:600; font-size: 0.9rem; line-height: 1.2;">${textoMensagem}</span>
         <button onclick="this.parentElement.remove()" style="
             background: rgba(0,0,0,0.2); 
             border: none; 
@@ -3039,10 +3062,8 @@ function mostrarAvisoVencimento(diasRestantes) {
         ">✕</button>
     `;
     
-    // Insere no topo absoluto do corpo do site
     document.body.prepend(aviso);
 }
-
 
 </script>
 </body>
