@@ -1675,11 +1675,12 @@ function limparMemoriaGlobal() {
 
 // ----------------------------------------------------------------------
 // ===============================================================
-// AUTENTICACIÓN + WHITELIST + VALIDADE (SISTEMA DE COBRANÇA)
+// ===============================================================
+// AUTENTICACIÓN + WHITELIST + VALIDADE (COM PROTEÇÃO ANTI-TRAVAMENTO)
 // ===============================================================
 onAuthStateChanged(auth, async (user) => {
-  // Inicializa idioma
-  updateLanguage(currentLang);
+  // Tenta atualizar o idioma, se der erro, segue em frente
+  try { updateLanguage(currentLang); } catch(e) { console.warn("Erro idioma", e); }
   
   // Listeners de troca de idioma
   const selLogin = document.getElementById("lang-select-login");
@@ -1690,7 +1691,10 @@ onAuthStateChanged(auth, async (user) => {
   if (user) {
      loading(true);
      const loadingText = document.getElementById('loading-overlay');
-     if(loadingText) loadingText.textContent = translations[currentLang].loading_check;
+     // Proteção: Só muda texto se o dicionário existir
+     if(loadingText && translations[currentLang]) {
+         loadingText.textContent = translations[currentLang].loading_check;
+     }
      
      try {
          const docRef = doc(db, "clientes_permitidos", user.email); 
@@ -1700,68 +1704,89 @@ onAuthStateChanged(auth, async (user) => {
          if (docSnap.exists() && docSnap.data().ativo === true) {
              const dados = docSnap.data();
 
-             // -------------------------------------------------------
-             // --- VERIFICAÇÃO DE VALIDADE (NOVA PARTE) ---
-             // -------------------------------------------------------
-             if (dados.validade) {
-                 const hoje = new Date().toISOString().split('T')[0]; // Pega data de hoje (AAAA-MM-DD)
-                 const dataValidade = dados.validade;
+             // =======================================================
+             // INÍCIO DA BLINDAGEM: LÓGICA DE VALIDADE
+             // =======================================================
+             try {
+                 if (dados.validade) {
+                     const hoje = new Date().toISOString().split('T')[0];
+                     const dataValidade = dados.validade;
 
-                 // 1. SE JÁ VENCEU -> BLOQUEIA
-                 if (hoje > dataValidade) {
-                     console.warn("Plano vencido:", user.email);
-                     
-                     // Busca mensagem traduzida e troca o {date}
-                     let msg = translations[currentLang].alert_plan_expired;
-                     msg = msg.replace("{date}", dataValidade);
-                     
-                     alert(msg);
-                     await signOut(auth);
-                     window.location.reload();
-                     return; // Para tudo aqui
-                 }
+                     // Validação básica para não travar se a data estiver errada no DB
+                     if (dataValidade && dataValidade.length === 10) {
+                         
+                         // 1. SE JÁ VENCEU -> BLOQUEIA
+                         if (hoje > dataValidade) {
+                             console.warn("Plano vencido:", user.email);
+                             let msg = "Plano Vencido."; // Texto padrão de segurança
+                             
+                             // Tenta pegar a tradução
+                             if(translations[currentLang] && translations[currentLang].alert_plan_expired) {
+                                 msg = translations[currentLang].alert_plan_expired.replace("{date}", dataValidade);
+                             }
+                             
+                             alert(msg);
+                             await signOut(auth);
+                             window.location.reload();
+                             return; // Para tudo aqui
+                         }
 
-                 // 2. SE VAI VENCER EM 5 DIAS -> AVISA
-                 const dataH = new Date(hoje);
-                 const dataV = new Date(dataValidade);
-                 const diffTime = Math.abs(dataV - dataH);
-                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-                 
-                 if (diffDays <= 5) {
-                     // Busca mensagem traduzida e troca {days} e {date}
-                     let msg = translations[currentLang].alert_plan_warning;
-                     msg = msg.replace("{days}", diffDays).replace("{date}", dataValidade);
-                     
-                     alert(msg);
+                         // 2. SE VAI VENCER EM 5 DIAS -> AVISA
+                         const dataH = new Date(hoje);
+                         const dataV = new Date(dataValidade);
+                         const diffTime = dataV - dataH; // Diferença em milissegundos
+                         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+                         
+                         if (diffDays >= 0 && diffDays <= 5) {
+                             let msg = "Aviso de Renovação."; // Padrão
+                             if(translations[currentLang] && translations[currentLang].alert_plan_warning) {
+                                 msg = translations[currentLang].alert_plan_warning
+                                     .replace("{days}", diffDays)
+                                     .replace("{date}", dataValidade);
+                             }
+                             alert(msg);
+                         }
+                     }
                  }
+             } catch (erroValidade) {
+                 console.error("Erro ao calcular validade (Ignorando para liberar acesso):", erroValidade);
+                 // Se der erro na data, a gente NÃO trava o site. Segue para o login.
              }
-             // -------------------------------------------------------
+             // =======================================================
+             // FIM DA BLINDAGEM
+             // =======================================================
 
-             if(loadingText) loadingText.textContent = translations[currentLang].loading_data;
+             if(loadingText && translations[currentLang]) {
+                 loadingText.textContent = translations[currentLang].loading_data;
+             }
              
              usuarioActual = user;
              document.getElementById("user-email").textContent = user.email;
              document.getElementById("login-screen").classList.add("hidden");
              document.getElementById("app").classList.remove("hidden");
              
-             // Atualiza selects do app
              if(selApp) selApp.value = currentLang;
 
+             // Tenta iniciar o app
              iniciarListeners(user.uid);
+
          } else {
-             // Bloqueado (Não está na Whitelist ou ativo=false)
+             // Bloqueado (Não está na Whitelist)
              console.warn("Acesso negado:", user.email);
-             alert(translations[currentLang].alert_restric);
+             let msg = "Acesso Restrito";
+             if(translations[currentLang]) msg = translations[currentLang].alert_restric;
+             
+             alert(msg);
              await signOut(auth);
              window.location.reload();
          }
      } catch (error) {
-         console.error("Erro whitelist:", error);
+         console.error("Erro geral whitelist:", error);
+         let msg = "Erro de conexão.";
          if (error.code === 'permission-denied') {
-            alert(translations[currentLang].alert_permiso);
-         } else {
-            alert("Error de conexión / Erro de conexão.");
-         }
+             if(translations[currentLang]) msg = translations[currentLang].alert_permiso;
+         } 
+         alert(msg);
          await signOut(auth);
          window.location.reload();
      }
@@ -1772,7 +1797,8 @@ onAuthStateChanged(auth, async (user) => {
          window.location.reload();
          return;
      }
-     limparMemoriaGlobal();
+     if (typeof limparMemoriaGlobal === "function") limparMemoriaGlobal();
+     
      unsubs.forEach(u => u());
      unsubs = [];
 
@@ -1784,6 +1810,7 @@ onAuthStateChanged(auth, async (user) => {
      loading(false);
   }
 });
+
 
 // ----------------------------------------------------------------------
 // CARGA DE DATOS
