@@ -712,8 +712,6 @@ tr:last-child td {
     gap: 0.5rem;
   }
 }
-
-
 </style>
 </head>
 <body>
@@ -784,7 +782,6 @@ tr:last-child td {
 <button data-section="categorias" data-i18n="menu_categorias">Categorías</button>
 <button data-section="perfil" data-i18n="menu_perfil">Perfil</button>
 </nav>
-
 <main>
 <div class="main-inner">
 
@@ -990,7 +987,8 @@ tr:last-child td {
               <th data-i18n="lbl_desc">Descripción</th>
               <th data-i18n="lbl_valor">Valor</th>
               <th data-i18n="lbl_fecha">Vencimiento</th>
-              <th data-i18n="lbl_estado">Estado</th> <th>#</th>
+              <th data-i18n="lbl_estado">Estado</th>
+              <th>#</th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -1228,13 +1226,13 @@ Para comenzar, elige por dónde quieres empezar a configurar tu cuenta:
 <div style="display:flex; flex-direction:column; gap:1rem;">
   <div style="background:rgba(255,255,255,0.05); padding:1rem; border-radius:16px; display:flex; justify-content:space-between; align-items:center;">
     <div style="margin-right:1rem;">
-      <strong style="color:var(--accent-cyan);" data-i18n="btn_ir_perfil">1. Configurar Perfil</strong>
+      <strong style="color:var(--accent-cyan);" data-i18n="btn_ir_perfil">1. Configurar Perfil ⚙️</strong>
     </div>
     <button type="button" class="secondary" id="btn-ir-perfil">Go</button>
   </div>
   <div style="background:rgba(255,255,255,0.05); padding:1rem; border-radius:16px; display:flex; justify-content:space-between; align-items:center;">
     <div style="margin-right:1rem;">
-      <strong style="color:var(--secondary-glow);" data-i18n="btn_ir_cat">2. Crear Categorías</strong>
+      <strong style="color:var(--secondary-glow);" data-i18n="btn_ir_cat">2. Crear Categorías 📂</strong>
     </div>
     <button type="button" class="secondary" id="btn-ir-categorias">Go</button>
   </div>
@@ -1262,6 +1260,8 @@ Para comenzar, elige por dónde quieres empezar a configurar tu cuenta:
   </div>
 </div>
 </div>
+
+<script type="module">
 <script type="module">
 // ===============================================================
 // INTEGRACIÓN FIREBASE
@@ -1305,7 +1305,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 // ===============================================================
-// SISTEMA DE IDIOMAS (i18n)
+// SISTEMA DE IDIOMAS (i18n) - DICIONÁRIO COMPLETO
 // ===============================================================
 let savedLang = localStorage.getItem('app_lang');
 let currentLang = (savedLang === 'es' || savedLang === 'pt') ? savedLang : 'es';
@@ -1478,7 +1478,9 @@ const translations = {
 };
 
 function updateLanguage(lang) {
-    if (lang !== 'es' && lang !== 'pt') lang = 'es';
+    if (lang !== 'es' && lang !== 'pt') {
+        lang = 'es';
+    }
     currentLang = lang;
     try {
         localStorage.setItem('app_lang', lang);
@@ -1501,7 +1503,7 @@ function updateLanguage(lang) {
     if (selLogin) selLogin.value = lang;
     if (selApp) selApp.value = lang;
 
-    // TRAVA DE SEGURANÇA: Só tenta atualizar a interface se o usuário estiver logado
+    // Correção para não chamar função de UI antes do login
     if (usuarioActual && typeof inicializarInterfaz === "function") {
         inicializarInterfaz();
     }
@@ -1712,7 +1714,7 @@ function estadoFijoParaMes(fijo, anioMes) {
 }
 
 // ----------------------------------------------------------------------
-// AUTENTICACIÓN (CORRIGIDA - EVITA TRAVAMENTO)
+// AUTENTICACIÓN COM WHITELIST E IDIOMA (CORRIGIDO)
 // ----------------------------------------------------------------------
 onAuthStateChanged(auth, async (user) => {
     updateLanguage(currentLang);
@@ -1769,8 +1771,7 @@ onAuthStateChanged(auth, async (user) => {
 
         document.getElementById("app").classList.add("hidden");
         document.getElementById("login-screen").classList.remove("hidden");
-        
-        // CORREÇÃO: Garante que o modal de boas-vindas esteja escondido ao fazer logout
+        // Correção: Esconder modal de boas-vindas se estiver no login
         document.getElementById("modal-categorias").classList.add("hidden");
 
         if (selLogin) selLogin.value = currentLang;
@@ -1785,6 +1786,7 @@ onAuthStateChanged(auth, async (user) => {
 function iniciarListeners(uid) {
     loading(true);
 
+    // Carregamento paralelo para evitar espera sequencial
     const unsubCat = onSnapshot(query(collection(db, "categorias"), where("uid", "==", uid)), (snapshot) => {
         categoriasLocal = [];
         snapshot.forEach(doc => {
@@ -1794,8 +1796,13 @@ function iniciarListeners(uid) {
             });
         });
         inicializarInterfaz();
-        // O modal só é verificado aqui, depois do login
-        mostrarModalCategoriasSiCorresponde();
+        
+        // CORREÇÃO: Só verificar o modal depois que os dados carregarem E o usuário estiver logado
+        if (categoriasLocal.length === 0 && !yaMostroModalCategorias) {
+            document.getElementById("modal-categorias").classList.remove("hidden");
+        } else {
+            document.getElementById("modal-categorias").classList.add("hidden");
+        }
     });
     unsubs.push(unsubCat);
 
@@ -1855,6 +1862,7 @@ function iniciarListeners(uid) {
 
             if (!monedaUsuario && paisUsuario) monedaUsuario = monedaPorDefectoParaPais(paisUsuario);
         } else {
+            // Padrões se não houver perfil
             metaMensualUsuario = 0;
             ingresoMensualUsuario = 0;
             objetivoNombre = "";
@@ -1909,8 +1917,6 @@ loginForm.addEventListener("submit", async (e) => {
     } catch (error) {
         console.error(error);
         msg.textContent = "Error: " + error.message;
-        // CORREÇÃO: Garante que destrava o botão se der erro
-        loading(false);
     }
 });
 
@@ -2072,17 +2078,20 @@ window.eliminarTransaccion = async (id) => {
 };
 
 // ----------------------------------------------------------------------
-// LÓGICA DE INTERFACE (UI) - CORRIGIDA
+// LÓGICA DE INTERFACE (UI)
+// ----------------------------------------------------------------------
+// ----------------------------------------------------------------------
+// LÓGICA DE INTERFACE (UI)
 // ----------------------------------------------------------------------
 
 function inicializarInterfaz() {
-    // CORREÇÃO CRÍTICA: Se não houver usuário logado,
-    // esta função PARA aqui e não desenha o painel.
+    // TRAVA DE SEGURANÇA: Se não houver usuário, não desenha nada.
+    // Isso corrige o bug da tela "bagunçada" no login.
     if (!usuarioActual) return;
 
     rellenarSelectCategorias();
     rellenarTablaCategorias();
-    rellenarTablaFijos(); // <-- Lógica de vencimento aplicada aqui
+    rellenarTablaFijos(); // <-- Nova lógica de Vencimento aplicada aqui
     rellenarTablaTarjetas();
     rellenarTablaTransacciones();
     rellenarPerfil();
@@ -2095,8 +2104,8 @@ function inicializarInterfaz() {
     actualizarCampoOrigenYTarjeta();
     inicializarReporte();
     
-    // Reaplica idioma para garantir textos dinâmicos
-    updateLanguage(currentLang);
+    // Verifica se deve abrir o modal de boas-vindas (apenas se logado)
+    mostrarModalCategoriasSiCorresponde();
 }
 
 // Sidebar Toggle
@@ -2155,6 +2164,27 @@ document.getElementById("perfil-objetivo-reset").addEventListener("click", async
 
 // --- FUNÇÕES DE PREENCHIMENTO (UI) ---
 
+// NOVA FUNÇÃO: preencher o formulário de Perfil com os dados carregados
+function rellenarPerfil() {
+    const edadInput = document.getElementById("perfil-edad");
+    if (!edadInput) return; // segurança
+
+    document.getElementById("perfil-edad").value = (edadUsuario ?? "") || "";
+    document.getElementById("perfil-sexo").value = sexoUsuario || "";
+    document.getElementById("perfil-pais").value = paisUsuario || "";
+
+    // Campos numéricos: usa valor bruto em string simples
+    document.getElementById("perfil-meta").value =
+        metaMensualUsuario ? metaMensualUsuario.toFixed(2) : "";
+    document.getElementById("perfil-ingreso").value =
+        ingresoMensualUsuario ? ingresoMensualUsuario.toFixed(2) : "";
+
+    document.getElementById("perfil-moneda").value = monedaUsuario || "";
+    document.getElementById("perfil-objetivo-nombre").value = objetivoNombre || "";
+    document.getElementById("perfil-objetivo-valor").value =
+        objetivoValor ? objetivoValor.toFixed(2) : "";
+}
+
 function rellenarSelectCategorias() {
     const sel = document.getElementById("categoria");
     sel.innerHTML = "";
@@ -2201,7 +2231,7 @@ function rellenarTablaFijos() {
     tb.innerHTML = "";
     const mes = obtenerAnioMesActual();
     fijosLocal.forEach(f => {
-        // Chama a função de status definida na Parte 2
+        // Chama a função de status criada na Parte 2
         const estado = estadoFijoParaMes(f, mes);
         
         const tr = document.createElement("tr");
@@ -2364,6 +2394,9 @@ function calcularAhorroTotal() {
 }
 
 function actualizarObjetivo() {
+    if (!objetivoNomebre && !objetivoNombre) {
+        // segurança se variável errada for usada em algum lugar antigo
+    }
     if (!objetivoNombre || !objetivoValor || objetivoValor <= 0) {
         document.getElementById("obj-nombre").textContent = "-";
         document.getElementById("obj-meta").textContent = "-";
@@ -2538,10 +2571,10 @@ function inicializarReporte() {
     const m = new Set(); m.add(obtenerAnioMesActual());
     transaccionesLocal.forEach(t => { if (t.fecha && t.fecha.length >= 7) m.add(t.fecha.slice(0, 7)); });
     Array.from(m).sort().reverse().forEach(x => { const o = document.createElement("option"); o.value = x; o.textContent = nombreMes(x) + " (" + x + ")"; sel.appendChild(o); });
-    sel.onchange = () => cargarDatosReporte(sel.value); if (m.size > 0) cargarDatosReporte(Array.from(m).sort().reverse()[0]);
+    sel.onchange = () => cargarDadosReporte(sel.value); if (m.size > 0) cargarDadosReporte(Array.from(m).sort().reverse()[0]);
 }
 
-function cargarDatosReporte(mes) {
+function cargarDadosReporte(mes) {
     const fl = transaccionesLocal.filter(t => t.fecha && t.fecha.startsWith(mes));
     let e = 0, s = 0, gc = {};
     fl.forEach(t => {
@@ -2563,7 +2596,7 @@ function cargarDatosReporte(mes) {
         tb.appendChild(tr);
     });
 }
-document.getElementById("reporte-mes-actual").addEventListener("click", () => { const c = obtenerAnioMesActual(); document.getElementById("reporte-mes").value = c; cargarDatosReporte(c); });
+document.getElementById("reporte-mes-actual").addEventListener("click", () => { const c = obtenerAnioMesActual(); document.getElementById("reporte-mes").value = c; cargarDadosReporte(c); });
 
 // MODAIS
 const modalCategorias = document.getElementById("modal-categorias");
