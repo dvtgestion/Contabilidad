@@ -1683,19 +1683,21 @@ onAuthStateChanged(auth, async (user) => {
   if (user) {
      loading(true);
      const loadingText = document.getElementById('loading-overlay');
-     // Carrega texto de loading correto se disponível
      if(loadingText && translations[currentLang]) loadingText.textContent = translations[currentLang].loading_check;
      
      try {
          const docRef = doc(db, "clientes_permitidos", user.email); 
          const docSnap = await getDoc(docRef);
 
-         // VERIFICA SE O USUÁRIO EXISTE NO BANCO
          if (docSnap.exists()) {
              const dadosUser = docSnap.data();
 
-             // 1. BLOQUEIO MANUAL (ATIVO/INATIVO)
-             // Se o campo 'ativo' não for true, bloqueia
+             // --- DEBUG: ISSO VAI TE MOSTRAR O QUE O FIREBASE MANDOU ---
+             // (Depois que funcionar, você pode apagar essa linha do alert)
+             alert(`DEBUG (Apagar depois):\nStatus Ativo: ${dadosUser.ativo}\nVencimento Lido: [${dadosUser.data_vencimento}]`);
+             // -----------------------------------------------------------
+
+             // 1. BLOQUEIO MANUAL
              if (dadosUser.ativo !== true) {
                  alert(translations[currentLang].alert_restric);
                  await signOut(auth);
@@ -1703,75 +1705,67 @@ onAuthStateChanged(auth, async (user) => {
                  return;
              }
 
-             // 2. BLOQUEIO POR DATA (CALENDÁRIO) 📅
+             // 2. BLOQUEIO POR DATA 📅
              if (dadosUser.data_vencimento) {
-                 const hoje = new Date();
-                 hoje.setHours(0, 0, 0, 0); // Zera horas para comparar apenas data
+                 const hoy = new Date();
+                 hoy.setHours(0, 0, 0, 0);
 
-                 // Quebra a data "AAAA-MM-DD" (ex: 2025-11-19)
-                 const partes = dadosUser.data_vencimento.split('-');
-                 // Cria data corretamente (mês no JS começa em 0)
-                 const dataVenc = new Date(partes[0], partes[1] - 1, partes[2]);
+                 // LIMPEZA: Converte barras em traços e remove espaços extras
+                 // Ex: "2025/11/20 " vira "2025-11-20"
+                 let dataLimpa = dadosUser.data_vencimento.toString().trim().replace(/\//g, "-");
+                 
+                 const partes = dataLimpa.split('-');
+                 
+                 // Garante que temos 3 partes (Ano, Mês, Dia)
+                 if (partes.length === 3) {
+                     const dataVenc = new Date(partes[0], partes[1] - 1, partes[2]);
 
-                 // A) SE JÁ VENCEU (BLOQUEIA) 🚫
-                 if (hoje > dataVenc) {
-                     const esPt = currentLang === 'pt';
-                     const msgBloqueio = esPt
-                        ? `🚫 ACESSO SUSPENSO\n\nSua assinatura venceu no dia: ${dadosUser.data_vencimento}.\nPor favor, regularize seu pagamento para acessar.`
-                        : `🚫 ACCESO SUSPENDIDO\n\nTu suscripción venció el día: ${dadosUser.data_vencimento}.\nPor favor, regulariza tu pago para acceder.`;
+                     // A) BLOQUEIO 🚫
+                     if (hoy > dataVenc) {
+                         const esPt = currentLang === 'pt';
+                         const msgBloqueio = esPt
+                            ? `🚫 ACESSO SUSPENSO\n\nSua assinatura venceu dia: ${dataLimpa}.\nRegularize para acessar.`
+                            : `🚫 ACCESO SUSPENDIDO\n\nTu suscripción venció el día: ${dataLimpa}.\nRegulariza para acceder.`;
 
-                     alert(msgBloqueio);
-                     await signOut(auth);
-                     window.location.reload();
-                     return; // Para o código aqui
-                 }
+                         alert(msgBloqueio);
+                         await signOut(auth);
+                         window.location.reload();
+                         return;
+                     }
 
-                 // B) SE VAI VENCER (AVISO VISUAL) ⚠️
-                 const diffTempo = dataVenc - hoje;
-                 // Converte milissegundos em dias
-                 const diffDias = Math.ceil(diffTempo / (1000 * 60 * 60 * 24));
+                     // B) AVISO ⚠️
+                     const diffTempo = dataVenc - hoy;
+                     const diffDias = Math.ceil(diffTempo / (1000 * 60 * 60 * 24));
 
-                 // Se faltar 5 dias ou menos (e não for negativo)
-                 if (diffDias <= 5 && diffDias >= 0) {
-                     // Chama a função que cria a barra vermelha (com atraso de 2s para garantir que a tela carregou)
-                     setTimeout(() => mostrarAvisoVencimento(diffDias), 2000);
+                     if (diffDias <= 5 && diffDias >= 0) {
+                         setTimeout(() => mostrarAvisoVencimento(diffDias), 2000);
+                     }
                  }
              }
 
-             // --- SUCESSO: LIBERA O ACESSO --- ✅
+             // LIBERA ACESSO ✅
              if(loadingText && translations[currentLang]) loadingText.textContent = translations[currentLang].loading_data;
-             
              usuarioActual = user;
              document.getElementById("user-email").textContent = user.email;
              document.getElementById("login-screen").classList.add("hidden");
              document.getElementById("app").classList.remove("hidden");
-             
-             // Atualiza selects do app
              const selApp = document.getElementById("lang-select-app");
              if(selApp) selApp.value = currentLang;
-
              iniciarListeners(user.uid);
 
          } else {
-             // Se não achou o documento na whitelist
-             console.warn("Acesso negado (não encontrado):", user.email);
              alert(translations[currentLang].alert_restric);
              await signOut(auth);
              window.location.reload();
          }
      } catch (error) {
          console.error("Erro whitelist:", error);
-         if (error.code === 'permission-denied') {
-            alert(translations[currentLang].alert_permiso);
-         } else {
-            alert("Error de conexión / Erro de conexão.");
-         }
+         alert("Error: " + error.message);
          await signOut(auth);
          window.location.reload();
      }
 
   } else {
-     // --- USUÁRIO NÃO LOGADO ---
      if (usuarioActual) {
          window.location.reload();
          return;
@@ -1782,14 +1776,12 @@ onAuthStateChanged(auth, async (user) => {
 
      document.getElementById("app").classList.add("hidden");
      document.getElementById("login-screen").classList.remove("hidden");
-     
-     // Atualiza select do login
      const selLogin = document.getElementById("lang-select-login");
      if(selLogin) selLogin.value = currentLang;
-     
      loading(false);
   }
 });
+
 
 // ----------------------------------------------------------------------
 // CARGA DE DATOS
