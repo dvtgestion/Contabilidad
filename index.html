@@ -1406,7 +1406,10 @@ const translations = {
         chart_restante: "Restante",
         chart_falta: "Falta",
         loading_check: "Validando acceso...",
-        loading_data: "Cargando datos..."
+        loading_data: "Cargando datos...",
+        // NOVAS LINHAS DE COBRANÇA:
+        alert_plan_expired: "🚫 PLAN VENCIDO\n\nSu acceso expiró el {date}.\nPor favor, realice el pago para renovar su suscripción.",
+        alert_plan_warning: "⚠️ AVISO DE RENOVACIÓN\n\nSu plan vence en {days} días ({date}).\nContacte al soporte para evitar el bloqueo."
     },
     pt: {
         // Login
@@ -1501,7 +1504,10 @@ const translations = {
         chart_restante: "Restante",
         chart_falta: "Falta",
         loading_check: "Verificando acesso...",
-        loading_data: "Carregando dados..."
+        loading_data: "Carregando dados...",
+    	// NOVAS LINHAS DE COBRANÇA:
+        alert_plan_expired: "🚫 PLANO VENCIDO\n\nSeu acesso expirou em {date}.\nPor favor, realize o pagamento para renovar sua assinatura.",
+        alert_plan_warning: "⚠️ AVISO DE RENOVAÇÃO\n\nSeu plano vence em {days} dias ({date}).\nContate o suporte para evitar o bloqueio."
     }
 };
 
@@ -1668,8 +1674,9 @@ function limparMemoriaGlobal() {
 }
 
 // ----------------------------------------------------------------------
-// AUTENTICACIÓN COM WHITELIST E IDIOMA
-// ----------------------------------------------------------------------
+// ===============================================================
+// AUTENTICACIÓN + WHITELIST + VALIDADE (SISTEMA DE COBRANÇA)
+// ===============================================================
 onAuthStateChanged(auth, async (user) => {
   // Inicializa idioma
   updateLanguage(currentLang);
@@ -1689,7 +1696,47 @@ onAuthStateChanged(auth, async (user) => {
          const docRef = doc(db, "clientes_permitidos", user.email); 
          const docSnap = await getDoc(docRef);
 
+         // Verifica se existe e se está ativo
          if (docSnap.exists() && docSnap.data().ativo === true) {
+             const dados = docSnap.data();
+
+             // -------------------------------------------------------
+             // --- VERIFICAÇÃO DE VALIDADE (NOVA PARTE) ---
+             // -------------------------------------------------------
+             if (dados.validade) {
+                 const hoje = new Date().toISOString().split('T')[0]; // Pega data de hoje (AAAA-MM-DD)
+                 const dataValidade = dados.validade;
+
+                 // 1. SE JÁ VENCEU -> BLOQUEIA
+                 if (hoje > dataValidade) {
+                     console.warn("Plano vencido:", user.email);
+                     
+                     // Busca mensagem traduzida e troca o {date}
+                     let msg = translations[currentLang].alert_plan_expired;
+                     msg = msg.replace("{date}", dataValidade);
+                     
+                     alert(msg);
+                     await signOut(auth);
+                     window.location.reload();
+                     return; // Para tudo aqui
+                 }
+
+                 // 2. SE VAI VENCER EM 5 DIAS -> AVISA
+                 const dataH = new Date(hoje);
+                 const dataV = new Date(dataValidade);
+                 const diffTime = Math.abs(dataV - dataH);
+                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+                 
+                 if (diffDays <= 5) {
+                     // Busca mensagem traduzida e troca {days} e {date}
+                     let msg = translations[currentLang].alert_plan_warning;
+                     msg = msg.replace("{days}", diffDays).replace("{date}", dataValidade);
+                     
+                     alert(msg);
+                 }
+             }
+             // -------------------------------------------------------
+
              if(loadingText) loadingText.textContent = translations[currentLang].loading_data;
              
              usuarioActual = user;
@@ -1702,8 +1749,8 @@ onAuthStateChanged(auth, async (user) => {
 
              iniciarListeners(user.uid);
          } else {
+             // Bloqueado (Não está na Whitelist ou ativo=false)
              console.warn("Acesso negado:", user.email);
-             // USA A MENSAGEM TRADUZIDA
              alert(translations[currentLang].alert_restric);
              await signOut(auth);
              window.location.reload();
@@ -1720,6 +1767,7 @@ onAuthStateChanged(auth, async (user) => {
      }
 
   } else {
+     // LOGOUT
      if (usuarioActual) {
          window.location.reload();
          return;
@@ -1731,7 +1779,6 @@ onAuthStateChanged(auth, async (user) => {
      document.getElementById("app").classList.add("hidden");
      document.getElementById("login-screen").classList.remove("hidden");
      
-     // Atualiza select do login
      if(selLogin) selLogin.value = currentLang;
      
      loading(false);
