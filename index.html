@@ -2271,6 +2271,121 @@ formTransaccion.addEventListener("submit", async (e) => {
     await deleteDoc(doc(db, "transacciones", id));
     actualizarObjetivo();
 };
+
+// 👇 COLE ISSO LOGO APÓS window.eliminarTransaccion 👇
+window.editarTransaccion = (id) => {
+    const t = transaccionesLocal.find(x => x.id === id);
+    if (!t) return;
+
+    const esPt = currentLang === 'pt';
+
+    // 1. Cria o Modal
+    const modal = document.createElement("div");
+    modal.className = "modal";
+    modal.style.display = "flex";
+
+    const card = document.createElement("div");
+    card.className = "card";
+    card.style.maxWidth = "400px";
+    card.style.width = "90%";
+    card.style.textAlign = "left";
+    card.style.border = "1px solid var(--accent-cyan)"; // Cor Cyan para diferenciar
+
+    // Título
+    const h3 = document.createElement("h3");
+    h3.textContent = esPt ? "✏️ Editar Transação" : "✏️ Editar Transacción";
+    h3.style.textAlign = "center";
+    h3.style.marginBottom = "1.5rem";
+    card.appendChild(h3);
+
+    // Formulário de Edição
+    const form = document.createElement("div");
+    form.style.display = "flex";
+    form.style.flexDirection = "column";
+    form.style.gap = "1rem";
+
+    // Campo: Valor
+    const lblValor = document.createElement("label");
+    lblValor.textContent = esPt ? "Valor:" : "Valor:";
+    const inputValor = document.createElement("input");
+    inputValor.type = "text";
+    inputValor.value = t.valor;
+    
+    // Campo: Data
+    const lblData = document.createElement("label");
+    lblData.textContent = esPt ? "Data:" : "Fecha:";
+    const inputData = document.createElement("input");
+    inputData.type = "date";
+    inputData.value = t.fecha;
+
+    // Campo: Descrição
+    const lblDesc = document.createElement("label");
+    lblDesc.textContent = esPt ? "Descrição:" : "Descripción:";
+    const inputDesc = document.createElement("input");
+    inputDesc.type = "text";
+    inputDesc.value = t.descripcion || "";
+
+    // Adiciona campos ao form
+    form.appendChild(lblValor);
+    form.appendChild(inputValor);
+    form.appendChild(lblData);
+    form.appendChild(inputData);
+    form.appendChild(lblDesc);
+    form.appendChild(inputDesc);
+    card.appendChild(form);
+
+    // Botões de Ação
+    const divBotoes = document.createElement("div");
+    divBotoes.style.display = "flex";
+    divBotoes.style.gap = "1rem";
+    divBotoes.style.marginTop = "1.5rem";
+
+    const btnSalvar = document.createElement("button");
+    btnSalvar.className = "primary";
+    btnSalvar.style.flex = "1";
+    btnSalvar.textContent = esPt ? "Salvar" : "Guardar";
+    btnSalvar.onclick = async () => {
+        const novoValor = parseNumeroLocal(inputValor.value);
+        const novaData = inputData.value;
+        const novaDesc = inputDesc.value.trim();
+
+        if (!novoValor || !novaData) {
+            alert(esPt ? "Preencha valor e data." : "Complete valor y fecha.");
+            return;
+        }
+
+        loading(true);
+        try {
+            // Atualiza no Firebase (Firestore)
+            await setDoc(doc(db, "transacciones", id), {
+                valor: novoValor,
+                fecha: novaData,
+                descripcion: novaDesc
+            }, { merge: true }); // Merge garante que só muda o que enviamos
+            
+            modal.remove();
+            actualizarObjetivo();
+        } catch (e) {
+            console.error(e);
+            alert("Error: " + e.message);
+        }
+        loading(false);
+    };
+
+    const btnCancelar = document.createElement("button");
+    btnCancelar.className = "secondary";
+    btnCancelar.style.flex = "1";
+    btnCancelar.textContent = esPt ? "Cancelar" : "Cancelar";
+    btnCancelar.onclick = () => modal.remove();
+
+    divBotoes.appendChild(btnCancelar);
+    divBotoes.appendChild(btnSalvar);
+    card.appendChild(divBotoes);
+
+    modal.appendChild(card);
+    document.body.appendChild(modal);
+};
+
 // ----------------------------------------------------------------------
 // LÓGICA DE INTERFACE
 // ----------------------------------------------------------------------
@@ -2739,7 +2854,7 @@ function rellenarTablaTarjetas() {
     rellenarSelectTarjetas();
 }
 
-// 👇 SUBSTITUA A FUNÇÃO 'rellenarTablaTransacciones' POR ESTA 👇
+// 👇 SUBSTITUA A FUNÇÃO 'rellenarTablaTransacciones' POR ESTA VERSÃO FINAL COMPLETA 👇
 function rellenarTablaTransacciones() {
     const tb = document.querySelector("#tabla-transacciones tbody");
     tb.innerHTML = "";
@@ -2757,6 +2872,7 @@ function rellenarTablaTransacciones() {
     l.forEach(t => {
         const tr = document.createElement("tr");
         
+        // 1. Define Categoria (Mantém lógica de Gasto Fixo)
         let catNombre = "-";
         if (t.categoriaId === null && t.gastoFijoId) {
             const f = fijosLocal.find(x => x.id === t.gastoFijoId);
@@ -2766,20 +2882,20 @@ function rellenarTablaTransacciones() {
             catNombre = c ? c.nome : "-";
         }
 
-        // --- LÓGICA DE ORIGEM ATUALIZADA ---
+        // 2. Define Origem (Mantém Bancos e Transferência)
         let origenTexto = "-";
         if (t.tipo === "salida") {
             if (t.origen === "tarjeta" && t.tarjetaId) {
-                // Cartão
+                // Mantém a visualização do Nome do Banco
                 const tar = tarjetasLocal.find(x => x.id === t.tarjetaId);
                 origenTexto = "💳 " + (tar ? `${tar.banco}` : "Tarjeta"); 
                 
             } else if (t.origen === "transferencia") {
-                // NOVA OPÇÃO: TRANSFERÊNCIA 🏦
+                // Mantém a opção Transferência Traduzida
                 origenTexto = "🏦 " + translations[currentLang].opt_transf;
                 
             } else {
-                // Dinheiro 💵
+                // Dinheiro Traduzido
                 origenTexto = "💵 " + translations[currentLang].opt_efectivo;
             }
         }
@@ -2791,16 +2907,15 @@ function rellenarTablaTransacciones() {
             <td>${origenTexto}</td>
             <td>${t.descripcion || ""}</td>
             <td>${formatearMoneda(t.valor)}</td>
-            <td></td>`;
+            <td>
+                <button class="btn-icon" onclick="window.editarTransaccion('${t.id}')" style="margin-right:5px;" title="Editar">✏️</button>
+                <button class="btn-icon btn-icon-danger" onclick="window.eliminarTransaccion('${t.id}')" title="Eliminar">X</button>
+            </td>`;
             
-        const btn = document.createElement("button");
-        btn.className = "btn-icon btn-icon-danger";
-        btn.textContent = "X";
-        btn.onclick = () => window.eliminarTransaccion(t.id);
-        tr.lastElementChild.appendChild(btn);
         tb.appendChild(tr);
     });
 }
+
 
 
 function actualizarResumen() {
