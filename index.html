@@ -2076,12 +2076,22 @@ window.pagarGastoFijo = (id) => {
     };
     lista.appendChild(btnTransf);
 
-    // --- OPÇÃO 3: TARJETAS ---
+        // ... (código anterior da função continua igual)
+
+    // 👇 SUBSTITUA APENAS ESTA PARTE DAS TARJETAS 👇
     if (tarjetasLocal.length > 0) {
         tarjetasLocal.forEach(t => {
             const btnCard = document.createElement("button");
-            btnCard.className = "secondary";
-            btnCard.innerHTML = `💳 ${t.alias || 'Card'} - ${t.banco || ''}`;
+            
+            // MUDANÇA 1: Usamos 'primary' para ficar grande igual aos outros
+            btnCard.className = "primary";
+            
+            // MUDANÇA 2: Cor Laranja/Rosa para destacar
+            btnCard.style.background = "linear-gradient(135deg, #f59e0b, #ec4899)";
+            
+            // MUDANÇA 3: Formatação mais bonita (Alias + Banco menorzinho)
+            btnCard.innerHTML = `💳 ${t.alias || 'Card'} <span style="font-size:0.9em; opacity:0.9">(${t.banco || '-'})</span>`;
+            
             btnCard.onclick = () => {
                 confirmarPago(gasto, "tarjeta", t.id);
                 modal.remove();
@@ -2094,6 +2104,10 @@ window.pagarGastoFijo = (id) => {
         aviso.textContent = esPt ? "(Sem cartões registrados)" : "(Sin tarjetas registradas)";
         lista.appendChild(aviso);
     }
+    // 👆 FIM DA SUBSTITUIÇÃO 👆
+
+    // ... (o resto do código: Botão Cancelar, etc, continua igual)
+
 
     // Botão Cancelar
     const btnCancel = document.createElement("button");
