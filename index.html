@@ -2216,15 +2216,51 @@ formTarjeta.addEventListener("submit", async (e) => {
 });
 window.eliminarTarjeta = async (id) => await deleteDoc(doc(db, "tarjetas", id));
 
-// 👇 LÓGICA VISUAL (MOSTRAR/ESCONDER PARCELAMENTO) 👇
+// 👇 LÓGICA VISUAL INTELIGENTE (TRADUZIDA PT/ES) 👇
 const selOrigem = document.getElementById("origen");
 const divParcelas = document.getElementById("campo-parcelas");
 const chkParcelado = document.getElementById("chk-parcelado");
 const divQtdParcelas = document.getElementById("div-qtd-parcelas");
 const selTipo = document.getElementById("tipo");
+const inputValor = document.getElementById("valor");
+const inputQtd = document.getElementById("qtd-parcelas");
 
-// Função inteligente: Só mostra parcelas se for SAÍDA
+// Função para calcular e mostrar quanto vai ficar cada parcela
+function calcularPreviaParcela() {
+    const avisoAntigo = document.getElementById("info-previa-parcela");
+    if (avisoAntigo) avisoAntigo.remove();
+
+    if (chkParcelado.checked && inputValor.value) {
+        const total = parseNumeroLocal(inputValor.value);
+        const qtd = parseInt(inputQtd.value) || 1;
+        
+        if (total > 0 && qtd > 1) {
+            const valorParcela = total / qtd;
+            const esPt = currentLang === 'pt';
+            
+            const textoAviso = esPt 
+                ? `ℹ️ Será registrado: <strong>${qtd}x</strong> de <strong>${formatearMoneda(valorParcela)}</strong>`
+                : `ℹ️ Se registrará: <strong>${qtd}x</strong> de <strong>${formatearMoneda(valorParcela)}</strong>`;
+            
+            const aviso = document.createElement("div");
+            aviso.id = "info-previa-parcela";
+            aviso.style.color = "var(--accent-cyan)";
+            aviso.style.fontSize = "0.85rem";
+            aviso.style.marginTop = "5px";
+            aviso.style.fontStyle = "italic";
+            aviso.innerHTML = textoAviso;
+            
+            inputValor.parentNode.appendChild(aviso);
+        }
+    }
+}
+
+// Função que controla a visibilidade e os textos
 function atualizarParcelamento() {
+    const lblValor = document.querySelector('label[for="valor"]');
+    const esPt = currentLang === 'pt';
+    
+    // 1. Mostra/Esconde o bloco de parcelas
     if (selTipo.value === "salida") {
         divParcelas.classList.remove("hidden");
     } else {
@@ -2232,19 +2268,37 @@ function atualizarParcelamento() {
         chkParcelado.checked = false; 
         divQtdParcelas.classList.add("hidden");
     }
-}
 
-// Ouve mudanças para mostrar/esconder
-selTipo.addEventListener("change", atualizarParcelamento);
-// Ouve o checkbox para mostrar a quantidade
-chkParcelado.addEventListener("change", () => {
+    // 2. Altera o texto do Label para evitar confusão (TRADUZIDO)
     if (chkParcelado.checked) {
         divQtdParcelas.classList.remove("hidden");
+        
+        // Texto de Alerta Rosa
+        lblValor.textContent = esPt 
+            ? "Valor TOTAL da Compra (Soma tudo):" 
+            : "Valor TOTAL de la Compra (Suma todo):";
+            
+        lblValor.style.color = "var(--secondary-glow)"; 
+        inputValor.placeholder = "1000,00";
+        calcularPreviaParcela();
     } else {
         divQtdParcelas.classList.add("hidden");
+        // Volta ao normal
+        lblValor.textContent = esPt ? "Valor" : "Valor"; // Ou pega do data-i18n se preferir
+        lblValor.style.color = "#cbd5e1";
+        inputValor.placeholder = esPt ? "Ex: 1.300,50" : "Ej: 1.300,50";
+        const aviso = document.getElementById("info-previa-parcela");
+        if (aviso) aviso.remove();
     }
-});
+}
+
+// Listeners
+selTipo.addEventListener("change", atualizarParcelamento);
+chkParcelado.addEventListener("change", atualizarParcelamento);
+inputValor.addEventListener("input", calcularPreviaParcela);
+inputQtd.addEventListener("input", calcularPreviaParcela);
 // 👆 FIM DA LÓGICA VISUAL 👆
+
 
 
 // 👇 SUBSTITUA O BLOCO formTransaccion INTEIRO POR ESTE 👇
