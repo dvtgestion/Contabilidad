@@ -2015,38 +2015,112 @@ formFijo.addEventListener("submit", async (e) => {
 // 👇👇👇 COLE ESTA LINHA QUE ESTAVA FALTANDO 👇👇👇
 window.eliminarFijo = async (id) => await deleteDoc(doc(db, "gastos_fijos", id));
 
-// 👇 COLE ISSO LOGO ABAIXO DE window.eliminarFijo 👇
-window.pagarGastoFijo = async (id) => {
+// 👇 SUBSTITUA A FUNÇÃO 'pagarGastoFijo' INTEIRA POR ESTA VERSÃO COM MENU DE ESCOLHA 👇
+window.pagarGastoFijo = (id) => {
     const gasto = fijosLocal.find(f => f.id === id);
     if (!gasto) return;
 
     const esPt = currentLang === 'pt';
-    const msg = esPt 
-        ? `Confirmar pagamento de: ${gasto.descripcion}?` 
-        : `¿Confirmar pago de: ${gasto.descripcion}?`;
 
-    if (!confirm(msg)) return;
+    // 1. Cria o Modal (Janela) dinamicamente usando o estilo do seu site
+    const modal = document.createElement("div");
+    modal.className = "modal"; 
+    modal.style.display = "flex"; // Força aparecer
+    
+    const card = document.createElement("div");
+    card.className = "card";
+    card.style.maxWidth = "400px";
+    card.style.width = "90%";
+    card.style.textAlign = "center";
+    card.style.border = "1px solid var(--primary-glow)"; // Destaque roxo
 
-    loading(true);
-    try {
-        await addDoc(collection(db, "transacciones"), {
-            uid: usuarioActual.uid,
-            tipo: "salida",
-            gastoFijoId: id,
-            categoriaId: null,
-            tarjetaId: null,
-            origen: "efectivo",
-            valor: Number(gasto.valor),
-            fecha: new Date().toISOString().slice(0, 10),
-            descripcion: "Pago: " + gasto.descripcion,
-            createdAt: serverTimestamp()
+    // Título e Subtítulo
+    const h3 = document.createElement("h3");
+    h3.textContent = esPt ? `Pagar: ${gasto.descripcion}` : `Pagar: ${gasto.descripcion}`;
+    h3.style.marginBottom = "0.5rem";
+    
+    const p = document.createElement("p");
+    p.className = "card-subtitle";
+    p.textContent = esPt ? "Escolha o método de pagamento:" : "Elige el método de pago:";
+    p.style.marginBottom = "1.5rem";
+
+    // Container dos botões
+    const lista = document.createElement("div");
+    lista.style.display = "flex";
+    lista.style.flexDirection = "column";
+    lista.style.gap = "10px";
+
+    // --- OPÇÃO 1: EFECTIVO ---
+    const btnEfec = document.createElement("button");
+    btnEfec.className = "primary";
+    btnEfec.innerHTML = esPt ? "💵 Dinheiro (Efectivo)" : "💵 Efectivo";
+    btnEfec.onclick = () => {
+        confirmarPago(gasto, "efectivo", null);
+        modal.remove();
+    };
+    lista.appendChild(btnEfec);
+
+    // --- OPÇÃO 2: TARJETAS (Gera um botão para cada cartão) ---
+    if (tarjetasLocal.length > 0) {
+        tarjetasLocal.forEach(t => {
+            const btnCard = document.createElement("button");
+            btnCard.className = "secondary";
+            // Mostra Alias - Banco
+            btnCard.innerHTML = `💳 ${t.alias || 'Card'} - ${t.banco || ''}`;
+            btnCard.onclick = () => {
+                confirmarPago(gasto, "tarjeta", t.id);
+                modal.remove();
+            };
+            lista.appendChild(btnCard);
         });
-    } catch (e) {
-        console.error(e);
-        alert("Error: " + e.message);
+    } else {
+        // Se não tiver cartão, avisa
+        const aviso = document.createElement("small");
+        aviso.style.color = "#64748b";
+        aviso.textContent = esPt ? "(Sem cartões registrados)" : "(Sin tarjetas registradas)";
+        lista.appendChild(aviso);
     }
-    loading(false);
+
+    // --- BOTÃO CANCELAR ---
+    const btnCancel = document.createElement("button");
+    btnCancel.className = "danger-action";
+    btnCancel.style.marginTop = "1rem";
+    btnCancel.style.padding = "0.8rem";
+    btnCancel.textContent = esPt ? "Cancelar" : "Cancelar";
+    btnCancel.onclick = () => modal.remove();
+
+    // Montagem na tela
+    card.appendChild(h3);
+    card.appendChild(p);
+    card.appendChild(lista);
+    card.appendChild(btnCancel);
+    modal.appendChild(card);
+    document.body.appendChild(modal);
+
+    // --- FUNÇÃO INTERNA QUE SALVA NO FIREBASE ---
+    async function confirmarPago(gasto, origen, tarjetaId) {
+        loading(true);
+        try {
+            await addDoc(collection(db, "transacciones"), {
+                uid: usuarioActual.uid,
+                tipo: "salida",
+                gastoFijoId: gasto.id,
+                categoriaId: null, // Fixo não precisa de categoria
+                tarjetaId: tarjetaId,
+                origen: origen, // Agora salva se foi 'efectivo' ou 'tarjeta'
+                valor: Number(gasto.valor),
+                fecha: new Date().toISOString().slice(0, 10),
+                descripcion: "Pago: " + gasto.descripcion,
+                createdAt: serverTimestamp()
+            });
+        } catch (e) {
+            console.error(e);
+            alert("Error: " + e.message);
+        }
+        loading(false);
+    }
 };
+
 
 // 👇 COLE ISSO LOGO ABAIXO DE window.pagarGastoFijo 👇
 window.deshacerPagoGastoFijo = async (id) => {
