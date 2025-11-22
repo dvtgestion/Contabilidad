@@ -2723,7 +2723,7 @@ function rellenarTablaTransacciones() {
         if (t.tipo === "salida") {
             if (t.origen === "tarjeta" && t.tarjetaId) {
                 const tar = tarjetasLocal.find(x => x.id === t.tarjetaId);
-                origenTexto = "💳 " + (tar ? `${tar.alias}` : "");
+                origenTexto = "💳 " + (tar ? `${tar.banco}` : "");
             } else {
                 // TRADUÇÃO APLICADA AQUI:
                 origenTexto = "💵 " + translations[currentLang].opt_efectivo;
