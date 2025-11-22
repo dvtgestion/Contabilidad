@@ -2181,7 +2181,7 @@ formTarjeta.addEventListener("submit", async (e) => {
 });
 window.eliminarTarjeta = async (id) => await deleteDoc(doc(db, "tarjetas", id));
 
-// Transações
+// 👇 SUBSTITUA O BLOCO DO 'formTransaccion' POR ESTE 👇
 const formTransaccion = document.getElementById("form-transaccion");
 formTransaccion.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -2192,20 +2192,33 @@ formTransaccion.addEventListener("submit", async (e) => {
     const fecha = document.getElementById("data").value;
     const desc = document.getElementById("descripcion").value.trim();
 
+    // Validação de Gasto Fixo
     let gfId = null;
     if (tipo === "salida" && catVal === "__gasto_fijo__") {
         gfId = document.getElementById("gasto-fijo-select").value;
         if (!gfId) { alert("Seleccione gasto fijo"); return; }
     }
+
+    // Validação da Origem (Dinheiro, Cartão ou Transferência)
     let tId = null, origFinal = null;
+    
     if (tipo === "salida") {
         if (orig === "tarjeta") {
             tId = document.getElementById("tarjeta-select").value;
             if (!tId) { alert("Seleccione tarjeta"); return; }
             origFinal = "tarjeta";
-        } else origFinal = "efectivo";
+            
+        } else if (orig === "transferencia") {
+            // NOVA LÓGICA AQUI: Se for transferência, salva como tal
+            origFinal = "transferencia";
+            
+        } else {
+            // Se não for cartão nem transferência, é dinheiro
+            origFinal = "efectivo";
+        }
     }
 
+    // Se não for gasto fixo, usa o ID da categoria normal
     const catIdDB = (catVal === "__gasto_fijo__") ? null : catVal;
 
     loading(true);
@@ -2216,23 +2229,25 @@ formTransaccion.addEventListener("submit", async (e) => {
             categoriaId: catIdDB,
             gastoFijoId: gfId,
             tarjetaId: tId,
-            origen: origFinal,
+            origen: origFinal, // Agora salva "transferencia" corretamente
             valor: val,
             fecha: fecha,
             descripcion: desc,
             createdAt: serverTimestamp()
         });
+        
+        // Limpa os campos
         document.getElementById("valor").value = "";
         document.getElementById("descripcion").value = "";
+        
         actualizarObjetivo();
     } catch (e) { console.error(e); alert("Error"); }
     loading(false);
 });
-window.eliminarTransaccion = async (id) => {
+	window.eliminarTransaccion = async (id) => {
     await deleteDoc(doc(db, "transacciones", id));
     actualizarObjetivo();
 };
-
 // ----------------------------------------------------------------------
 // LÓGICA DE INTERFACE
 // ----------------------------------------------------------------------
