@@ -2018,26 +2018,26 @@ formFijo.addEventListener("submit", async (e) => {
 // 👇👇👇 COLE ESTA LINHA QUE ESTAVA FALTANDO 👇👇👇
 window.eliminarFijo = async (id) => await deleteDoc(doc(db, "gastos_fijos", id));
 
-// 👇 SUBSTITUA A FUNÇÃO 'pagarGastoFijo' INTEIRA POR ESTA VERSÃO COM MENU DE ESCOLHA 👇
+// 👇 SUBSTITUA A FUNÇÃO 'pagarGastoFijo' INTEIRA POR ESTA 👇
 window.pagarGastoFijo = (id) => {
     const gasto = fijosLocal.find(f => f.id === id);
     if (!gasto) return;
 
     const esPt = currentLang === 'pt';
 
-    // 1. Cria o Modal (Janela) dinamicamente usando o estilo do seu site
+    // 1. Cria o Modal
     const modal = document.createElement("div");
     modal.className = "modal"; 
-    modal.style.display = "flex"; // Força aparecer
+    modal.style.display = "flex";
     
     const card = document.createElement("div");
     card.className = "card";
     card.style.maxWidth = "400px";
     card.style.width = "90%";
     card.style.textAlign = "center";
-    card.style.border = "1px solid var(--primary-glow)"; // Destaque roxo
+    card.style.border = "1px solid var(--primary-glow)";
 
-    // Título e Subtítulo
+    // Título
     const h3 = document.createElement("h3");
     h3.textContent = esPt ? `Pagar: ${gasto.descripcion}` : `Pagar: ${gasto.descripcion}`;
     h3.style.marginBottom = "0.5rem";
@@ -2063,12 +2063,24 @@ window.pagarGastoFijo = (id) => {
     };
     lista.appendChild(btnEfec);
 
-    // --- OPÇÃO 2: TARJETAS (Gera um botão para cada cartão) ---
+    // --- OPÇÃO 2: TRANSFERÊNCIA (NOVO 🏦) ---
+    const btnTransf = document.createElement("button");
+    // Usei um estilo levemente diferente (Cyan) para diferenciar do Dinheiro
+    btnTransf.className = "primary"; 
+    btnTransf.style.background = "linear-gradient(135deg, #06b6d4, #3b82f6)"; 
+    btnTransf.innerHTML = esPt ? "🏦 Transferência" : "🏦 Transferencia";
+    btnTransf.onclick = () => {
+        // Salva como 'transferencia'
+        confirmarPago(gasto, "transferencia", null);
+        modal.remove();
+    };
+    lista.appendChild(btnTransf);
+
+    // --- OPÇÃO 3: TARJETAS ---
     if (tarjetasLocal.length > 0) {
         tarjetasLocal.forEach(t => {
             const btnCard = document.createElement("button");
             btnCard.className = "secondary";
-            // Mostra Alias - Banco
             btnCard.innerHTML = `💳 ${t.alias || 'Card'} - ${t.banco || ''}`;
             btnCard.onclick = () => {
                 confirmarPago(gasto, "tarjeta", t.id);
@@ -2077,14 +2089,13 @@ window.pagarGastoFijo = (id) => {
             lista.appendChild(btnCard);
         });
     } else {
-        // Se não tiver cartão, avisa
         const aviso = document.createElement("small");
         aviso.style.color = "#64748b";
         aviso.textContent = esPt ? "(Sem cartões registrados)" : "(Sin tarjetas registradas)";
         lista.appendChild(aviso);
     }
 
-    // --- BOTÃO CANCELAR ---
+    // Botão Cancelar
     const btnCancel = document.createElement("button");
     btnCancel.className = "danger-action";
     btnCancel.style.marginTop = "1rem";
@@ -2092,7 +2103,6 @@ window.pagarGastoFijo = (id) => {
     btnCancel.textContent = esPt ? "Cancelar" : "Cancelar";
     btnCancel.onclick = () => modal.remove();
 
-    // Montagem na tela
     card.appendChild(h3);
     card.appendChild(p);
     card.appendChild(lista);
@@ -2100,7 +2110,7 @@ window.pagarGastoFijo = (id) => {
     modal.appendChild(card);
     document.body.appendChild(modal);
 
-    // --- FUNÇÃO INTERNA QUE SALVA NO FIREBASE ---
+    // Função Interna de Salvar
     async function confirmarPago(gasto, origen, tarjetaId) {
         loading(true);
         try {
@@ -2108,9 +2118,9 @@ window.pagarGastoFijo = (id) => {
                 uid: usuarioActual.uid,
                 tipo: "salida",
                 gastoFijoId: gasto.id,
-                categoriaId: null, // Fixo não precisa de categoria
+                categoriaId: null,
                 tarjetaId: tarjetaId,
-                origen: origen, // Agora salva se foi 'efectivo' ou 'tarjeta'
+                origen: origen, // Aqui ele vai salvar 'transferencia' se você escolheu o botão novo
                 valor: Number(gasto.valor),
                 fecha: new Date().toISOString().slice(0, 10),
                 descripcion: "Pago: " + gasto.descripcion,
@@ -2123,7 +2133,6 @@ window.pagarGastoFijo = (id) => {
         loading(false);
     }
 };
-
 
 // 👇 COLE ISSO LOGO ABAIXO DE window.pagarGastoFijo 👇
 window.deshacerPagoGastoFijo = async (id) => {
