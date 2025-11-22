@@ -913,7 +913,7 @@ tr:last-child td {
 </label>
       </div>
       <div id="div-qtd-parcelas" class="hidden" style="margin-top: 10px;">
-          <label>Cantidad de cuotas (Meses):</label>
+          <label data-i18n="lbl_qtd_parcelas">Cantidad de cuotas (Meses):</label>
           <input type="number" id="qtd-parcelas" min="2" max="36" value="2" placeholder="Ex: 12">
       </div>
   </div>
@@ -1386,6 +1386,7 @@ const translations = {
         opt_tarjeta: "Tarjeta",
         opt_transf: "Transferencia",
         lbl_is_parcelado: "¿Compra en cuotas?",
+        lbl_qtd_parcelas: "Cantidad de cuotas (Meses):",
 
         // Alertas
         alert_restric: "🚫 ACCESO RESTRINGIDO\n\nEste correo no tiene permisos activos.\nTu cuenta ha sido creada, pero necesitas que el administrador habilite tu acceso.",
@@ -1483,6 +1484,7 @@ const translations = {
         opt_tarjeta: "Cartão",
         opt_transf: "Transferência",
         lbl_is_parcelado: "Compra parcelada?",
+        lbl_qtd_parcelas: "Quantidade de parcelas (Meses):",
 
         // Alertas
         alert_restric: "🚫 ACESSO RESTRITO\n\nEste e-mail não tem permissões ativas.\nSua conta foi criada, mas você precisa que o administrador habilite seu acesso.",
@@ -1584,8 +1586,12 @@ function updateLanguage(lang) {
     if (typeof actualizarObjetivo === "function") {
         try { actualizarObjetivo(); } catch(e) { console.error("Erro ao atualizar objetivo", e); }
     }
-}
 
+ // 👇👇👇 COLE O CÓDIGO NOVO AQUI (DENTRO DA FUNÇÃO) 👇👇👇
+    if (typeof actualizarParcelamento === "function") {
+        atualizarParcelamento();
+    }
+}
 // --- UTILITÁRIOS VISUAIS ---
 function loading(show) {
     const el = document.getElementById('loading-overlay');
