@@ -2015,6 +2015,40 @@ formFijo.addEventListener("submit", async (e) => {
 // 👇👇👇 COLE ESTA LINHA QUE ESTAVA FALTANDO 👇👇👇
 window.eliminarFijo = async (id) => await deleteDoc(doc(db, "gastos_fijos", id));
 
+// 👇 COLE ISSO LOGO ABAIXO DE window.eliminarFijo 👇
+window.pagarGastoFijo = async (id) => {
+    const gasto = fijosLocal.find(f => f.id === id);
+    if (!gasto) return;
+
+    const esPt = currentLang === 'pt';
+    const msg = esPt 
+        ? `Confirmar pagamento de: ${gasto.descripcion}?` 
+        : `¿Confirmar pago de: ${gasto.descripcion}?`;
+
+    if (!confirm(msg)) return;
+
+    loading(true);
+    try {
+        await addDoc(collection(db, "transacciones"), {
+            uid: usuarioActual.uid,
+            tipo: "salida",
+            gastoFijoId: id,
+            categoriaId: null,
+            tarjetaId: null,
+            origen: "efectivo",
+            valor: Number(gasto.valor),
+            fecha: new Date().toISOString().slice(0, 10),
+            descripcion: "Pago: " + gasto.descripcion,
+            createdAt: serverTimestamp()
+        });
+    } catch (e) {
+        console.error(e);
+        alert("Error: " + e.message);
+    }
+    loading(false);
+};
+
+
 // Tarjetas
 const formTarjeta = document.getElementById("form-tarjeta");
 formTarjeta.addEventListener("submit", async (e) => {
@@ -2471,25 +2505,45 @@ function rellenarSelectGastosFijos() {
     });
 }
 
+// 👇 SUBSTITUA A FUNÇÃO ANTIGA POR ESTA 👇
 function rellenarTablaFijos() {
     const tb = document.querySelector("#tabla-fijos tbody");
     tb.innerHTML = "";
     const mes = obtenerAnioMesActual();
+    
     fijosLocal.forEach(f => {
         const estado = estadoFijoParaMes(f, mes);
         const tr = document.createElement("tr");
         if (estado.claseFila) tr.classList.add(estado.claseFila);
-        tr.innerHTML = `<td>${f.descripcion}</td><td>${formatearMoneda(f.valor)}</td><td>Día ${f.vencimiento}</td>
-                   <td><span class="badge-estado ${estado.badgeClase}">${estado.texto}</span></td><td></td>`;
-        const btn = document.createElement("button");
-        btn.className = "btn-icon btn-icon-danger";
-        btn.textContent = "X";
-        btn.onclick = () => window.eliminarFijo(f.id);
-        tr.lastElementChild.appendChild(btn);
+        
+        // Botão Pagar aparece se não estiver verde
+        let btnPagar = "";
+        if (estado.badgeClase !== "badge-verde") {
+            btnPagar = `
+            <button onclick="window.pagarGastoFijo('${f.id}')" class="btn-icon" style="
+                border-color: rgba(74, 222, 128, 0.4); 
+                color: #4ade80; 
+                margin-right: 5px;
+            " title="Pagar">
+                ✔
+            </button>`;
+        }
+
+        tr.innerHTML = `
+            <td>${f.descripcion}</td>
+            <td>${formatearMoneda(f.valor)}</td>
+            <td>Día ${f.vencimiento}</td>
+            <td><span class="badge-estado ${estado.badgeClase}">${estado.texto}</span></td>
+            <td>
+                ${btnPagar}
+                <button class="btn-icon btn-icon-danger" onclick="window.eliminarFijo('${f.id}')" title="Eliminar">X</button>
+            </td>`;
+            
         tb.appendChild(tr);
     });
     rellenarSelectGastosFijos();
 }
+
 
 function rellenarSelectTarjetas() {
     const s = document.getElementById("tarjeta-select");
