@@ -879,51 +879,63 @@ tr:last-child td {
     <div class="card">
       <h3 data-i18n="trans_new_title">Nueva transacción</h3>
       <form id="form-transaccion">
-        <div>
-          <label for="tipo" data-i18n="lbl_tipo">Tipo</label>
-          <select id="tipo" required>
-            <option value="entrada" data-i18n="opt_entrada">Entrada</option>
-            <option value="salida" data-i18n="opt_salida">Salida</option>
-          </select>
-        </div>
-        <div>
-          <label for="categoria" data-i18n="lbl_cat">Categoría</label>
-          <select id="categoria" required></select>
-        </div>
-        <div id="campo-origen" class="hidden">
-  <label for="origen" data-i18n="lbl_origen">Origen (solo salidas)</label>
-  <select id="origen">
-    <option value="efectivo" data-i18n="opt_efectivo">Efectivo</option>
-    <option value="tarjeta" data-i18n="opt_tarjeta">Tarjeta</option>
-    <option value="transferencia" data-i18n="opt_transf">Transferencia</option>
-  </select>
-</div>
-        <div id="campo-tarjeta" class="hidden">
-          <label for="tarjeta-select" data-i18n="menu_tarjetas">Tarjeta</label>
-          <select id="tarjeta-select"></select>
-        </div>
-        <div>
-          <label for="valor" data-i18n="lbl_valor">Valor</label>
-          <input type="text" id="valor" required placeholder="Ej: 1.300,50" />
-        </div>
-        <div>
-          <label for="data" data-i18n="lbl_fecha">Fecha</label>
-          <input type="date" id="data" required />
-        </div>
-        <div id="campo-gasto-fijo" class="hidden">
-          <label for="gasto-fijo-select" data-i18n="lbl_cat">Gasto Fijo</label>
-          <select id="gasto-fijo-select"></select>
-        </div>
-        <div class="full">
-          <label for="descripcion" data-i18n="lbl_desc">Descripción</label>
-          <input type="text" id="descripcion" />
-        </div>
-        <div>
-          <button type="submit" class="primary" data-i18n="btn_add">Añadir</button>
-        </div>
-      </form>
-    </div>
+  <div>
+    <label for="tipo" data-i18n="lbl_tipo">Tipo</label>
+    <select id="tipo" required>
+      <option value="entrada" data-i18n="opt_entrada">Entrada</option>
+      <option value="salida" data-i18n="opt_salida">Salida</option>
+    </select>
+  </div>
+  <div>
+    <label for="categoria" data-i18n="lbl_cat">Categoría</label>
+    <select id="categoria" required></select>
+  </div>
+  
+  <div id="campo-origen" class="hidden">
+    <label for="origen" data-i18n="lbl_origen">Origen (solo salidas)</label>
+    <select id="origen">
+      <option value="efectivo" data-i18n="opt_efectivo">Efectivo</option>
+      <option value="tarjeta" data-i18n="opt_tarjeta">Tarjeta</option>
+      <option value="transferencia" data-i18n="opt_transf">Transferencia</option>
+    </select>
+  </div>
 
+  <div id="campo-tarjeta" class="hidden">
+    <label for="tarjeta-select" data-i18n="menu_tarjetas">Tarjeta</label>
+    <select id="tarjeta-select"></select>
+  </div>
+
+  <div id="campo-parcelas" class="hidden full" style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 10px; margin-bottom: 10px;">
+      <div style="display:flex; gap: 10px; align-items: center;">
+          <input type="checkbox" id="chk-parcelado" style="width:auto;">
+          <label for="chk-parcelado" style="margin:0; cursor:pointer;">Compra Parcelada? (Cuotas)</label>
+      </div>
+      <div id="div-qtd-parcelas" class="hidden" style="margin-top: 10px;">
+          <label>Cantidad de cuotas (Meses):</label>
+          <input type="number" id="qtd-parcelas" min="2" max="36" value="2" placeholder="Ex: 12">
+      </div>
+  </div>
+  <div>
+    <label for="valor" data-i18n="lbl_valor">Valor Total</label>
+    <input type="text" id="valor" required placeholder="Ej: 1.000,00" />
+  </div>
+  <div>
+    <label for="data" data-i18n="lbl_fecha">Fecha (1ª Parcela)</label>
+    <input type="date" id="data" required />
+  </div>
+  <div id="campo-gasto-fijo" class="hidden">
+    <label for="gasto-fijo-select" data-i18n="lbl_cat">Gasto Fijo</label>
+    <select id="gasto-fijo-select"></select>
+  </div>
+  <div class="full">
+    <label for="descripcion" data-i18n="lbl_desc">Descripción</label>
+    <input type="text" id="descripcion" />
+  </div>
+  <div>
+    <button type="submit" class="primary" data-i18n="btn_add">Añadir</button>
+  </div>
+</form>
+    </div>
     <div class="card">
       <h3 data-i18n="trans_list_title">Transacciones del mes</h3>
       
@@ -2204,69 +2216,134 @@ formTarjeta.addEventListener("submit", async (e) => {
 });
 window.eliminarTarjeta = async (id) => await deleteDoc(doc(db, "tarjetas", id));
 
-// 👇 SUBSTITUA O BLOCO DO 'formTransaccion' POR ESTE 👇
+// 👇 LÓGICA VISUAL (MOSTRAR/ESCONDER PARCELAMENTO) 👇
+const selOrigem = document.getElementById("origen");
+const divParcelas = document.getElementById("campo-parcelas");
+const chkParcelado = document.getElementById("chk-parcelado");
+const divQtdParcelas = document.getElementById("div-qtd-parcelas");
+const selTipo = document.getElementById("tipo");
+
+// Função inteligente: Só mostra parcelas se for SAÍDA
+function atualizarParcelamento() {
+    if (selTipo.value === "salida") {
+        divParcelas.classList.remove("hidden");
+    } else {
+        divParcelas.classList.add("hidden");
+        chkParcelado.checked = false; 
+        divQtdParcelas.classList.add("hidden");
+    }
+}
+
+// Ouve mudanças para mostrar/esconder
+selTipo.addEventListener("change", atualizarParcelamento);
+// Ouve o checkbox para mostrar a quantidade
+chkParcelado.addEventListener("change", () => {
+    if (chkParcelado.checked) {
+        divQtdParcelas.classList.remove("hidden");
+    } else {
+        divQtdParcelas.classList.add("hidden");
+    }
+});
+// 👆 FIM DA LÓGICA VISUAL 👆
+
+
+// 👇 SUBSTITUA O BLOCO formTransaccion INTEIRO POR ESTE 👇
 const formTransaccion = document.getElementById("form-transaccion");
 formTransaccion.addEventListener("submit", async (e) => {
     e.preventDefault();
     const tipo = document.getElementById("tipo").value;
     const catVal = document.getElementById("categoria").value;
     const orig = document.getElementById("origen").value;
-    const val = parseNumeroLocal(document.getElementById("valor").value);
-    const fecha = document.getElementById("data").value;
+    const valTotal = parseNumeroLocal(document.getElementById("valor").value);
+    const dataInicial = document.getElementById("data").value;
     const desc = document.getElementById("descripcion").value.trim();
 
-    // Validação de Gasto Fixo
+    // Novos campos
+    const isParcelado = document.getElementById("chk-parcelado").checked;
+    const qtdParcelas = parseInt(document.getElementById("qtd-parcelas").value);
+
+    // Validações
     let gfId = null;
     if (tipo === "salida" && catVal === "__gasto_fijo__") {
         gfId = document.getElementById("gasto-fijo-select").value;
         if (!gfId) { alert("Seleccione gasto fijo"); return; }
     }
 
-    // Validação da Origem (Dinheiro, Cartão ou Transferência)
+    // Validação da Origem
     let tId = null, origFinal = null;
-    
     if (tipo === "salida") {
         if (orig === "tarjeta") {
             tId = document.getElementById("tarjeta-select").value;
             if (!tId) { alert("Seleccione tarjeta"); return; }
             origFinal = "tarjeta";
-            
         } else if (orig === "transferencia") {
-            // NOVA LÓGICA AQUI: Se for transferência, salva como tal
             origFinal = "transferencia";
-            
         } else {
-            // Se não for cartão nem transferência, é dinheiro
             origFinal = "efectivo";
         }
     }
 
-    // Se não for gasto fixo, usa o ID da categoria normal
-    const catIdDB = (catVal === "__gasto_fijo__") ? null : catVal;
-
     loading(true);
     try {
-        await addDoc(collection(db, "transacciones"), {
-            uid: usuarioActual.uid,
-            tipo: tipo,
-            categoriaId: catIdDB,
-            gastoFijoId: gfId,
-            tarjetaId: tId,
-            origen: origFinal, // Agora salva "transferencia" corretamente
-            valor: val,
-            fecha: fecha,
-            descripcion: desc,
-            createdAt: serverTimestamp()
-        });
+        const catIdDB = (catVal === "__gasto_fijo__") ? null : catVal;
+
+        // --- VERIFICAÇÃO DE PARCELAMENTO ---
+        // Nota: Removi a restrição de cartão. Agora parcela qualquer saída.
+        if (isParcelado && tipo === "salida" && qtdParcelas > 1) {
+            
+            const valorParcela = valTotal / qtdParcelas;
+            const promises = [];
+            const [ano, mes, dia] = dataInicial.split('-').map(Number);
+            
+            for (let i = 0; i < qtdParcelas; i++) {
+                // Calcula data futura corretamente
+                const dataFutura = new Date(ano, (mes - 1) + i, dia);
+                const dataFormatada = dataFutura.toISOString().slice(0, 10);
+
+                const docData = {
+                    uid: usuarioActual.uid,
+                    tipo: tipo,
+                    categoriaId: catIdDB,
+                    gastoFijoId: gfId,
+                    tarjetaId: tId,
+                    origen: origFinal, // Salva a origem correta
+                    valor: valorParcela,
+                    fecha: dataFormatada,
+                    descripcion: `${desc} (${i+1}/${qtdParcelas})`, // Ex: TV (1/10)
+                    createdAt: serverTimestamp()
+                };
+                promises.push(addDoc(collection(db, "transacciones"), docData));
+            }
+            
+            await Promise.all(promises);
+
+        } else {
+            // --- MODO NORMAL (SEM PARCELAR) ---
+            await addDoc(collection(db, "transacciones"), {
+                uid: usuarioActual.uid,
+                tipo: tipo,
+                categoriaId: catIdDB,
+                gastoFijoId: gfId,
+                tarjetaId: tId,
+                origen: origFinal,
+                valor: valTotal,
+                fecha: dataInicial,
+                descripcion: desc,
+                createdAt: serverTimestamp()
+            });
+        }
         
-        // Limpa os campos
+        // Limpa tudo
         document.getElementById("valor").value = "";
         document.getElementById("descripcion").value = "";
+        document.getElementById("chk-parcelado").checked = false;
+        document.getElementById("div-qtd-parcelas").classList.add("hidden");
         
         actualizarObjetivo();
-    } catch (e) { console.error(e); alert("Error"); }
+    } catch (e) { console.error(e); alert("Error: " + e.message); }
     loading(false);
 });
+
 	window.eliminarTransaccion = async (id) => {
     await deleteDoc(doc(db, "transacciones", id));
     actualizarObjetivo();
