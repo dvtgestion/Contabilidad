@@ -2048,6 +2048,39 @@ window.pagarGastoFijo = async (id) => {
     loading(false);
 };
 
+// 👇 COLE ISSO LOGO ABAIXO DE window.pagarGastoFijo 👇
+window.deshacerPagoGastoFijo = async (id) => {
+    const mesActual = obtenerAnioMesActual();
+    
+    // 1. Procura a transação que pagou esse gasto neste mês
+    const transaccion = transaccionesLocal.find(t => 
+        t.gastoFijoId === id && 
+        t.fecha && t.fecha.startsWith(mesActual)
+    );
+
+    if (!transaccion) {
+        alert("Error: Pago no encontrado / Pagamento não encontrado.");
+        return;
+    }
+
+    // 2. Confirmação
+    const esPt = currentLang === 'pt';
+    const msg = esPt 
+        ? `Desfazer pagamento? O valor voltará ao saldo.` 
+        : `¿Deshacer pago? El valor volverá al saldo.`;
+
+    if (!confirm(msg)) return;
+
+    loading(true);
+    try {
+        // 3. Deleta a transação, fazendo a conta voltar a ficar "Pendente/Vencida"
+        await deleteDoc(doc(db, "transacciones", transaccion.id));
+    } catch (e) {
+        console.error(e);
+        alert("Error: " + e.message);
+    }
+    loading(false);
+};
 
 // Tarjetas
 const formTarjeta = document.getElementById("form-tarjeta");
@@ -2505,7 +2538,7 @@ function rellenarSelectGastosFijos() {
     });
 }
 
-// 👇 SUBSTITUA A FUNÇÃO ANTIGA POR ESTA 👇
+// 👇 SUBSTITUA A FUNÇÃO rellenarTablaFijos POR ESTA VERSÃO FINAL 👇
 function rellenarTablaFijos() {
     const tb = document.querySelector("#tabla-fijos tbody");
     tb.innerHTML = "";
@@ -2516,16 +2549,28 @@ function rellenarTablaFijos() {
         const tr = document.createElement("tr");
         if (estado.claseFila) tr.classList.add(estado.claseFila);
         
-        // Botão Pagar aparece se não estiver verde
-        let btnPagar = "";
+        // Lógica dos Botões de Ação
+        let btnAcao = "";
+        
         if (estado.badgeClase !== "badge-verde") {
-            btnPagar = `
+            // SE NÃO ESTÁ PAGO: Botão Verde de PAGAR (✔)
+            btnAcao = `
             <button onclick="window.pagarGastoFijo('${f.id}')" class="btn-icon" style="
                 border-color: rgba(74, 222, 128, 0.4); 
                 color: #4ade80; 
                 margin-right: 5px;
             " title="Pagar">
                 ✔
+            </button>`;
+        } else {
+            // SE JÁ ESTÁ PAGO: Botão Amarelo de DESFAZER (↺)
+            btnAcao = `
+            <button onclick="window.deshacerPagoGastoFijo('${f.id}')" class="btn-icon" style="
+                border-color: rgba(250, 204, 21, 0.4); 
+                color: #facc15; 
+                margin-right: 5px;
+            " title="Deshacer / Desfazer">
+                ↺
             </button>`;
         }
 
@@ -2535,7 +2580,7 @@ function rellenarTablaFijos() {
             <td>Día ${f.vencimiento}</td>
             <td><span class="badge-estado ${estado.badgeClase}">${estado.texto}</span></td>
             <td>
-                ${btnPagar}
+                ${btnAcao}
                 <button class="btn-icon btn-icon-danger" onclick="window.eliminarFijo('${f.id}')" title="Eliminar">X</button>
             </td>`;
             
@@ -2543,6 +2588,7 @@ function rellenarTablaFijos() {
     });
     rellenarSelectGastosFijos();
 }
+
 
 
 function rellenarSelectTarjetas() {
