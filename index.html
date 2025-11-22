@@ -891,12 +891,13 @@ tr:last-child td {
           <select id="categoria" required></select>
         </div>
         <div id="campo-origen" class="hidden">
-          <label for="origen" data-i18n="lbl_origen">Origen (solo salidas)</label>
-          <select id="origen">
-            <option value="efectivo" data-i18n="opt_efectivo">Efectivo</option>
-            <option value="tarjeta" data-i18n="opt_tarjeta">Tarjeta</option>
-          </select>
-        </div>
+  <label for="origen" data-i18n="lbl_origen">Origen (solo salidas)</label>
+  <select id="origen">
+    <option value="efectivo" data-i18n="opt_efectivo">Efectivo</option>
+    <option value="tarjeta" data-i18n="opt_tarjeta">Tarjeta</option>
+    <option value="transferencia" data-i18n="opt_transf">Transferencia</option>
+  </select>
+</div>
         <div id="campo-tarjeta" class="hidden">
           <label for="tarjeta-select" data-i18n="menu_tarjetas">Tarjeta</label>
           <select id="tarjeta-select"></select>
@@ -1369,6 +1370,7 @@ const translations = {
         opt_salida: "Salida",
         opt_efectivo: "Efectivo",
         opt_tarjeta: "Tarjeta",
+        opt_transf: "Transferencia",
 
         // Alertas
         alert_restric: "🚫 ACCESO RESTRINGIDO\n\nEste correo no tiene permisos activos.\nTu cuenta ha sido creada, pero necesitas que el administrador habilite tu acceso.",
@@ -1464,6 +1466,7 @@ const translations = {
         opt_salida: "Saída",
         opt_efectivo: "Dinheiro",
         opt_tarjeta: "Cartão",
+        opt_transf: "Transferencia",
 
         // Alertas
         alert_restric: "🚫 ACESSO RESTRITO\n\nEste e-mail não tem permissões ativas.\nSua conta foi criada, mas você precisa que o administrador habilite seu acesso.",
@@ -2698,19 +2701,24 @@ function rellenarTablaTarjetas() {
     rellenarSelectTarjetas();
 }
 
+// 👇 SUBSTITUA A FUNÇÃO 'rellenarTablaTransacciones' POR ESTA 👇
 function rellenarTablaTransacciones() {
     const tb = document.querySelector("#tabla-transacciones tbody");
     tb.innerHTML = "";
     const mes = obtenerAnioMesActual();
     let l = transaccionesLocal.filter(t => t.fecha && t.fecha.startsWith(mes));
+    
     const ft = document.getElementById("filtro-texto").value.toLowerCase();
     const ff = document.getElementById("filtro-fecha").value;
+    
     if (ft) l = l.filter(t => (t.descripcion || "").toLowerCase().includes(ft));
     if (ff) l = l.filter(t => t.fecha === ff);
+    
     l.sort((a, b) => a.fecha < b.fecha ? 1 : -1);
 
     l.forEach(t => {
         const tr = document.createElement("tr");
+        
         let catNombre = "-";
         if (t.categoriaId === null && t.gastoFijoId) {
             const f = fijosLocal.find(x => x.id === t.gastoFijoId);
@@ -2719,18 +2727,34 @@ function rellenarTablaTransacciones() {
             const c = categoriasLocal.find(x => x.id === t.categoriaId);
             catNombre = c ? c.nome : "-";
         }
+
+        // --- LÓGICA DE ORIGEM ATUALIZADA ---
         let origenTexto = "-";
         if (t.tipo === "salida") {
             if (t.origen === "tarjeta" && t.tarjetaId) {
+                // Cartão
                 const tar = tarjetasLocal.find(x => x.id === t.tarjetaId);
-                origenTexto = "💳 " + (tar ? `${tar.banco}` : "");
+                origenTexto = "💳 " + (tar ? `${tar.banco}` : "Tarjeta"); 
+                
+            } else if (t.origen === "transferencia") {
+                // NOVA OPÇÃO: TRANSFERÊNCIA 🏦
+                origenTexto = "🏦 " + translations[currentLang].opt_transf;
+                
             } else {
-                // TRADUÇÃO APLICADA AQUI:
+                // Dinheiro 💵
                 origenTexto = "💵 " + translations[currentLang].opt_efectivo;
             }
         }
 
-        tr.innerHTML = `<td>${t.fecha}</td><td><span class="tag ${t.tipo}">${t.tipo}</span></td><td>${catNombre}</td><td>${origenTexto}</td><td>${t.descripcion || ""}</td><td>${formatearMoneda(t.valor)}</td><td></td>`;
+        tr.innerHTML = `
+            <td>${t.fecha}</td>
+            <td><span class="tag ${t.tipo}">${t.tipo}</span></td>
+            <td>${catNombre}</td>
+            <td>${origenTexto}</td>
+            <td>${t.descripcion || ""}</td>
+            <td>${formatearMoneda(t.valor)}</td>
+            <td></td>`;
+            
         const btn = document.createElement("button");
         btn.className = "btn-icon btn-icon-danger";
         btn.textContent = "X";
@@ -2739,6 +2763,7 @@ function rellenarTablaTransacciones() {
         tb.appendChild(tr);
     });
 }
+
 
 function actualizarResumen() {
     const transMes = filtrarMesActual(transaccionesLocal, "fecha");
