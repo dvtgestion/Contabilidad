@@ -1827,68 +1827,103 @@ onAuthStateChanged(auth, async (user) => {
 // ----------------------------------------------------------------------
 // CARGA DE DATOS
 
-// ----------------------------------------------------------------------
+// 👇 SUBSTITUA A FUNÇÃO 'iniciarListeners' POR ESTA VERSÃO COM TRATAMENTO DE ERRO 👇
 function iniciarListeners(uid) {
-loading(true);
+    loading(true);
 
-const unsubCat = onSnapshot(query(collection(db, "categorias"), where("uid", "==", uid)), (snapshot) => {
-   categoriasLocal = [];
-   snapshot.forEach(doc => { categoriasLocal.push({ id: doc.id, ...doc.data() }); });
-   inicializarInterfaz();
-   mostrarModalCategoriasSiCorresponde();
-});
-unsubs.push(unsubCat);
+    // Função auxiliar para tratar erro de permissão
+    const handlePermissionError = (error) => {
+        console.error("Erro de permissão:", error);
+        loading(false);
+        // Se o erro for de permissão, significa que o bloqueio do servidor funcionou
+        if (error.code === 'permission-denied') {
+            alert("🔒 ACESSO BLOQUEADO PELO SERVIDOR.\n\nSua assinatura pode estar vencida ou seu usuário inativo.");
+            signOut(auth).then(() => window.location.reload());
+        }
+    };
 
-const unsubTrans = onSnapshot(query(collection(db, "transacciones"), where("uid", "==", uid)), (snapshot) => {
-   transaccionesLocal = [];
-   snapshot.forEach(doc => { transaccionesLocal.push({ id: doc.id, ...doc.data() }); });
-   inicializarInterfaz();
-});
-unsubs.push(unsubTrans);
+    // 1. Categorias
+    const unsubCat = onSnapshot(
+        query(collection(db, "categorias"), where("uid", "==", uid)), 
+        (snapshot) => {
+            categoriasLocal = [];
+            snapshot.forEach(doc => { categoriasLocal.push({ id: doc.id, ...doc.data() }); });
+            inicializarInterfaz();
+            mostrarModalCategoriasSiCorresponde();
+        }, 
+        handlePermissionError // <--- O SEGREDO ESTÁ AQUI
+    );
+    unsubs.push(unsubCat);
 
-const unsubFijos = onSnapshot(query(collection(db, "gastos_fijos"), where("uid", "==", uid)), (snapshot) => {
-   fijosLocal = [];
-   snapshot.forEach(doc => { fijosLocal.push({ id: doc.id, ...doc.data() }); });
-   inicializarInterfaz();
-});
-unsubs.push(unsubFijos);
+    // 2. Transações
+    const unsubTrans = onSnapshot(
+        query(collection(db, "transacciones"), where("uid", "==", uid)), 
+        (snapshot) => {
+            transaccionesLocal = [];
+            snapshot.forEach(doc => { transaccionesLocal.push({ id: doc.id, ...doc.data() }); });
+            inicializarInterfaz();
+        },
+        handlePermissionError
+    );
+    unsubs.push(unsubTrans);
 
-const unsubTarj = onSnapshot(query(collection(db, "tarjetas"), where("uid", "==", uid)), (snapshot) => {
-   tarjetasLocal = [];
-   snapshot.forEach(doc => { tarjetasLocal.push({ id: doc.id, ...doc.data() }); });
-   inicializarInterfaz();
-});
-unsubs.push(unsubTarj);
+    // 3. Gastos Fijos
+    const unsubFijos = onSnapshot(
+        query(collection(db, "gastos_fijos"), where("uid", "==", uid)), 
+        (snapshot) => {
+            fijosLocal = [];
+            snapshot.forEach(doc => { fijosLocal.push({ id: doc.id, ...doc.data() }); });
+            inicializarInterfaz();
+        },
+        handlePermissionError
+    );
+    unsubs.push(unsubFijos);
 
-const docRef = doc(db, "perfil", uid);
-const unsubPerfil = onSnapshot(docRef, (docSnap) => {
-   if (docSnap.exists()) {
-       const p = docSnap.data();
-       edadUsuario = p.edad;
-       sexoUsuario = p.sexo;
-       paisUsuario = p.pais;
-       monedaUsuario = p.moneda || "USD";
-       metaMensualUsuario = Number(p.meta_mensual) || 0;
-       ingresoMensualUsuario = Number(p.ingreso_mensual) || 0;
-       objetivoNombre = p.objetivo_nombre || "";
-       objetivoValor = Number(p.objetivo_valor) || 0;
-       objetivoAhorroBase = Number(p.objetivo_ahorro_base) || 0;
-       objetivoFechaInicio = p.objetivo_fecha_inicio;
-       objetivoCompletado = p.objetivo_completado;
-       yaMostroModalCategorias = p.mostro_modal_categorias;
-       objetivosHistorial = p.objetivos_historial || [];
- 
-       if(!monedaUsuario && paisUsuario) monedaUsuario = monedaPorDefectoParaPais(paisUsuario);
-   } else {
-       metaMensualUsuario = 0; ingresoMensualUsuario = 0;
-       objetivoNombre = ""; objetivoValor = 0; objetivoAhorroBase = 0;
-       yaMostroModalCategorias = false;
-   }
-   inicializarInterfaz();
-   loading(false);
-});
-unsubs.push(unsubPerfil);
+    // 4. Tarjetas
+    const unsubTarj = onSnapshot(
+        query(collection(db, "tarjetas"), where("uid", "==", uid)), 
+        (snapshot) => {
+            tarjetasLocal = [];
+            snapshot.forEach(doc => { tarjetasLocal.push({ id: doc.id, ...doc.data() }); });
+            inicializarInterfaz();
+        },
+        handlePermissionError
+    );
+    unsubs.push(unsubTarj);
+
+    // 5. Perfil (Este é o que destrava a tela)
+    const docRef = doc(db, "perfil", uid);
+    const unsubPerfil = onSnapshot(docRef, (docSnap) => {
+        if (docSnap.exists()) {
+            const p = docSnap.data();
+            edadUsuario = p.edad;
+            sexoUsuario = p.sexo;
+            paisUsuario = p.pais;
+            monedaUsuario = p.moneda || "USD";
+            metaMensualUsuario = Number(p.meta_mensual) || 0;
+            ingresoMensualUsuario = Number(p.ingreso_mensual) || 0;
+            objetivoNombre = p.objetivo_nombre || "";
+            objetivoValor = Number(p.objetivo_valor) || 0;
+            objetivoAhorroBase = Number(p.objetivo_ahorro_base) || 0;
+            objetivoFechaInicio = p.objetivo_fecha_inicio;
+            objetivoCompletado = p.objetivo_completado;
+            yaMostroModalCategorias = p.mostro_modal_categorias;
+            objetivosHistorial = p.objetivos_historial || [];
+        
+            if(!monedaUsuario && paisUsuario) monedaUsuario = monedaPorDefectoParaPais(paisUsuario);
+        } else {
+            metaMensualUsuario = 0; ingresoMensualUsuario = 0;
+            objetivoNombre = ""; objetivoValor = 0; objetivoAhorroBase = 0;
+            yaMostroModalCategorias = false;
+        }
+        inicializarInterfaz();
+        loading(false); // <--- Aqui ele tira a tela de carregamento se der certo
+    }, 
+    handlePermissionError // <--- Aqui ele tira a tela de carregamento se der erro
+    );
+    unsubs.push(unsubPerfil);
 }
+
 // ----------------------------------------------------------------------
 // LÓGICA DE LOGIN E REGISTRO UI
 // ----------------------------------------------------------------------
