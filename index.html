@@ -2408,10 +2408,66 @@ formTransaccion.addEventListener("submit", async (e) => {
     loading(false);
 });
 
-	window.eliminarTransaccion = async (id) => {
-    await deleteDoc(doc(db, "transacciones", id));
-    actualizarObjetivo();
+	// 👇 SUBSTITUA A FUNÇÃO 'eliminarTransaccion' POR ESTA VERSÃO INTELIGENTE 👇
+window.eliminarTransaccion = async (id) => {
+    // 1. Busca a transação na memória para analisar
+    const tx = transaccionesLocal.find(x => x.id === id);
+    if (!tx) return;
+
+    const esPt = currentLang === 'pt';
+
+    // 2. Verifica se é parcela usando "Expressão Regular"
+    // Procura pelo padrão: "Texto (Número/Número)" ex: "TV (1/5)"
+    const match = tx.descripcion ? tx.descripcion.match(/(.*?) \((\d+)\/(\d+)\)$/) : null;
+
+    if (match) {
+        // É UMA PARCELA!
+        const nomeBase = match[1]; // Ex: "TV"
+        
+        const msg = esPt
+            ? `Esta transação faz parte de um parcelamento ("${nomeBase}").\nDeseja apagar TODAS as parcelas relacionadas?`
+            : `Esta transacción es parte de una compra en cuotas ("${nomeBase}").\n¿Desea eliminar TODAS las cuotas relacionadas?`;
+
+        if (confirm(msg)) {
+            loading(true);
+            try {
+                // 3. Filtra todas as parcelas desse mesmo item
+                // Critério: Mesmo Tipo + Mesmo Valor + Descrição começa igual
+                const parcelasParaApagar = transaccionesLocal.filter(t => 
+                    t.tipo === tx.tipo &&
+                    Math.abs(t.valor - tx.valor) < 0.01 && // Compara valor (margem erro centavos)
+                    t.descripcion.startsWith(`${nomeBase} (`) &&
+                    t.descripcion.includes(`/${match[3]})`) // Garante que é do mesmo total (ex: /5)
+                );
+
+                // 4. Deleta todas em lote
+                const promises = parcelasParaApagar.map(t => deleteDoc(doc(db, "transacciones", t.id)));
+                await Promise.all(promises);
+                
+                actualizarObjetivo();
+                alert(esPt ? "Todas as parcelas foram apagadas." : "Todas las cuotas han sido eliminadas.");
+            
+            } catch (e) {
+                console.error(e);
+                alert("Error: " + e.message);
+            }
+            loading(false);
+            return; // Sai da função, pois já apagou tudo
+        }
+    }
+
+    // --- MODO NORMAL (Se não for parcela ou se o usuário cancelou apagar tudo) ---
+    const msgSimples = esPt ? "Apagar esta transação?" : "¿Eliminar esta transacción?";
+    if (!confirm(msgSimples)) return;
+
+    loading(true);
+    try {
+        await deleteDoc(doc(db, "transacciones", id));
+        actualizarObjetivo();
+    } catch (e) { console.error(e); }
+    loading(false);
 };
+
 
 // 👇 COLE ISSO LOGO APÓS window.eliminarTransaccion 👇
 window.editarTransaccion = (id) => {
