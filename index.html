@@ -712,8 +712,6 @@ tr:last-child td {
     gap: 0.5rem;
   }
 }
-
-
 </style>
 </head>
 <body>
@@ -1410,15 +1408,14 @@ const translations = {
         btn_save_perf: "Guardar perfil",
         btn_reset_obj: "Reiniciar progreso",
         
-                // Simulador
+        // Simulador
         sim_title: "🔮 Simulador",
         sim_lbl_monto: "Monto mensual extra:",
         sim_btn_calc: "Calcular",
         sim_btn_close: "Cerrar",
         sim_result_fail: "Actualmente no ahorras.",
         sim_result_success: "¡Terminarías antes!",
-        sim_msg_initial: "Ingresa un valor arriba para ver el impacto.", // <--- NOVA LINHA
-
+        sim_msg_initial: "Ingresa un valor arriba para ver el impacto.",
         
         // Gráficos
         chart_restante: "Restante",
@@ -1508,15 +1505,14 @@ const translations = {
         btn_save_perf: "Salvar perfil",
         btn_reset_obj: "Reiniciar progresso",
         
-                // Simulador
+        // Simulador
         sim_title: "🔮 Simulador",
         sim_lbl_monto: "Valor mensal extra:",
         sim_btn_calc: "Calcular",
         sim_btn_close: "Fechar",
         sim_result_fail: "Atualmente você não economiza.",
         sim_result_success: "Terminaria antes!",
-        sim_msg_initial: "Insira um valor acima para ver o impacto.", // <--- NOVA LINHA
-
+        sim_msg_initial: "Insira um valor acima para ver o impacto.",
         
         // Gráficos
         chart_restante: "Restante",
@@ -1526,9 +1522,8 @@ const translations = {
     }
 };
 
-// Função Principal de Troca de Idioma (VERSÃO COMPLETA COM FAIXA VERMELHA)
+// Função Principal de Troca de Idioma
 function updateLanguage(lang) {
-    // Segurança extra: se chegar algo inválido, força espanhol
     if (lang !== 'es' && lang !== 'pt') lang = 'es';
     
     currentLang = lang;
@@ -1536,7 +1531,6 @@ function updateLanguage(lang) {
         localStorage.setItem('app_lang', lang);
     } catch (e) { console.warn("Sem acesso ao localStorage"); }
 
-    // Atualiza textos estáticos (HTML)
     const elements = document.querySelectorAll('[data-i18n]');
     if (elements) {
         elements.forEach(el => {
@@ -1551,16 +1545,13 @@ function updateLanguage(lang) {
         });
     }
 
-    // Sincroniza os seletores
     const selLogin = document.getElementById("lang-select-login");
     const selApp = document.getElementById("lang-select-app");
     if(selLogin) selLogin.value = lang;
     if(selApp) selApp.value = lang;
     
-    // --- NOVO: TRADUÇÃO DA FAIXA VERMELHA (AQUI ESTÁ A CORREÇÃO) ---
     const avisoBar = document.getElementById("barra-aviso-vencimento");
     if (avisoBar) {
-        // Lê quantos dias faltam (salvo no dataset)
         const dias = parseInt(avisoBar.dataset.dias);
         const spanTexto = avisoBar.querySelector(".msg-texto");
         
@@ -1577,9 +1568,7 @@ function updateLanguage(lang) {
             }
         }
     }
-    // ----------------------------------------------------------------
 
-    // ATUALIZAÇÃO DOS GRÁFICOS
     if (typeof actualizarResumen === "function") {
         try { actualizarResumen(); } catch(e) { console.error("Erro ao atualizar resumo", e); }
     }
@@ -1587,11 +1576,11 @@ function updateLanguage(lang) {
         try { actualizarObjetivo(); } catch(e) { console.error("Erro ao atualizar objetivo", e); }
     }
 
- // 👇👇👇 COLE O CÓDIGO NOVO AQUI (DENTRO DA FUNÇÃO) 👇👇👇
     if (typeof actualizarParcelamento === "function") {
         atualizarParcelamento();
     }
 }
+
 // --- UTILITÁRIOS VISUAIS ---
 function loading(show) {
     const el = document.getElementById('loading-overlay');
@@ -1630,7 +1619,6 @@ function formatearMoneda(valor) {
     const currency = monedaUsuario || "USD";
     let locale = "en-US";
     
-    // Ajuste fino de locale baseado no idioma escolhido
     if (currentLang === "pt") locale = "pt-BR";
     else locale = "es-ES";
 
@@ -1650,8 +1638,23 @@ function formatearMoneda(valor) {
     }
 }
 
+// ******************************
+// AJUSTE PRINCIPAL: MÊS ATUAL LOCAL
+// ******************************
 function obtenerAnioMesActual() {
-    return new Date().toISOString().slice(0, 7);
+    const hoy = new Date();                   // data local
+    const anio = hoy.getFullYear();
+    const mes = String(hoy.getMonth() + 1).padStart(2, "0");
+    return `${anio}-${mes}`;                 // ex: "2025-11"
+}
+
+// Helper para data de hoje local (AAAA-MM-DD)
+function obtenerFechaLocalHoy() {
+    const hoy = new Date();
+    const anio = hoy.getFullYear();
+    const mes = String(hoy.getMonth() + 1).padStart(2, "0");
+    const dia = String(hoy.getDate()).padStart(2, "0");
+    return `${anio}-${mes}-${dia}`;          // ex: "2025-11-30"
 }
 
 function filtrarMesActual(lista, campoFecha) {
@@ -1663,7 +1666,6 @@ function nombreMes(anioMes) {
     if (!anioMes) return "";
     const [anio, mes] = anioMes.split("-");
     const fecha = new Date(parseInt(anio), parseInt(mes) - 1, 1);
-    // Usa o idioma selecionado para a data
     const langLocale = currentLang === "pt" ? "pt-BR" : "es-ES";
     return fecha.toLocaleDateString(langLocale, { month: "long", year: "numeric" });
 }
@@ -1711,17 +1713,15 @@ function limparMemoriaGlobal() {
 }
 
 // ----------------------------------------------------------------------
-// 👇👇👇 SUBSTITUA SEU BLOCO ATUAL POR ESTE AQUI 👇👇👇
+// onAuthStateChanged
+// ----------------------------------------------------------------------
 onAuthStateChanged(auth, async (user) => {
-   // 1. Garante o idioma atual
   updateLanguage(currentLang);
 
-  // 👇👇👇 COLE ESTAS 4 LINHAS AQUI (ELAS ESTAVAM FALTANDO) 👇👇👇
   const selLogin = document.getElementById("lang-select-login");
   const selApp = document.getElementById("lang-select-app");
   if(selLogin) selLogin.onchange = (e) => updateLanguage(e.target.value);
   if(selApp) selApp.onchange = (e) => updateLanguage(e.target.value);
-  // 👆👆👆 FIM DO TRECHO QUE FALTAVA 👆👆👆
 
   if (user) {
      loading(true);
@@ -1748,16 +1748,13 @@ onAuthStateChanged(auth, async (user) => {
                  const hoy = new Date();
                  hoy.setHours(0, 0, 0, 0);
 
-                 // Limpeza da data
                  let dataLimpa = dadosUser.data_vencimento.toString().trim().replace(/\//g, "-");
                  const partes = dataLimpa.split('-');
                  
                  if (partes.length === 3) {
                      const dataVenc = new Date(partes[0], partes[1] - 1, partes[2]);
 
-                     // A) BLOQUEIO 🚫
                      if (hoy > dataVenc) {
-                         // Define mensagem no idioma correto
                          const esPt = currentLang === 'pt';
                          const msgBloqueio = esPt
                             ? `🚫 ACESSO SUSPENSO\n\nSua assinatura venceu dia: ${dataLimpa}.\nRegularize para acessar.`
@@ -1769,25 +1766,21 @@ onAuthStateChanged(auth, async (user) => {
                          return;
                      }
 
-                     // B) AVISO ⚠️
                      const diffTempo = dataVenc - hoy;
                      const diffDias = Math.ceil(diffTempo / (1000 * 60 * 60 * 24));
 
                      if (diffDias <= 5 && diffDias >= 0) {
-                         // Chama a barra visual
                          setTimeout(() => mostrarAvisoVencimento(diffDias), 1500);
                      }
                  }
              }
 
-             // LIBERA ACESSO ✅
              if(loadingText && translations[currentLang]) loadingText.textContent = translations[currentLang].loading_data;
              usuarioActual = user;
              document.getElementById("user-email").textContent = user.email;
              document.getElementById("login-screen").classList.add("hidden");
              document.getElementById("app").classList.remove("hidden");
              
-             // Atualiza o seletor visual do app
              const selApp = document.getElementById("lang-select-app");
              if(selApp) selApp.value = currentLang;
              
@@ -1823,26 +1816,21 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
-
 // ----------------------------------------------------------------------
-// CARGA DE DATOS
-
-// 👇 SUBSTITUA A FUNÇÃO 'iniciarListeners' POR ESTA VERSÃO COM TRATAMENTO DE ERRO 👇
+// CARGA DE DATOS - iniciarListeners
+// ----------------------------------------------------------------------
 function iniciarListeners(uid) {
     loading(true);
 
-    // Função auxiliar para tratar erro de permissão
     const handlePermissionError = (error) => {
         console.error("Erro de permissão:", error);
         loading(false);
-        // Se o erro for de permissão, significa que o bloqueio do servidor funcionou
         if (error.code === 'permission-denied') {
             alert("🔒 ACESSO BLOQUEADO PELO SERVIDOR.\n\nSua assinatura pode estar vencida ou seu usuário inativo.");
             signOut(auth).then(() => window.location.reload());
         }
     };
 
-    // 1. Categorias
     const unsubCat = onSnapshot(
         query(collection(db, "categorias"), where("uid", "==", uid)), 
         (snapshot) => {
@@ -1851,11 +1839,10 @@ function iniciarListeners(uid) {
             inicializarInterfaz();
             mostrarModalCategoriasSiCorresponde();
         }, 
-        handlePermissionError // <--- O SEGREDO ESTÁ AQUI
+        handlePermissionError
     );
     unsubs.push(unsubCat);
 
-    // 2. Transações
     const unsubTrans = onSnapshot(
         query(collection(db, "transacciones"), where("uid", "==", uid)), 
         (snapshot) => {
@@ -1867,7 +1854,6 @@ function iniciarListeners(uid) {
     );
     unsubs.push(unsubTrans);
 
-    // 3. Gastos Fijos
     const unsubFijos = onSnapshot(
         query(collection(db, "gastos_fijos"), where("uid", "==", uid)), 
         (snapshot) => {
@@ -1879,7 +1865,6 @@ function iniciarListeners(uid) {
     );
     unsubs.push(unsubFijos);
 
-    // 4. Tarjetas
     const unsubTarj = onSnapshot(
         query(collection(db, "tarjetas"), where("uid", "==", uid)), 
         (snapshot) => {
@@ -1891,7 +1876,6 @@ function iniciarListeners(uid) {
     );
     unsubs.push(unsubTarj);
 
-    // 5. Perfil (Este é o que destrava a tela)
     const docRef = doc(db, "perfil", uid);
     const unsubPerfil = onSnapshot(docRef, (docSnap) => {
         if (docSnap.exists()) {
@@ -1917,9 +1901,9 @@ function iniciarListeners(uid) {
             yaMostroModalCategorias = false;
         }
         inicializarInterfaz();
-        loading(false); // <--- Aqui ele tira a tela de carregamento se der certo
+        loading(false);
     }, 
-    handlePermissionError // <--- Aqui ele tira a tela de carregamento se der erro
+    handlePermissionError
     );
     unsubs.push(unsubPerfil);
 }
@@ -1940,7 +1924,6 @@ let modoRegistro = false;
 
 toggleModeBtn.addEventListener("click", () => {
     modoRegistro = !modoRegistro;
-    // Atualiza textos baseado no idioma atual
     if (modoRegistro) {
         loginSubmit.textContent = translations[currentLang].btn_create;
         toggleText.textContent = translations[currentLang].msg_has_account;
@@ -1982,8 +1965,6 @@ document.getElementById("logout-btn").addEventListener("click", () => {
 // ----------------------------------------------------------------------
 // SALVAR DADOS (ESCRITA FIRESTORE)
 // ----------------------------------------------------------------------
-
-// Salvar Perfil
 async function guardarPerfilEnServidor() {
     if (!usuarioActual) return;
     try {
@@ -2039,7 +2020,6 @@ window.eliminarCategoria = async (id) => {
 };
 
 // Gastos Fijos
-// Procure esta parte no seu código e SUBSTITUA por isso:
 const formFijo = document.getElementById("form-fijo");
 formFijo.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -2047,17 +2027,13 @@ formFijo.addEventListener("submit", async (e) => {
     const v = parseNumeroLocal(document.getElementById("fijo-valor").value);
     const ven = parseInt(document.getElementById("fijo-vencimiento").value);
 
-    // --- LÓGICA NOVA: CALCULA O MÊS DE INÍCIO ---
     const hoje = new Date();
     const diaAtual = hoje.getDate();
-    let mesInicio = obtenerAnioMesActual(); // Tenta começar este mês
+    let mesInicio = obtenerAnioMesActual();
 
-    // Se o dia de vencimento (ex: 19) for menor que hoje (ex: 21), 
-    // então já venceu este mês, jogamos para o próximo.
     if (ven < diaAtual) {
         mesInicio = siguienteAnioMes(mesInicio);
     }
-    // ---------------------------------------------
 
     loading(true);
     try {
@@ -2066,23 +2042,23 @@ formFijo.addEventListener("submit", async (e) => {
             descripcion: d,
             valor: v,
             vencimiento: ven,
-            mes_inicio: mesInicio // Usa o mês calculado acima
+            mes_inicio: mesInicio
         });
         formFijo.reset();
     } catch (e) { console.error(e); }
     loading(false);
 });
-// 👇👇👇 COLE ESTA LINHA QUE ESTAVA FALTANDO 👇👇👇
 window.eliminarFijo = async (id) => await deleteDoc(doc(db, "gastos_fijos", id));
 
-// 👇 SUBSTITUA A FUNÇÃO 'pagarGastoFijo' INTEIRA POR ESTA 👇
+// ----------------------------------------------------------------------
+// pagarGastoFijo / deshacer
+// ----------------------------------------------------------------------
 window.pagarGastoFijo = (id) => {
     const gasto = fijosLocal.find(f => f.id === id);
     if (!gasto) return;
 
     const esPt = currentLang === 'pt';
 
-    // 1. Cria o Modal
     const modal = document.createElement("div");
     modal.className = "modal"; 
     modal.style.display = "flex";
@@ -2094,7 +2070,6 @@ window.pagarGastoFijo = (id) => {
     card.style.textAlign = "center";
     card.style.border = "1px solid var(--primary-glow)";
 
-    // Título
     const h3 = document.createElement("h3");
     h3.textContent = esPt ? `Pagar: ${gasto.descripcion}` : `Pagar: ${gasto.descripcion}`;
     h3.style.marginBottom = "0.5rem";
@@ -2104,13 +2079,11 @@ window.pagarGastoFijo = (id) => {
     p.textContent = esPt ? "Escolha o método de pagamento:" : "Elige el método de pago:";
     p.style.marginBottom = "1.5rem";
 
-    // Container dos botões
     const lista = document.createElement("div");
     lista.style.display = "flex";
     lista.style.flexDirection = "column";
     lista.style.gap = "10px";
 
-    // --- OPÇÃO 1: EFECTIVO ---
     const btnEfec = document.createElement("button");
     btnEfec.className = "primary";
     btnEfec.innerHTML = esPt ? "💵 Dinheiro (Efectivo)" : "💵 Efectivo";
@@ -2120,35 +2093,22 @@ window.pagarGastoFijo = (id) => {
     };
     lista.appendChild(btnEfec);
 
-    // --- OPÇÃO 2: TRANSFERÊNCIA (NOVO 🏦) ---
     const btnTransf = document.createElement("button");
-    // Usei um estilo levemente diferente (Cyan) para diferenciar do Dinheiro
     btnTransf.className = "primary"; 
     btnTransf.style.background = "linear-gradient(135deg, #06b6d4, #3b82f6)"; 
     btnTransf.innerHTML = esPt ? "🏦 Transferência" : "🏦 Transferencia";
     btnTransf.onclick = () => {
-        // Salva como 'transferencia'
         confirmarPago(gasto, "transferencia", null);
         modal.remove();
     };
     lista.appendChild(btnTransf);
 
-        // ... (código anterior da função continua igual)
-
-    // 👇 SUBSTITUA APENAS ESTA PARTE DAS TARJETAS 👇
     if (tarjetasLocal.length > 0) {
         tarjetasLocal.forEach(t => {
             const btnCard = document.createElement("button");
-            
-            // MUDANÇA 1: Usamos 'primary' para ficar grande igual aos outros
             btnCard.className = "primary";
-            
-            // MUDANÇA 2: Cor Laranja/Rosa para destacar
             btnCard.style.background = "linear-gradient(135deg, #f59e0b, #ec4899)";
-            
-            // MUDANÇA 3: Formatação mais bonita (Alias + Banco menorzinho)
             btnCard.innerHTML = `💳 ${t.alias || 'Card'} <span style="font-size:0.9em; opacity:0.9">(${t.banco || '-'})</span>`;
-            
             btnCard.onclick = () => {
                 confirmarPago(gasto, "tarjeta", t.id);
                 modal.remove();
@@ -2161,12 +2121,7 @@ window.pagarGastoFijo = (id) => {
         aviso.textContent = esPt ? "(Sem cartões registrados)" : "(Sin tarjetas registradas)";
         lista.appendChild(aviso);
     }
-    // 👆 FIM DA SUBSTITUIÇÃO 👆
 
-    // ... (o resto do código: Botão Cancelar, etc, continua igual)
-
-
-    // Botão Cancelar
     const btnCancel = document.createElement("button");
     btnCancel.className = "danger-action";
     btnCancel.style.marginTop = "1rem";
@@ -2181,7 +2136,6 @@ window.pagarGastoFijo = (id) => {
     modal.appendChild(card);
     document.body.appendChild(modal);
 
-    // Função Interna de Salvar
     async function confirmarPago(gasto, origen, tarjetaId) {
         loading(true);
         try {
@@ -2191,9 +2145,12 @@ window.pagarGastoFijo = (id) => {
                 gastoFijoId: gasto.id,
                 categoriaId: null,
                 tarjetaId: tarjetaId,
-                origen: origen, // Aqui ele vai salvar 'transferencia' se você escolheu o botão novo
+                origen: origen,
                 valor: Number(gasto.valor),
-                fecha: new Date().toISOString().slice(0, 10),
+                // ******************************
+                // AQUI USA DATA LOCAL HOJE
+                // ******************************
+                fecha: obtenerFechaLocalHoy(),
                 descripcion: "Pago: " + gasto.descripcion,
                 createdAt: serverTimestamp()
             });
@@ -2205,11 +2162,9 @@ window.pagarGastoFijo = (id) => {
     }
 };
 
-// 👇 COLE ISSO LOGO ABAIXO DE window.pagarGastoFijo 👇
 window.deshacerPagoGastoFijo = async (id) => {
     const mesActual = obtenerAnioMesActual();
     
-    // 1. Procura a transação que pagou esse gasto neste mês
     const transaccion = transaccionesLocal.find(t => 
         t.gastoFijoId === id && 
         t.fecha && t.fecha.startsWith(mesActual)
@@ -2220,7 +2175,6 @@ window.deshacerPagoGastoFijo = async (id) => {
         return;
     }
 
-    // 2. Confirmação
     const esPt = currentLang === 'pt';
     const msg = esPt 
         ? `Desfazer pagamento? O valor voltará ao saldo.` 
@@ -2230,7 +2184,6 @@ window.deshacerPagoGastoFijo = async (id) => {
 
     loading(true);
     try {
-        // 3. Deleta a transação, fazendo a conta voltar a ficar "Pendente/Vencida"
         await deleteDoc(doc(db, "transacciones", transaccion.id));
     } catch (e) {
         console.error(e);
@@ -2261,7 +2214,9 @@ formTarjeta.addEventListener("submit", async (e) => {
 });
 window.eliminarTarjeta = async (id) => await deleteDoc(doc(db, "tarjetas", id));
 
-// 👇 LÓGICA VISUAL INTELIGENTE (TRADUZIDA PT/ES) 👇
+// ----------------------------------------------------------------------
+// Lógica visual parcelamento
+// ----------------------------------------------------------------------
 const selOrigem = document.getElementById("origen");
 const divParcelas = document.getElementById("campo-parcelas");
 const chkParcelado = document.getElementById("chk-parcelado");
@@ -2270,7 +2225,6 @@ const selTipo = document.getElementById("tipo");
 const inputValor = document.getElementById("valor");
 const inputQtd = document.getElementById("qtd-parcelas");
 
-// Função para calcular e mostrar quanto vai ficar cada parcela
 function calcularPreviaParcela() {
     const avisoAntigo = document.getElementById("info-previa-parcela");
     if (avisoAntigo) avisoAntigo.remove();
@@ -2300,12 +2254,10 @@ function calcularPreviaParcela() {
     }
 }
 
-// Função que controla a visibilidade e os textos
-function atualizarParcelamento() {
+function actualizarParcelamento() {
     const lblValor = document.querySelector('label[for="valor"]');
     const esPt = currentLang === 'pt';
     
-    // 1. Mostra/Esconde o bloco de parcelas
     if (selTipo.value === "salida") {
         divParcelas.classList.remove("hidden");
     } else {
@@ -2314,11 +2266,9 @@ function atualizarParcelamento() {
         divQtdParcelas.classList.add("hidden");
     }
 
-    // 2. Altera o texto do Label para evitar confusão (TRADUZIDO)
     if (chkParcelado.checked) {
         divQtdParcelas.classList.remove("hidden");
         
-        // Texto de Alerta Rosa
         lblValor.textContent = esPt 
             ? "Valor TOTAL da Compra (Soma tudo):" 
             : "Valor TOTAL de la Compra (Suma todo):";
@@ -2328,8 +2278,7 @@ function atualizarParcelamento() {
         calcularPreviaParcela();
     } else {
         divQtdParcelas.classList.add("hidden");
-        // Volta ao normal
-        lblValor.textContent = esPt ? "Valor" : "Valor"; // Ou pega do data-i18n se preferir
+        lblValor.textContent = esPt ? "Valor" : "Valor";
         lblValor.style.color = "#cbd5e1";
         inputValor.placeholder = esPt ? "Ex: 1.300,50" : "Ej: 1.300,50";
         const aviso = document.getElementById("info-previa-parcela");
@@ -2337,16 +2286,14 @@ function atualizarParcelamento() {
     }
 }
 
-// Listeners
-selTipo.addEventListener("change", atualizarParcelamento);
-chkParcelado.addEventListener("change", atualizarParcelamento);
+selTipo.addEventListener("change", actualizarParcelamento);
+chkParcelado.addEventListener("change", actualizarParcelamento);
 inputValor.addEventListener("input", calcularPreviaParcela);
 inputQtd.addEventListener("input", calcularPreviaParcela);
-// 👆 FIM DA LÓGICA VISUAL 👆
 
-
-
-// 👇 SUBSTITUA O BLOCO formTransaccion INTEIRO POR ESTE 👇
+// ----------------------------------------------------------------------
+// formTransaccion (parcelado + normal)
+// ----------------------------------------------------------------------
 const formTransaccion = document.getElementById("form-transaccion");
 formTransaccion.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -2357,18 +2304,15 @@ formTransaccion.addEventListener("submit", async (e) => {
     const dataInicial = document.getElementById("data").value;
     const desc = document.getElementById("descripcion").value.trim();
 
-    // Novos campos
     const isParcelado = document.getElementById("chk-parcelado").checked;
     const qtdParcelas = parseInt(document.getElementById("qtd-parcelas").value);
 
-    // Validações
     let gfId = null;
     if (tipo === "salida" && catVal === "__gasto_fijo__") {
         gfId = document.getElementById("gasto-fijo-select").value;
         if (!gfId) { alert("Seleccione gasto fijo"); return; }
     }
 
-    // Validação da Origem
     let tId = null, origFinal = null;
     if (tipo === "salida") {
         if (orig === "tarjeta") {
@@ -2386,8 +2330,6 @@ formTransaccion.addEventListener("submit", async (e) => {
     try {
         const catIdDB = (catVal === "__gasto_fijo__") ? null : catVal;
 
-        // --- VERIFICAÇÃO DE PARCELAMENTO ---
-        // Nota: Removi a restrição de cartão. Agora parcela qualquer saída.
         if (isParcelado && tipo === "salida" && qtdParcelas > 1) {
             
             const valorParcela = valTotal / qtdParcelas;
@@ -2395,7 +2337,6 @@ formTransaccion.addEventListener("submit", async (e) => {
             const [ano, mes, dia] = dataInicial.split('-').map(Number);
             
             for (let i = 0; i < qtdParcelas; i++) {
-                // Calcula data futura corretamente
                 const dataFutura = new Date(ano, (mes - 1) + i, dia);
                 const dataFormatada = dataFutura.toISOString().slice(0, 10);
 
@@ -2405,10 +2346,10 @@ formTransaccion.addEventListener("submit", async (e) => {
                     categoriaId: catIdDB,
                     gastoFijoId: gfId,
                     tarjetaId: tId,
-                    origen: origFinal, // Salva a origem correta
+                    origen: origFinal,
                     valor: valorParcela,
                     fecha: dataFormatada,
-                    descripcion: `${desc} (${i+1}/${qtdParcelas})`, // Ex: TV (1/10)
+                    descripcion: `${desc} (${i+1}/${qtdParcelas})`,
                     createdAt: serverTimestamp()
                 };
                 promises.push(addDoc(collection(db, "transacciones"), docData));
@@ -2417,7 +2358,6 @@ formTransaccion.addEventListener("submit", async (e) => {
             await Promise.all(promises);
 
         } else {
-            // --- MODO NORMAL (SEM PARCELAR) ---
             await addDoc(collection(db, "transacciones"), {
                 uid: usuarioActual.uid,
                 tipo: tipo,
@@ -2432,7 +2372,6 @@ formTransaccion.addEventListener("submit", async (e) => {
             });
         }
         
-        // Limpa tudo
         document.getElementById("valor").value = "";
         document.getElementById("descripcion").value = "";
         document.getElementById("chk-parcelado").checked = false;
@@ -2443,21 +2382,19 @@ formTransaccion.addEventListener("submit", async (e) => {
     loading(false);
 });
 
-	// 👇 SUBSTITUA A FUNÇÃO 'eliminarTransaccion' POR ESTA VERSÃO INTELIGENTE 👇
+// ----------------------------------------------------------------------
+// eliminarTransaccion + editarTransaccion
+// ----------------------------------------------------------------------
 window.eliminarTransaccion = async (id) => {
-    // 1. Busca a transação na memória para analisar
     const tx = transaccionesLocal.find(x => x.id === id);
     if (!tx) return;
 
     const esPt = currentLang === 'pt';
 
-    // 2. Verifica se é parcela usando "Expressão Regular"
-    // Procura pelo padrão: "Texto (Número/Número)" ex: "TV (1/5)"
     const match = tx.descripcion ? tx.descripcion.match(/(.*?) \((\d+)\/(\d+)\)$/) : null;
 
     if (match) {
-        // É UMA PARCELA!
-        const nomeBase = match[1]; // Ex: "TV"
+        const nomeBase = match[1]; 
         
         const msg = esPt
             ? `Esta transação faz parte de um parcelamento ("${nomeBase}").\nDeseja apagar TODAS as parcelas relacionadas?`
@@ -2466,16 +2403,13 @@ window.eliminarTransaccion = async (id) => {
         if (confirm(msg)) {
             loading(true);
             try {
-                // 3. Filtra todas as parcelas desse mesmo item
-                // Critério: Mesmo Tipo + Mesmo Valor + Descrição começa igual
                 const parcelasParaApagar = transaccionesLocal.filter(t => 
                     t.tipo === tx.tipo &&
-                    Math.abs(t.valor - tx.valor) < 0.01 && // Compara valor (margem erro centavos)
+                    Math.abs(t.valor - tx.valor) < 0.01 &&
                     t.descripcion.startsWith(`${nomeBase} (`) &&
-                    t.descripcion.includes(`/${match[3]})`) // Garante que é do mesmo total (ex: /5)
+                    t.descripcion.includes(`/${match[3]})`)
                 );
 
-                // 4. Deleta todas em lote
                 const promises = parcelasParaApagar.map(t => deleteDoc(doc(db, "transacciones", t.id)));
                 await Promise.all(promises);
                 
@@ -2487,11 +2421,10 @@ window.eliminarTransaccion = async (id) => {
                 alert("Error: " + e.message);
             }
             loading(false);
-            return; // Sai da função, pois já apagou tudo
+            return;
         }
     }
 
-    // --- MODO NORMAL (Se não for parcela ou se o usuário cancelou apagar tudo) ---
     const msgSimples = esPt ? "Apagar esta transação?" : "¿Eliminar esta transacción?";
     if (!confirm(msgSimples)) return;
 
@@ -2503,15 +2436,12 @@ window.eliminarTransaccion = async (id) => {
     loading(false);
 };
 
-
-// 👇 COLE ISSO LOGO APÓS window.eliminarTransaccion 👇
 window.editarTransaccion = (id) => {
     const t = transaccionesLocal.find(x => x.id === id);
     if (!t) return;
 
     const esPt = currentLang === 'pt';
 
-    // 1. Cria o Modal
     const modal = document.createElement("div");
     modal.className = "modal";
     modal.style.display = "flex";
@@ -2521,43 +2451,37 @@ window.editarTransaccion = (id) => {
     card.style.maxWidth = "400px";
     card.style.width = "90%";
     card.style.textAlign = "left";
-    card.style.border = "1px solid var(--accent-cyan)"; // Cor Cyan para diferenciar
+    card.style.border = "1px solid var(--accent-cyan)";
 
-    // Título
     const h3 = document.createElement("h3");
     h3.textContent = esPt ? "✏️ Editar Transação" : "✏️ Editar Transacción";
     h3.style.textAlign = "center";
     h3.style.marginBottom = "1.5rem";
     card.appendChild(h3);
 
-    // Formulário de Edição
     const form = document.createElement("div");
     form.style.display = "flex";
     form.style.flexDirection = "column";
     form.style.gap = "1rem";
 
-    // Campo: Valor
     const lblValor = document.createElement("label");
     lblValor.textContent = esPt ? "Valor:" : "Valor:";
     const inputValor = document.createElement("input");
     inputValor.type = "text";
     inputValor.value = t.valor;
     
-    // Campo: Data
     const lblData = document.createElement("label");
     lblData.textContent = esPt ? "Data:" : "Fecha:";
     const inputData = document.createElement("input");
     inputData.type = "date";
     inputData.value = t.fecha;
 
-    // Campo: Descrição
     const lblDesc = document.createElement("label");
     lblDesc.textContent = esPt ? "Descrição:" : "Descripción:";
     const inputDesc = document.createElement("input");
     inputDesc.type = "text";
     inputDesc.value = t.descripcion || "";
 
-    // Adiciona campos ao form
     form.appendChild(lblValor);
     form.appendChild(inputValor);
     form.appendChild(lblData);
@@ -2566,7 +2490,6 @@ window.editarTransaccion = (id) => {
     form.appendChild(inputDesc);
     card.appendChild(form);
 
-    // Botões de Ação
     const divBotoes = document.createElement("div");
     divBotoes.style.display = "flex";
     divBotoes.style.gap = "1rem";
@@ -2588,12 +2511,11 @@ window.editarTransaccion = (id) => {
 
         loading(true);
         try {
-            // Atualiza no Firebase (Firestore)
             await setDoc(doc(db, "transacciones", id), {
                 valor: novoValor,
                 fecha: novaData,
                 descripcion: novaDesc
-            }, { merge: true }); // Merge garante que só muda o que enviamos
+            }, { merge: true });
             
             modal.remove();
             actualizarObjetivo();
@@ -2619,10 +2541,8 @@ window.editarTransaccion = (id) => {
 };
 
 // ----------------------------------------------------------------------
-// LÓGICA DE INTERFACE
+// LÓGICA DE INTERFACE / MODAIS / NAV
 // ----------------------------------------------------------------------
-
-// Botões e Modais
 const modalCategorias = document.getElementById("modal-categorias");
 const modalCategoriasOk = document.getElementById("modal-categorias-ok");
 modalCategoriasOk.addEventListener("click", async () => {
@@ -2631,7 +2551,6 @@ modalCategoriasOk.addEventListener("click", async () => {
     await guardarPerfilEnServidor();
 });
 
-// Lógica dos botões de boas-vindas
 const btnPerfil = document.getElementById("btn-ir-perfil");
 if (btnPerfil) {
     btnPerfil.addEventListener("click", async () => {
@@ -2677,15 +2596,10 @@ function inicializarInterfaz() {
     actualizarCampoGastoFijo();
     actualizarCampoOrigenYTarjeta();
     inicializarReporte();
-    
-    // Força atualização do modal
     mostrarModalCategoriasSiCorresponde();
-    
-    // Reaplica idioma para garantir textos dinâmicos (tabelas/gráficos)
     updateLanguage(currentLang);
 }
 
-// Navegação Lateral
 const sidebar = document.getElementById("sidebar");
 const menuToggle = document.getElementById("menu-toggle");
 menuToggle.addEventListener("click", () => sidebar.classList.toggle("open"));
@@ -2700,7 +2614,6 @@ sidebar.addEventListener("click", (e) => {
     sidebar.classList.remove("open");
 });
 
-// Listeners de campos dinâmicos
 document.getElementById("tipo").addEventListener("change", () => {
     rellenarSelectCategorias();
     actualizarCampoGastoFijo();
@@ -2716,7 +2629,6 @@ document.getElementById("btn-limpiar-filtros").addEventListener("click", () => {
     rellenarTablaTransacciones();
 });
 
-// Salvar perfil
 document.getElementById("form-perfil").addEventListener("submit", async (e) => {
     e.preventDefault();
     edadUsuario = parseInt(document.getElementById("perfil-edad").value);
@@ -2738,12 +2650,17 @@ document.getElementById("form-perfil").addEventListener("submit", async (e) => {
     inicializarInterfaz();
 });
 
-// Resetar Objetivo
+// ----------------------------------------------------------------------
+// Resetar Objetivo (usa data local)
+// ----------------------------------------------------------------------
 document.getElementById("perfil-objetivo-reset").addEventListener("click", async () => {
     if (!confirm("Confirm reset?")) return;
 
     objetivoAhorroBase = calcularAhorroTotal();
-    objetivoFechaInicio = new Date().toISOString().slice(0, 10);
+    // ******************************
+    // AQUI TAMBÉM USA DATA LOCAL
+    // ******************************
+    objetivoFechaInicio = obtenerFechaLocalHoy();
     objetivoCompletado = false;
 
     await guardarPerfilEnServidor();
@@ -2753,10 +2670,8 @@ document.getElementById("perfil-objetivo-reset").addEventListener("click", async
 // --- SIMULADOR ---
 const modalSim = document.getElementById("modal-simulador");
 
-// Botão de Abrir (Com Reset de Texto)
 document.getElementById("btn-abrir-simulador").addEventListener("click", () => {
     modalSim.classList.remove("hidden");
-    // Reseta o texto para a instrução inicial ao abrir
     const res = document.getElementById("simulador-resultado");
     const input = document.getElementById("simulador-monto");
     
@@ -2765,7 +2680,7 @@ document.getElementById("btn-abrir-simulador").addEventListener("click", () => {
     } else {
         res.textContent = "...";
     }
-    input.value = ""; // Limpa o número anterior
+    input.value = "";
 });
 
 document.getElementById("btn-cerrar-simulador").addEventListener("click", () => modalSim.classList.add("hidden"));
@@ -2818,9 +2733,9 @@ document.getElementById("btn-calcular-simulacion").addEventListener("click", () 
     }
 });
 
-
-// --- GRÁFICOS (Completo e Expandido) ---
-
+// ----------------------------------------------------------------------
+// Gráfico Viajero del Tiempo
+// ----------------------------------------------------------------------
 function dibujarGraficoViajeroTiempo() {
     const canvas = document.getElementById("chart-time-travel");
     if (!canvas) return;
@@ -2832,10 +2747,8 @@ function dibujarGraficoViajeroTiempo() {
 
     const hoy = new Date();
     const meses = [];
-    // Histórico de 3 meses atrás + 6 futuros
     for (let i = -2; i <= 6; i++) {
         const d = new Date(hoy.getFullYear(), hoy.getMonth() + i, 1);
-        // TRADUÇÃO DA DATA NO EIXO X
         const localeData = currentLang === "pt" ? "pt-BR" : "es-ES";
         meses.push({
             label: d.toLocaleDateString(localeData, { month: 'short' }),
@@ -2953,8 +2866,9 @@ function dibujarGraficoViajeroTiempo() {
     });
 }
 
-// --- AUXILIARES DE UI ---
-
+// ----------------------------------------------------------------------
+// AUXILIARES DE UI (tabelas, campos)
+// ----------------------------------------------------------------------
 function rellenarSelectCategorias() {
     const sel = document.getElementById("categoria");
     sel.innerHTML = "";
@@ -3000,7 +2914,7 @@ function rellenarSelectGastosFijos() {
     });
 }
 
-// 👇 SUBSTITUA A FUNÇÃO rellenarTablaFijos POR ESTA VERSÃO FINAL 👇
+// Tabela de gastos fixos com estado
 function rellenarTablaFijos() {
     const tb = document.querySelector("#tabla-fijos tbody");
     tb.innerHTML = "";
@@ -3011,11 +2925,9 @@ function rellenarTablaFijos() {
         const tr = document.createElement("tr");
         if (estado.claseFila) tr.classList.add(estado.claseFila);
         
-        // Lógica dos Botões de Ação
         let btnAcao = "";
         
         if (estado.badgeClase !== "badge-verde") {
-            // SE NÃO ESTÁ PAGO: Botão Verde de PAGAR (✔)
             btnAcao = `
             <button onclick="window.pagarGastoFijo('${f.id}')" class="btn-icon" style="
                 border-color: rgba(74, 222, 128, 0.4); 
@@ -3025,7 +2937,6 @@ function rellenarTablaFijos() {
                 ✔
             </button>`;
         } else {
-            // SE JÁ ESTÁ PAGO: Botão Amarelo de DESFAZER (↺)
             btnAcao = `
             <button onclick="window.deshacerPagoGastoFijo('${f.id}')" class="btn-icon" style="
                 border-color: rgba(250, 204, 21, 0.4); 
@@ -3051,24 +2962,16 @@ function rellenarTablaFijos() {
     rellenarSelectGastosFijos();
 }
 
-
-
 function rellenarSelectTarjetas() {
     const s = document.getElementById("tarjeta-select");
     s.innerHTML = "";
     tarjetasLocal.forEach(t => {
         const o = document.createElement("option");
         o.value = t.id;
-        
-        // MUDANÇA AQUI:
-        // Antes era: `${t.alias || ""} ${t.digitos || ""}`
-        // Agora é: "Alias - Banco" (Ex: Jose - Bisa)
         o.textContent = `${t.alias || "Tarjeta"} - ${t.banco || "Banco"}`;
-        
         s.appendChild(o);
     });
 }
-
 
 function rellenarTablaTarjetas() {
     const tb = document.querySelector("#tabla-tarjetas tbody");
@@ -3086,7 +2989,7 @@ function rellenarTablaTarjetas() {
     rellenarSelectTarjetas();
 }
 
-// 👇 SUBSTITUA A FUNÇÃO 'rellenarTablaTransacciones' POR ESTA VERSÃO FINAL COMPLETA 👇
+// Transações do mês (tabela)
 function rellenarTablaTransacciones() {
     const tb = document.querySelector("#tabla-transacciones tbody");
     tb.innerHTML = "";
@@ -3104,7 +3007,6 @@ function rellenarTablaTransacciones() {
     l.forEach(t => {
         const tr = document.createElement("tr");
         
-        // 1. Define Categoria (Mantém lógica de Gasto Fixo)
         let catNombre = "-";
         if (t.categoriaId === null && t.gastoFijoId) {
             const f = fijosLocal.find(x => x.id === t.gastoFijoId);
@@ -3114,20 +3016,16 @@ function rellenarTablaTransacciones() {
             catNombre = c ? c.nome : "-";
         }
 
-        // 2. Define Origem (Mantém Bancos e Transferência)
         let origenTexto = "-";
         if (t.tipo === "salida") {
             if (t.origen === "tarjeta" && t.tarjetaId) {
-                // Mantém a visualização do Nome do Banco
                 const tar = tarjetasLocal.find(x => x.id === t.tarjetaId);
                 origenTexto = "💳 " + (tar ? `${tar.banco}` : "Tarjeta"); 
                 
             } else if (t.origen === "transferencia") {
-                // Mantém a opção Transferência Traduzida
                 origenTexto = "🏦 " + translations[currentLang].opt_transf;
                 
             } else {
-                // Dinheiro Traduzido
                 origenTexto = "💵 " + translations[currentLang].opt_efectivo;
             }
         }
@@ -3148,8 +3046,9 @@ function rellenarTablaTransacciones() {
     });
 }
 
-
-
+// ----------------------------------------------------------------------
+// Resumo, objetivo, histórico, análise
+// ----------------------------------------------------------------------
 function actualizarResumen() {
     const transMes = filtrarMesActual(transaccionesLocal, "fecha");
     let totalEntradas = 0;
@@ -3288,7 +3187,10 @@ function actualizarObjetivo() {
 
     if (!objetivoCompletado && ahorroObjetivo >= objetivoValor) {
         objetivoCompletado = true;
-        const hoy = new Date().toISOString().slice(0, 10);
+        // ******************************
+        // AQUI TAMBÉM USA DATA LOCAL
+        // ******************************
+        const hoy = obtenerFechaLocalHoy();
         objetivosHistorial.push({ nombre: objetivoNombre, valorMeta: objetivoValor, ahorroFinal: ahorroObjetivo, fechaInicio: objetivoFechaInicio, fechaConclusion: hoy });
         guardarPerfilEnServidor();
     }
@@ -3332,7 +3234,8 @@ function actualizarObjetivo() {
 }
 
 function rellenarHistorialObjetivos() {
-    const tb = document.querySelector("#tabla-historial-objetivos tbody"); tb.innerHTML = "";
+    const tb = document.querySelector("#tabla-historial-objetivos tbody"); 
+    tb.innerHTML = "";
     objetivosHistorial.forEach(o => {
         const tr = document.createElement("tr");
         tr.innerHTML = `<td>${o.nombre}</td><td>${formatearMoneda(o.valorMeta)}</td><td>${formatearMoneda(o.ahorroFinal)}</td><td>${o.fechaInicio}</td><td>${o.fechaConclusion}</td>`;
@@ -3378,6 +3281,9 @@ function actualizarCampoOrigenYTarjeta() {
     }
 }
 
+// ----------------------------------------------------------------------
+// Gráficos Meta e Objetivo
+// ----------------------------------------------------------------------
 function dibujarGraficoMeta(porcentajeUsado, textoCentro) {
     const canvas = document.getElementById("meta-chart");
     if (!canvas) return;
@@ -3417,7 +3323,6 @@ function dibujarGraficoMeta(porcentajeUsado, textoCentro) {
 
         ctx.fillStyle = "#94a3b8";
         ctx.font = "10px sans-serif";
-        // TRADUÇÃO DO TEXTO 'RESTANTE'
         ctx.fillText(translations[currentLang].chart_restante, cx, cy + 15);
     }
 }
@@ -3456,11 +3361,11 @@ function dibujarGraficoObjetivo(porcentaje, textoCentro) {
 
         ctx.fillStyle = "#94a3b8";
         ctx.font = "10px sans-serif";
-        // TRADUÇÃO DO TEXTO 'FALTA'
         ctx.fillText(translations[currentLang].chart_falta, cx, cy + 15);
     }
 }
 
+// Perfil
 function rellenarPerfil() {
     document.getElementById("perfil-edad").value = edadUsuario || "";
     document.getElementById("perfil-sexo").value = sexoUsuario || "";
@@ -3472,6 +3377,9 @@ function rellenarPerfil() {
     document.getElementById("perfil-objetivo-valor").value = objetivoValor || "";
 }
 
+// ----------------------------------------------------------------------
+// Reporte mensal
+// ----------------------------------------------------------------------
 function inicializarReporte() {
     const sel = document.getElementById("reporte-mes");
     sel.innerHTML = "";
@@ -3536,7 +3444,10 @@ document.getElementById("reporte-mes-actual").addEventListener("click", () => {
     sel.value = current;
     cargarDatosReporte(current);
 });
-// --- FUNÇÃO DE CORES (QUE ESTAVA FALTANDO) ---
+
+// ----------------------------------------------------------------------
+// Função de cor por categoria
+// ----------------------------------------------------------------------
 function getColorParaCategoria(nombre) {
  let hash = 0;
  for (let i = 0; i < nombre.length; i++) {
@@ -3546,20 +3457,18 @@ function getColorParaCategoria(nombre) {
  return "#" + "00000".substring(0, 6 - c.length) + c;
 }
 
-// SUBSTITUA a função 'estadoFijoParaMes' inteira por esta:
+// ----------------------------------------------------------------------
+// estadoFijoParaMes (usa mes_inicio + mes atual)
+// ----------------------------------------------------------------------
 function estadoFijoParaMes(gasto, anioMes) {
-    
-    // 1. NOVO: Verifica se este gasto só começa no futuro
-    // Se o mês atual (anioMes) for ANTERIOR ao mês de início gravado no banco
     if (gasto.mes_inicio && anioMes < gasto.mes_inicio) {
         return { 
             texto: "Próx. Mês", 
             badgeClase: "badge-normal", 
-            claseFila: "" // Fica cinza/transparente, sem alerta
+            claseFila: ""
         };
     }
 
-    // 2. Verifica se já foi pago
     const estaPagado = transaccionesLocal.some(t => 
         t.tipo === "salida" && 
         t.gastoFijoId === gasto.id && 
@@ -3570,21 +3479,16 @@ function estadoFijoParaMes(gasto, anioMes) {
         return { texto: "Pago", badgeClase: "badge-verde", claseFila: "fijo-verde" };
     }
 
-    // 3. Lógica de datas
     const hoy = new Date();
     const diaHoy = hoy.getDate();
-    const [anio, mes] = anioMes.split("-");
     
-    // Histórico passado
     if (anioMes < obtenerAnioMesActual()) {
          return { texto: "Vencido", badgeClase: "badge-rojo", claseFila: "fijo-rojo" };
     }
-    // Futuro (além do mes_inicio já verificado)
     if (anioMes > obtenerAnioMesActual()) {
         return { texto: "Pendiente", badgeClase: "badge-normal", claseFila: "" };
     }
 
-    // Mês atual: verifica dia
     const diaVenc = gasto.vencimiento;
     
     if (diaHoy > diaVenc) {
@@ -3596,12 +3500,12 @@ function estadoFijoParaMes(gasto, anioMes) {
     }
 }
 
-// --- FUNÇÃO: MOSTRAR BARRA DE VENCIMENTO (LAYOUT CORRIGIDO + SUPORTE A TRADUÇÃO) ---
+// ----------------------------------------------------------------------
+// Barra de aviso de vencimento
+// ----------------------------------------------------------------------
 function mostrarAvisoVencimento(diasRestantes) {
-    // Evita criar duas barras se já tiver uma
     if(document.getElementById("barra-aviso-vencimento")) return;
 
-    // 1. Define o texto inicial baseado no idioma atual
     const esPt = currentLang === 'pt';
     let textoMensagem = "";
 
@@ -3615,11 +3519,8 @@ function mostrarAvisoVencimento(diasRestantes) {
             : `⚠️ ATENCIÓN: Tu suscripción vence en ${diasRestantes} días.`;
     }
 
-    // 2. Cria a barra visual
     const aviso = document.createElement("div");
     aviso.id = "barra-aviso-vencimento";
-    
-    // IMPORTANTE: Salvamos os dias aqui para a tradução funcionar depois
     aviso.dataset.dias = diasRestantes; 
 
     aviso.style.cssText = `
@@ -3637,7 +3538,6 @@ function mostrarAvisoVencimento(diasRestantes) {
         box-shadow: 0 2px 10px rgba(0,0,0,0.2);
     `;
     
-    // Adicionei a classe 'msg-texto' no span para podermos trocar o texto via código depois
     aviso.innerHTML = `
         <span class="msg-texto" style="font-weight:600; font-size: 0.9rem; line-height: 1.2;">${textoMensagem}</span>
         <button onclick="this.parentElement.remove()" style="
@@ -3656,7 +3556,6 @@ function mostrarAvisoVencimento(diasRestantes) {
     
     document.body.prepend(aviso);
 }
-
 </script>
 </body>
 </html>
