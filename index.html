@@ -1650,8 +1650,17 @@ function formatearMoneda(valor) {
     }
 }
 
+// ==========================================================
+// CORREÇÃO #1: Erro de Data (Dia 30 sumindo)
+// Modificado para usar data local em vez de UTC (toISOString)
+// ==========================================================
 function obtenerAnioMesActual() {
-    return new Date().toISOString().slice(0, 7);
+    const d = new Date();
+    // Pega o ano local
+    const year = d.getFullYear();
+    // Pega o mês local (0-11) e soma 1, garantindo 2 dígitos
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    return `${year}-${month}`;
 }
 
 function filtrarMesActual(lista, campoFecha) {
@@ -2098,7 +2107,6 @@ window.pagarGastoFijo = (id) => {
     };
     lista.appendChild(btnTransf);
 
-        // ... (código anterior da função continua igual)
 
     // 👇 SUBSTITUA APENAS ESTA PARTE DAS TARJETAS 👇
     if (tarjetasLocal.length > 0) {
@@ -2127,9 +2135,6 @@ window.pagarGastoFijo = (id) => {
         lista.appendChild(aviso);
     }
     // 👆 FIM DA SUBSTITUIÇÃO 👆
-
-    // ... (o resto do código: Botão Cancelar, etc, continua igual)
-
 
     // Botão Cancelar
     const btnCancel = document.createElement("button");
@@ -2352,7 +2357,6 @@ formTransaccion.addEventListener("submit", async (e) => {
         const catIdDB = (catVal === "__gasto_fijo__") ? null : catVal;
 
         // --- VERIFICAÇÃO DE PARCELAMENTO ---
-        // Nota: Removi a restrição de cartão. Agora parcela qualquer saída.
         if (isParcelado && tipo === "salida" && qtdParcelas > 1) {
             
             const valorParcela = valTotal / qtdParcelas;
@@ -3051,25 +3055,43 @@ function rellenarTablaTarjetas() {
     rellenarSelectTarjetas();
 }
 
-// 👇 SUBSTITUA A FUNÇÃO 'rellenarTablaTransacciones' POR ESTA VERSÃO FINAL COMPLETA 👇
+// ==========================================================
+// CORREÇÃO #2: Histórico de Transações
+// Se tiver filtro de data, IGNORE o mês atual.
+// ==========================================================
 function rellenarTablaTransacciones() {
     const tb = document.querySelector("#tabla-transacciones tbody");
     tb.innerHTML = "";
-    const mes = obtenerAnioMesActual();
-    let l = transaccionesLocal.filter(t => t.fecha && t.fecha.startsWith(mes));
     
+    // Pega os valores dos filtros
     const ft = document.getElementById("filtro-texto").value.toLowerCase();
     const ff = document.getElementById("filtro-fecha").value;
     
-    if (ft) l = l.filter(t => (t.descripcion || "").toLowerCase().includes(ft));
-    if (ff) l = l.filter(t => t.fecha === ff);
+    // Começa com a lista completa
+    let l = transaccionesLocal; 
+
+    // 1. Se o usuário selecionou uma data específica, filtre por ela (ignorando mês atual)
+    if (ff) {
+        l = l.filter(t => t.fecha === ff);
+    } 
+    // 2. Se NÃO selecionou data, aplica o padrão: Mês Atual
+    else {
+        const mes = obtenerAnioMesActual();
+        l = l.filter(t => t.fecha && t.fecha.startsWith(mes));
+    }
     
+    // 3. Aplica o filtro de texto se houver
+    if (ft) {
+        l = l.filter(t => (t.descripcion || "").toLowerCase().includes(ft));
+    }
+    
+    // Ordena por data (mais recente primeiro)
     l.sort((a, b) => a.fecha < b.fecha ? 1 : -1);
 
     l.forEach(t => {
         const tr = document.createElement("tr");
         
-        // 1. Define Categoria (Mantém lógica de Gasto Fixo)
+        // Define Categoria
         let catNombre = "-";
         if (t.categoriaId === null && t.gastoFijoId) {
             const f = fijosLocal.find(x => x.id === t.gastoFijoId);
@@ -3079,20 +3101,17 @@ function rellenarTablaTransacciones() {
             catNombre = c ? c.nome : "-";
         }
 
-        // 2. Define Origem (Mantém Bancos e Transferência)
+        // Define Origem
         let origenTexto = "-";
         if (t.tipo === "salida") {
             if (t.origen === "tarjeta" && t.tarjetaId) {
-                // Mantém a visualização do Nome do Banco
                 const tar = tarjetasLocal.find(x => x.id === t.tarjetaId);
                 origenTexto = "💳 " + (tar ? `${tar.banco}` : "Tarjeta"); 
                 
             } else if (t.origen === "transferencia") {
-                // Mantém a opção Transferência Traduzida
                 origenTexto = "🏦 " + translations[currentLang].opt_transf;
                 
             } else {
-                // Dinheiro Traduzido
                 origenTexto = "💵 " + translations[currentLang].opt_efectivo;
             }
         }
@@ -3112,8 +3131,6 @@ function rellenarTablaTransacciones() {
         tb.appendChild(tr);
     });
 }
-
-
 
 function actualizarResumen() {
     const transMes = filtrarMesActual(transaccionesLocal, "fecha");
