@@ -2351,6 +2351,12 @@ function actualizarParcelamento() {
     }
 }
 
+// Listeners
+selTipo.addEventListener("change", atualizarParcelamento);
+chkParcelado.addEventListener("change", atualizarParcelamento);
+inputValor.addEventListener("input", calcularPreviaParcela);
+inputQtd.addEventListener("input", calcularPreviaParcela);
+// 👆 FIM DA LÓGICA VISUAL 👆
 
 
 // ============================================================
