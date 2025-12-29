@@ -2453,23 +2453,14 @@ setTimeout(() => {
 window.actualizarParcelamento = actualizarParcelamento;
 
 
+// // ============================================================
+// FORMULÁRIO DE TRANSAÇÃO (ÚNICO / SEM DUPLICAR CONST)
 // ============================================================
-// FORMULÁRIO DE TRANSAÇÃO
-// ============================================================
 const formTransaccion = document.getElementById("form-transaccion");
-formTransaccion.addEventListener("submit", async (e) => {
-    // ... seu código continua aqui ...
 
-
-// 👇 SUBSTITUA O BLOCO formTransaccion INTEIRO POR ESTE 👇
-const formTransaccion = document.getElementById("form-transaccion");
-// ... (continue com o código do formTransaccion) ...
-
-
-// 👇 SUBSTITUA O BLOCO formTransaccion INTEIRO POR ESTE 👇
-const formTransaccion = document.getElementById("form-transaccion");
 formTransaccion.addEventListener("submit", async (e) => {
     e.preventDefault();
+
     const tipo = document.getElementById("tipo").value;
     const catVal = document.getElementById("categoria").value;
     const orig = document.getElementById("origen").value;
@@ -2477,19 +2468,20 @@ formTransaccion.addEventListener("submit", async (e) => {
     const dataInicial = document.getElementById("data").value;
     const desc = document.getElementById("descripcion").value.trim();
 
-    // Novos campos
     const isParcelado = document.getElementById("chk-parcelado").checked;
-    const qtdParcelas = parseInt(document.getElementById("qtd-parcelas").value);
+    const qtdParcelas = parseInt(document.getElementById("qtd-parcelas").value) || 1;
 
-    // Validações
+    // Validação: gasto fixo selecionado
     let gfId = null;
     if (tipo === "salida" && catVal === "__gasto_fijo__") {
         gfId = document.getElementById("gasto-fijo-select").value;
         if (!gfId) { alert("Seleccione gasto fijo"); return; }
     }
 
-    // Validação da Origem
-    let tId = null, origFinal = null;
+    // Origem / Tarjeta
+    let tId = null;
+    let origFinal = null;
+
     if (tipo === "salida") {
         if (orig === "tarjeta") {
             tId = document.getElementById("tarjeta-select").value;
@@ -2502,41 +2494,47 @@ formTransaccion.addEventListener("submit", async (e) => {
         }
     }
 
+    // Validação básica
+    if (!dataInicial) { alert("Seleccione fecha"); return; }
+    if (!valTotal || valTotal <= 0) { alert("Ingrese un valor válido"); return; }
+
     loading(true);
     try {
         const catIdDB = (catVal === "__gasto_fijo__") ? null : catVal;
 
-        // --- VERIFICAÇÃO DE PARCELAMENTO ---
+        // PARCELADO: cria N docs
         if (isParcelado && tipo === "salida" && qtdParcelas > 1) {
-            
             const valorParcela = valTotal / qtdParcelas;
-            const promises = [];
-            const [ano, mes, dia] = dataInicial.split('-').map(Number);
-            
-            for (let i = 0; i < qtdParcelas; i++) {
-                // Calcula data futura corretamente
-                const dataFutura = new Date(ano, (mes - 1) + i, dia);
-                const dataFormatada = dataFutura.toISOString().slice(0, 10);
+            const [ano, mes, dia] = dataInicial.split("-").map(Number);
 
-                const docData = {
+            const promises = [];
+            for (let i = 0; i < qtdParcelas; i++) {
+                const dataFutura = new Date(ano, (mes - 1) + i, dia);
+
+                // Evita bug de UTC:
+                const yyyy = dataFutura.getFullYear();
+                const mm = String(dataFutura.getMonth() + 1).padStart(2, "0");
+                const dd = String(dataFutura.getDate()).padStart(2, "0");
+                const dataFormatada = `${yyyy}-${mm}-${dd}`;
+
+                promises.push(addDoc(collection(db, "transacciones"), {
                     uid: usuarioActual.uid,
                     tipo: tipo,
                     categoriaId: catIdDB,
                     gastoFijoId: gfId,
                     tarjetaId: tId,
-                    origen: origFinal, // Salva a origem correta
+                    origen: origFinal,
                     valor: valorParcela,
                     fecha: dataFormatada,
-                    descripcion: `${desc} (${i+1}/${qtdParcelas})`, // Ex: TV (1/10)
+                    descripcion: `${desc} (${i + 1}/${qtdParcelas})`,
                     createdAt: serverTimestamp()
-                };
-                promises.push(addDoc(collection(db, "transacciones"), docData));
+                }));
             }
-            
-            await Promise.all(promises);
 
-        } else {
-            // --- MODO NORMAL (SEM PARCELAR) ---
+            await Promise.all(promises);
+        } 
+        // NORMAL: 1 doc
+        else {
             await addDoc(collection(db, "transacciones"), {
                 uid: usuarioActual.uid,
                 tipo: tipo,
@@ -2550,77 +2548,22 @@ formTransaccion.addEventListener("submit", async (e) => {
                 createdAt: serverTimestamp()
             });
         }
-        
-        // Limpa tudo
+
+        // Limpa campos
         document.getElementById("valor").value = "";
         document.getElementById("descripcion").value = "";
         document.getElementById("chk-parcelado").checked = false;
-        document.getElementById("div-qtd-parcelas").classList.add("hidden");
-        
+        const divQtd = document.getElementById("div-qtd-parcelas");
+        if (divQtd) divQtd.classList.add("hidden");
+
         actualizarObjetivo();
-    } catch (e) { console.error(e); alert("Error: " + e.message); }
-    loading(false);
-});
-
-	// 👇 SUBSTITUA A FUNÇÃO 'eliminarTransaccion' POR ESTA VERSÃO INTELIGENTE 👇
-window.eliminarTransaccion = async (id) => {
-    // 1. Busca a transação na memória para analisar
-    const tx = transaccionesLocal.find(x => x.id === id);
-    if (!tx) return;
-
-    const esPt = currentLang === 'pt';
-
-    // 2. Verifica se é parcela usando "Expressão Regular"
-    // Procura pelo padrão: "Texto (Número/Número)" ex: "TV (1/5)"
-    const match = tx.descripcion ? tx.descripcion.match(/(.*?) \((\d+)\/(\d+)\)$/) : null;
-
-    if (match) {
-        // É UMA PARCELA!
-        const nomeBase = match[1]; // Ex: "TV"
-        
-        const msg = esPt
-            ? `Esta transação faz parte de um parcelamento ("${nomeBase}").\nDeseja apagar TODAS as parcelas relacionadas?`
-            : `Esta transacción es parte de una compra en cuotas ("${nomeBase}").\n¿Desea eliminar TODAS las cuotas relacionadas?`;
-
-        if (confirm(msg)) {
-            loading(true);
-            try {
-                // 3. Filtra todas as parcelas desse mesmo item
-                // Critério: Mesmo Tipo + Mesmo Valor + Descrição começa igual
-                const parcelasParaApagar = transaccionesLocal.filter(t => 
-                    t.tipo === tx.tipo &&
-                    Math.abs(t.valor - tx.valor) < 0.01 && // Compara valor (margem erro centavos)
-                    t.descripcion.startsWith(`${nomeBase} (`) &&
-                    t.descripcion.includes(`/${match[3]})`) // Garante que é do mesmo total (ex: /5)
-                );
-
-                // 4. Deleta todas em lote
-                const promises = parcelasParaApagar.map(t => deleteDoc(doc(db, "transacciones", t.id)));
-                await Promise.all(promises);
-                
-                actualizarObjetivo();
-                alert(esPt ? "Todas as parcelas foram apagadas." : "Todas las cuotas han sido eliminadas.");
-            
-            } catch (e) {
-                console.error(e);
-                alert("Error: " + e.message);
-            }
-            loading(false);
-            return; // Sai da função, pois já apagou tudo
-        }
+    } catch (e) {
+        console.error(e);
+        alert("Error: " + e.message);
+    } finally {
+        loading(false);
     }
-
-    // --- MODO NORMAL (Se não for parcela ou se o usuário cancelou apagar tudo) ---
-    const msgSimples = esPt ? "Apagar esta transação?" : "¿Eliminar esta transacción?";
-    if (!confirm(msgSimples)) return;
-
-    loading(true);
-    try {
-        await deleteDoc(doc(db, "transacciones", id));
-        actualizarObjetivo();
-    } catch (e) { console.error(e); }
-    loading(false);
-};
+});
 
 
 // 👇 COLE ISSO LOGO APÓS window.eliminarTransaccion 👇
