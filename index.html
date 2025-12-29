@@ -2369,7 +2369,6 @@ function calcularPreviaParcela() {
     const val = document.getElementById("valor");
     const qtd = document.getElementById("qtd-parcelas");
 
-    // Remove aviso antigo se houver
     const avisoAntigo = document.getElementById("info-previa-parcela");
     if (avisoAntigo) avisoAntigo.remove();
 
@@ -2379,7 +2378,6 @@ function calcularPreviaParcela() {
         
         if (total > 0 && q > 1) {
             const valorParcela = total / q;
-            // Detecta idioma para texto
             const esPt = (localStorage.getItem('app_lang') === 'pt');
             
             const texto = esPt 
@@ -2388,7 +2386,7 @@ function calcularPreviaParcela() {
             
             const aviso = document.createElement("div");
             aviso.id = "info-previa-parcela";
-            aviso.style.color = "#06b6d4"; // Ciano
+            aviso.style.color = "#06b6d4"; 
             aviso.style.fontSize = "0.85rem";
             aviso.style.marginTop = "5px";
             aviso.style.fontStyle = "italic";
@@ -2408,12 +2406,11 @@ function actualizarParcelamento() {
     const inputValor = document.getElementById("valor");
     const lblValor = document.querySelector('label[for="valor"]');
     
-    // Segurança: se os elementos não existirem ainda, para
     if (!selTipo || !divParcelas || !chkParcelado || !inputValor) return;
 
     const esPt = (localStorage.getItem('app_lang') === 'pt');
     
-    // A. Mostra/Esconde o bloco de parcelas (Só aparece em Saída)
+    // A. Mostra/Esconde
     if (selTipo.value === "salida") {
         divParcelas.classList.remove("hidden");
     } else {
@@ -2422,33 +2419,24 @@ function actualizarParcelamento() {
         divQtdParcelas.classList.add("hidden");
     }
 
-    // B. Lógica quando o Checkbox muda
+    // B. Lógica Checkbox
     if (chkParcelado.checked) {
         divQtdParcelas.classList.remove("hidden");
-        
-        // Muda o texto para "Valor TOTAL"
-        lblValor.textContent = esPt 
-            ? "Valor TOTAL da Compra (Soma tudo):" 
-            : "Valor TOTAL de la Compra (Suma todo):";
-            
-        lblValor.style.color = "#ec4899"; // Rosa para destacar
+        lblValor.textContent = esPt ? "Valor TOTAL:" : "Valor TOTAL:";
+        lblValor.style.color = "#ec4899";
         inputValor.placeholder = "1000,00";
-        
         calcularPreviaParcela();
     } else {
         divQtdParcelas.classList.add("hidden");
-        
-        // Volta ao normal
         lblValor.textContent = esPt ? "Valor" : "Valor"; 
         lblValor.style.color = "#cbd5e1";
         inputValor.placeholder = "Ex: 100,00";
-        
         const aviso = document.getElementById("info-previa-parcela");
         if (aviso) aviso.remove();
     }
 }
 
-// 3. Ativa os ouvintes de evento (Listeners) de forma segura
+// 3. Ativa os ouvintes (Substitui os antigos)
 setTimeout(() => {
     const elTipo = document.getElementById("tipo");
     const elChk = document.getElementById("chk-parcelado");
@@ -2461,8 +2449,17 @@ setTimeout(() => {
     if(elQtd) elQtd.addEventListener("input", calcularPreviaParcela);
 }, 500);
 
-// Torna global para corrigir o erro "Can't find variable"
+// Torna global para evitar erro "Can't find variable"
 window.actualizarParcelamento = actualizarParcelamento;
+
+
+// ============================================================
+// FORMULÁRIO DE TRANSAÇÃO
+// ============================================================
+const formTransaccion = document.getElementById("form-transaccion");
+formTransaccion.addEventListener("submit", async (e) => {
+    // ... seu código continua aqui ...
+
 
 // 👇 SUBSTITUA O BLOCO formTransaccion INTEIRO POR ESTE 👇
 const formTransaccion = document.getElementById("form-transaccion");
