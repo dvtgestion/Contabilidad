@@ -2352,13 +2352,115 @@ function actualizarParcelamento() {
 }
 
 
-// Listeners
-selTipo.addEventListener("change", atualizarParcelamento);
-chkParcelado.addEventListener("change", atualizarParcelamento);
-inputValor.addEventListener("input", calcularPreviaParcela);
-inputQtd.addEventListener("input", calcularPreviaParcela);
-// 👆 FIM DA LÓGICA VISUAL 👆
 
+// ============================================================
+// LÓGICA DE PARCELAMENTO (Cole isso antes do formTransaccion)
+// ============================================================
+
+// 1. Função para calcular valor da parcela em tempo real
+function calcularPreviaParcela() {
+    const chk = document.getElementById("chk-parcelado");
+    const val = document.getElementById("valor");
+    const qtd = document.getElementById("qtd-parcelas");
+
+    // Remove aviso antigo se houver
+    const avisoAntigo = document.getElementById("info-previa-parcela");
+    if (avisoAntigo) avisoAntigo.remove();
+
+    if (chk && chk.checked && val.value) {
+        const total = parseNumeroLocal(val.value);
+        const q = parseInt(qtd.value) || 1;
+        
+        if (total > 0 && q > 1) {
+            const valorParcela = total / q;
+            // Detecta idioma para texto
+            const esPt = (localStorage.getItem('app_lang') === 'pt');
+            
+            const texto = esPt 
+                ? `ℹ️ Será registrado: <strong>${q}x</strong> de <strong>${formatearMoneda(valorParcela)}</strong>`
+                : `ℹ️ Se registrará: <strong>${q}x</strong> de <strong>${formatearMoneda(valorParcela)}</strong>`;
+            
+            const aviso = document.createElement("div");
+            aviso.id = "info-previa-parcela";
+            aviso.style.color = "#06b6d4"; // Ciano
+            aviso.style.fontSize = "0.85rem";
+            aviso.style.marginTop = "5px";
+            aviso.style.fontStyle = "italic";
+            aviso.innerHTML = texto;
+            
+            if(val.parentNode) val.parentNode.appendChild(aviso);
+        }
+    }
+}
+
+// 2. Função Principal que Mostra/Esconde os campos
+function actualizarParcelamento() {
+    const selTipo = document.getElementById("tipo");
+    const divParcelas = document.getElementById("campo-parcelas");
+    const chkParcelado = document.getElementById("chk-parcelado");
+    const divQtdParcelas = document.getElementById("div-qtd-parcelas");
+    const inputValor = document.getElementById("valor");
+    const lblValor = document.querySelector('label[for="valor"]');
+    
+    // Segurança: se os elementos não existirem ainda, para
+    if (!selTipo || !divParcelas || !chkParcelado || !inputValor) return;
+
+    const esPt = (localStorage.getItem('app_lang') === 'pt');
+    
+    // A. Mostra/Esconde o bloco de parcelas (Só aparece em Saída)
+    if (selTipo.value === "salida") {
+        divParcelas.classList.remove("hidden");
+    } else {
+        divParcelas.classList.add("hidden");
+        chkParcelado.checked = false; 
+        divQtdParcelas.classList.add("hidden");
+    }
+
+    // B. Lógica quando o Checkbox muda
+    if (chkParcelado.checked) {
+        divQtdParcelas.classList.remove("hidden");
+        
+        // Muda o texto para "Valor TOTAL"
+        lblValor.textContent = esPt 
+            ? "Valor TOTAL da Compra (Soma tudo):" 
+            : "Valor TOTAL de la Compra (Suma todo):";
+            
+        lblValor.style.color = "#ec4899"; // Rosa para destacar
+        inputValor.placeholder = "1000,00";
+        
+        calcularPreviaParcela();
+    } else {
+        divQtdParcelas.classList.add("hidden");
+        
+        // Volta ao normal
+        lblValor.textContent = esPt ? "Valor" : "Valor"; 
+        lblValor.style.color = "#cbd5e1";
+        inputValor.placeholder = "Ex: 100,00";
+        
+        const aviso = document.getElementById("info-previa-parcela");
+        if (aviso) aviso.remove();
+    }
+}
+
+// 3. Ativa os ouvintes de evento (Listeners) de forma segura
+setTimeout(() => {
+    const elTipo = document.getElementById("tipo");
+    const elChk = document.getElementById("chk-parcelado");
+    const elVal = document.getElementById("valor");
+    const elQtd = document.getElementById("qtd-parcelas");
+
+    if(elTipo) elTipo.addEventListener("change", actualizarParcelamento);
+    if(elChk) elChk.addEventListener("change", actualizarParcelamento);
+    if(elVal) elVal.addEventListener("input", calcularPreviaParcela);
+    if(elQtd) elQtd.addEventListener("input", calcularPreviaParcela);
+}, 500);
+
+// Torna global para corrigir o erro "Can't find variable"
+window.actualizarParcelamento = actualizarParcelamento;
+
+// 👇 SUBSTITUA O BLOCO formTransaccion INTEIRO POR ESTE 👇
+const formTransaccion = document.getElementById("form-transaccion");
+// ... (continue com o código do formTransaccion) ...
 
 
 // 👇 SUBSTITUA O BLOCO formTransaccion INTEIRO POR ESTE 👇
