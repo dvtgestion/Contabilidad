@@ -1719,119 +1719,127 @@ function limparMemoriaGlobal() {
     yaMostroModalCategorias = false;
 }
 
-// ----------------------------------------------------------------------
-// 👇👇👇 SUBSTITUA SEU BLOCO ATUAL POR ESTE AQUI 👇👇👇
+// // 👇👇👇 SUBSTITUA SEU onAuthStateChanged POR ESTA VERSÃO DE DIAGNÓSTICO 👇👇👇
 onAuthStateChanged(auth, async (user) => {
-   // 1. Garante o idioma atual
-  updateLanguage(currentLang);
+  // Tenta garantir que o seletor de idioma funcione
+  try {
+      const selLogin = document.getElementById("lang-select-login");
+      const selApp = document.getElementById("lang-select-app");
+      if(selLogin) selLogin.onchange = (e) => updateLanguage(e.target.value);
+      if(selApp) selApp.onchange = (e) => updateLanguage(e.target.value);
+      
+      // Atualiza idioma inicial
+      if(typeof updateLanguage === "function") updateLanguage(currentLang);
+  } catch (e) {
+      console.warn("Aviso idioma:", e);
+  }
 
-  // 👇👇👇 COLE ESTAS 4 LINHAS AQUI (ELAS ESTAVAM FALTANDO) 👇👇👇
-  const selLogin = document.getElementById("lang-select-login");
-  const selApp = document.getElementById("lang-select-app");
-  if(selLogin) selLogin.onchange = (e) => updateLanguage(e.target.value);
-  if(selApp) selApp.onchange = (e) => updateLanguage(e.target.value);
-  // 👆👆👆 FIM DO TRECHO QUE FALTAVA 👆👆👆
+  const loginMsg = document.getElementById("login-message");
 
   if (user) {
+     // Usuário logado
      loading(true);
      const loadingText = document.getElementById('loading-overlay');
-     if(loadingText && translations[currentLang]) loadingText.textContent = translations[currentLang].loading_check;
+     if(loadingText) loadingText.textContent = "Verificando dados...";
      
      try {
+         // --- VERIFICAÇÃO DE PERMISSÃO ---
          const docRef = doc(db, "clientes_permitidos", user.email); 
          const docSnap = await getDoc(docRef);
 
          if (docSnap.exists()) {
              const dadosUser = docSnap.data();
 
-             // 1. BLOQUEIO MANUAL
+             // 1. CHECAGEM: CONTA ATIVA
              if (dadosUser.ativo !== true) {
-                 alert(translations[currentLang].alert_restric);
-                 await signOut(auth);
-                 window.location.reload();
-                 return;
+                 throw new Error("Conta desativada pelo administrador.");
              }
 
-             // 2. BLOQUEIO POR DATA
+             // 2. CHECAGEM: VENCIMENTO (CORRIGIDO BUG DE DATA)
              if (dadosUser.data_vencimento) {
                  const hoy = new Date();
                  hoy.setHours(0, 0, 0, 0);
 
-                 // Limpeza da data
+                 // Formata DD/MM/AAAA ou DD-MM-AAAA
                  let dataLimpa = dadosUser.data_vencimento.toString().trim().replace(/\//g, "-");
                  const partes = dataLimpa.split('-');
                  
                  if (partes.length === 3) {
-                     const dataVenc = new Date(partes[0], partes[1] - 1, partes[2]);
+                     // CORREÇÃO IMPORTANTE: new Date(Ano, Mês-1, Dia)
+                     // Antes estava invertido e gerava erro de lógica
+                     const ano = parseInt(partes[2]);
+                     const mes = parseInt(partes[1]) - 1;
+                     const dia = parseInt(partes[0]);
+                     
+                     const dataVenc = new Date(ano, mes, dia);
 
-                     // A) BLOQUEIO 🚫
                      if (hoy > dataVenc) {
-                         // Define mensagem no idioma correto
-                         const esPt = currentLang === 'pt';
-                         const msgBloqueio = esPt
-                            ? `🚫 ACESSO SUSPENSO\n\nSua assinatura venceu dia: ${dataLimpa}.\nRegularize para acessar.`
-                            : `🚫 ACCESO SUSPENDIDO\n\nTu suscripción venció el día: ${dataLimpa}.\nRegulariza para acceder.`;
-
-                         alert(msgBloqueio);
-                         await signOut(auth);
-                         window.location.reload();
-                         return;
+                         throw new Error(`Assinatura vencida em: ${dataLimpa}`);
                      }
 
-                     // B) AVISO ⚠️
+                     // Aviso de vencimento próximo (5 dias)
                      const diffTempo = dataVenc - hoy;
                      const diffDias = Math.ceil(diffTempo / (1000 * 60 * 60 * 24));
-
                      if (diffDias <= 5 && diffDias >= 0) {
-                         // Chama a barra visual
-                         setTimeout(() => mostrarAvisoVencimento(diffDias), 1500);
+                         setTimeout(() => {
+                             if(typeof mostrarAvisoVencimento === "function") 
+                                 mostrarAvisoVencimento(diffDias);
+                         }, 1500);
                      }
                  }
              }
 
-             // LIBERA ACESSO ✅
-             if(loadingText && translations[currentLang]) loadingText.textContent = translations[currentLang].loading_data;
+             // --- SUCESSO ---
+             if(loadingText) loadingText.textContent = "Entrando...";
+             
              usuarioActual = user;
-             document.getElementById("user-email").textContent = user.email;
+             
+             // Atualiza UI
+             const elEmail = document.getElementById("user-email");
+             if(elEmail) elEmail.textContent = user.email;
+             
              document.getElementById("login-screen").classList.add("hidden");
              document.getElementById("app").classList.remove("hidden");
              
-             // Atualiza o seletor visual do app
-             const selApp = document.getElementById("lang-select-app");
-             if(selApp) selApp.value = currentLang;
-             
+             // Inicia listeners
              iniciarListeners(user.uid);
 
          } else {
-             alert(translations[currentLang].alert_restric);
-             await signOut(auth);
-             window.location.reload();
+             // Se não achou na whitelist, lança erro para cair no catch
+             throw new Error("E-mail não encontrado na lista de permissões.");
          }
+
      } catch (error) {
-         console.error("Erro whitelist:", error);
-         alert("Error: " + error.message);
-         await signOut(auth);
-         window.location.reload();
+         // 👇👇👇 AQUI ESTÁ A MÁGICA: MOSTRA O ERRO NA TELA 👇👇👇
+         console.error("Erro Fatal no Login:", error);
+         loading(false); // Remove o overlay
+         await signOut(auth); // Desloga para não ficar num limbo
+         
+         if(loginMsg) {
+             loginMsg.style.color = "#ef4444"; // Vermelho
+             loginMsg.style.fontWeight = "bold";
+             // Mostra o erro técnico na tela
+             loginMsg.textContent = "ERRO: " + error.message;
+         }
+         alert("Ocorreu um erro: " + error.message);
      }
 
   } else {
+     // Logout ou Sem Usuário
      if (usuarioActual) {
          window.location.reload();
          return;
      }
+     // Limpeza
      limparMemoriaGlobal();
      unsubs.forEach(u => u());
      unsubs = [];
 
      document.getElementById("app").classList.add("hidden");
      document.getElementById("login-screen").classList.remove("hidden");
-     
-     const selLogin = document.getElementById("lang-select-login");
-     if(selLogin) selLogin.value = currentLang;
      loading(false);
   }
 });
-
 
 // ----------------------------------------------------------------------
 // CARGA DE DATOS
