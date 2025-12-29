@@ -1870,34 +1870,49 @@ const unsubTarj = onSnapshot(query(collection(db, "tarjetas"), where("uid", "=="
 unsubs.push(unsubTarj);
 
 const docRef = doc(db, "perfil", uid);
-const unsubPerfil = onSnapshot(docRef, (docSnap) => {
-   if (docSnap.exists()) {
-       const p = docSnap.data();
-       edadUsuario = p.edad;
-       sexoUsuario = p.sexo;
-       paisUsuario = p.pais;
-       monedaUsuario = p.moneda || "USD";
-       metaMensualUsuario = Number(p.meta_mensual) || 0;
-       ingresoMensualUsuario = Number(p.ingreso_mensual) || 0;
-       objetivoNombre = p.objetivo_nombre || "";
-       objetivoValor = Number(p.objetivo_valor) || 0;
-       objetivoAhorroBase = Number(p.objetivo_ahorro_base) || 0;
-       objetivoFechaInicio = p.objetivo_fecha_inicio;
-       objetivoCompletado = p.objetivo_completado;
-       yaMostroModalCategorias = p.mostro_modal_categorias;
-       objetivosHistorial = p.objetivos_historial || [];
- 
-       if(!monedaUsuario && paisUsuario) monedaUsuario = monedaPorDefectoParaPais(paisUsuario);
-   } else {
-       metaMensualUsuario = 0; ingresoMensualUsuario = 0;
-       objetivoNombre = ""; objetivoValor = 0; objetivoAhorroBase = 0;
-       yaMostroModalCategorias = false;
-   }
-   inicializarInterfaz();
-   loading(false);
-});
+
+const unsubPerfil = onSnapshot(
+  docRef,
+  (docSnap) => {
+    try {
+      if (docSnap.exists()) {
+        const p = docSnap.data();
+        edadUsuario = p.edad;
+        sexoUsuario = p.sexo;
+        paisUsuario = p.pais;
+        monedaUsuario = p.moneda || "USD";
+        metaMensualUsuario = Number(p.meta_mensual) || 0;
+        ingresoMensualUsuario = Number(p.ingreso_mensual) || 0;
+        objetivoNombre = p.objetivo_nombre || "";
+        objetivoValor = Number(p.objetivo_valor) || 0;
+        objetivoAhorroBase = Number(p.objetivo_ahorro_base) || 0;
+        objetivoFechaInicio = p.objetivo_fecha_inicio;
+        objetivoCompletado = p.objetivo_completado;
+        yaMostroModalCategorias = p.mostro_modal_categorias;
+        objetivosHistorial = p.objetivos_historial || [];
+      } else {
+        // Perfil ainda não existe (usuário novo)
+        metaMensualUsuario = 0; ingresoMensualUsuario = 0;
+        objetivoNombre = ""; objetivoValor = 0; objetivoAhorroBase = 0;
+        yaMostroModalCategorias = false;
+      }
+
+      inicializarInterfaz();
+    } catch (e) {
+      console.error("Erro inicializarInterfaz (perfil):", e);
+      alert("Error UI: " + e.message);
+    } finally {
+      loading(false); // <-- GARANTE QUE DESLIGA
+    }
+  },
+  (error) => {
+    console.error("Erro onSnapshot(perfil):", error);
+    loading(false);
+    alert("Error perfil/permisos: " + error.message);
+  }
+);
+
 unsubs.push(unsubPerfil);
-}
 // ----------------------------------------------------------------------
 // LÓGICA DE LOGIN E REGISTRO UI
 // ----------------------------------------------------------------------
