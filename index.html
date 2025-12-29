@@ -1650,17 +1650,8 @@ function formatearMoneda(valor) {
     }
 }
 
-// ==========================================================
-// CORREÇÃO #1: Erro de Data (Dia 30 sumindo)
-// Modificado para usar data local em vez de UTC (toISOString)
-// ==========================================================
 function obtenerAnioMesActual() {
-    const d = new Date();
-    // Pega o ano local
-    const year = d.getFullYear();
-    // Pega o mês local (0-11) e soma 1, garantindo 2 dígitos
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    return `${year}-${month}`;
+    return new Date().toISOString().slice(0, 7);
 }
 
 function filtrarMesActual(lista, campoFecha) {
@@ -1719,127 +1710,119 @@ function limparMemoriaGlobal() {
     yaMostroModalCategorias = false;
 }
 
-// // 👇👇👇 SUBSTITUA SEU onAuthStateChanged POR ESTA VERSÃO DE DIAGNÓSTICO 👇👇👇
+// ----------------------------------------------------------------------
+// 👇👇👇 SUBSTITUA SEU BLOCO ATUAL POR ESTE AQUI 👇👇👇
 onAuthStateChanged(auth, async (user) => {
-  // Tenta garantir que o seletor de idioma funcione
-  try {
-      const selLogin = document.getElementById("lang-select-login");
-      const selApp = document.getElementById("lang-select-app");
-      if(selLogin) selLogin.onchange = (e) => updateLanguage(e.target.value);
-      if(selApp) selApp.onchange = (e) => updateLanguage(e.target.value);
-      
-      // Atualiza idioma inicial
-      if(typeof updateLanguage === "function") updateLanguage(currentLang);
-  } catch (e) {
-      console.warn("Aviso idioma:", e);
-  }
+   // 1. Garante o idioma atual
+  updateLanguage(currentLang);
 
-  const loginMsg = document.getElementById("login-message");
+  // 👇👇👇 COLE ESTAS 4 LINHAS AQUI (ELAS ESTAVAM FALTANDO) 👇👇👇
+  const selLogin = document.getElementById("lang-select-login");
+  const selApp = document.getElementById("lang-select-app");
+  if(selLogin) selLogin.onchange = (e) => updateLanguage(e.target.value);
+  if(selApp) selApp.onchange = (e) => updateLanguage(e.target.value);
+  // 👆👆👆 FIM DO TRECHO QUE FALTAVA 👆👆👆
 
   if (user) {
-     // Usuário logado
      loading(true);
      const loadingText = document.getElementById('loading-overlay');
-     if(loadingText) loadingText.textContent = "Verificando dados...";
+     if(loadingText && translations[currentLang]) loadingText.textContent = translations[currentLang].loading_check;
      
      try {
-         // --- VERIFICAÇÃO DE PERMISSÃO ---
          const docRef = doc(db, "clientes_permitidos", user.email); 
          const docSnap = await getDoc(docRef);
 
          if (docSnap.exists()) {
              const dadosUser = docSnap.data();
 
-             // 1. CHECAGEM: CONTA ATIVA
+             // 1. BLOQUEIO MANUAL
              if (dadosUser.ativo !== true) {
-                 throw new Error("Conta desativada pelo administrador.");
+                 alert(translations[currentLang].alert_restric);
+                 await signOut(auth);
+                 window.location.reload();
+                 return;
              }
 
-             // 2. CHECAGEM: VENCIMENTO (CORRIGIDO BUG DE DATA)
+             // 2. BLOQUEIO POR DATA
              if (dadosUser.data_vencimento) {
                  const hoy = new Date();
                  hoy.setHours(0, 0, 0, 0);
 
-                 // Formata DD/MM/AAAA ou DD-MM-AAAA
+                 // Limpeza da data
                  let dataLimpa = dadosUser.data_vencimento.toString().trim().replace(/\//g, "-");
                  const partes = dataLimpa.split('-');
                  
                  if (partes.length === 3) {
-                     // CORREÇÃO IMPORTANTE: new Date(Ano, Mês-1, Dia)
-                     // Antes estava invertido e gerava erro de lógica
-                     const ano = parseInt(partes[2]);
-                     const mes = parseInt(partes[1]) - 1;
-                     const dia = parseInt(partes[0]);
-                     
-                     const dataVenc = new Date(ano, mes, dia);
+                     const dataVenc = new Date(partes[0], partes[1] - 1, partes[2]);
 
+                     // A) BLOQUEIO 🚫
                      if (hoy > dataVenc) {
-                         throw new Error(`Assinatura vencida em: ${dataLimpa}`);
+                         // Define mensagem no idioma correto
+                         const esPt = currentLang === 'pt';
+                         const msgBloqueio = esPt
+                            ? `🚫 ACESSO SUSPENSO\n\nSua assinatura venceu dia: ${dataLimpa}.\nRegularize para acessar.`
+                            : `🚫 ACCESO SUSPENDIDO\n\nTu suscripción venció el día: ${dataLimpa}.\nRegulariza para acceder.`;
+
+                         alert(msgBloqueio);
+                         await signOut(auth);
+                         window.location.reload();
+                         return;
                      }
 
-                     // Aviso de vencimento próximo (5 dias)
+                     // B) AVISO ⚠️
                      const diffTempo = dataVenc - hoy;
                      const diffDias = Math.ceil(diffTempo / (1000 * 60 * 60 * 24));
+
                      if (diffDias <= 5 && diffDias >= 0) {
-                         setTimeout(() => {
-                             if(typeof mostrarAvisoVencimento === "function") 
-                                 mostrarAvisoVencimento(diffDias);
-                         }, 1500);
+                         // Chama a barra visual
+                         setTimeout(() => mostrarAvisoVencimento(diffDias), 1500);
                      }
                  }
              }
 
-             // --- SUCESSO ---
-             if(loadingText) loadingText.textContent = "Entrando...";
-             
+             // LIBERA ACESSO ✅
+             if(loadingText && translations[currentLang]) loadingText.textContent = translations[currentLang].loading_data;
              usuarioActual = user;
-             
-             // Atualiza UI
-             const elEmail = document.getElementById("user-email");
-             if(elEmail) elEmail.textContent = user.email;
-             
+             document.getElementById("user-email").textContent = user.email;
              document.getElementById("login-screen").classList.add("hidden");
              document.getElementById("app").classList.remove("hidden");
              
-             // Inicia listeners
+             // Atualiza o seletor visual do app
+             const selApp = document.getElementById("lang-select-app");
+             if(selApp) selApp.value = currentLang;
+             
              iniciarListeners(user.uid);
 
          } else {
-             // Se não achou na whitelist, lança erro para cair no catch
-             throw new Error("E-mail não encontrado na lista de permissões.");
+             alert(translations[currentLang].alert_restric);
+             await signOut(auth);
+             window.location.reload();
          }
-
      } catch (error) {
-         // 👇👇👇 AQUI ESTÁ A MÁGICA: MOSTRA O ERRO NA TELA 👇👇👇
-         console.error("Erro Fatal no Login:", error);
-         loading(false); // Remove o overlay
-         await signOut(auth); // Desloga para não ficar num limbo
-         
-         if(loginMsg) {
-             loginMsg.style.color = "#ef4444"; // Vermelho
-             loginMsg.style.fontWeight = "bold";
-             // Mostra o erro técnico na tela
-             loginMsg.textContent = "ERRO: " + error.message;
-         }
-         alert("Ocorreu um erro: " + error.message);
+         console.error("Erro whitelist:", error);
+         alert("Error: " + error.message);
+         await signOut(auth);
+         window.location.reload();
      }
 
   } else {
-     // Logout ou Sem Usuário
      if (usuarioActual) {
          window.location.reload();
          return;
      }
-     // Limpeza
      limparMemoriaGlobal();
      unsubs.forEach(u => u());
      unsubs = [];
 
      document.getElementById("app").classList.add("hidden");
      document.getElementById("login-screen").classList.remove("hidden");
+     
+     const selLogin = document.getElementById("lang-select-login");
+     if(selLogin) selLogin.value = currentLang;
      loading(false);
   }
 });
+
 
 // ----------------------------------------------------------------------
 // CARGA DE DATOS
@@ -1878,48 +1861,32 @@ const unsubTarj = onSnapshot(query(collection(db, "tarjetas"), where("uid", "=="
 unsubs.push(unsubTarj);
 
 const docRef = doc(db, "perfil", uid);
-
-const unsubPerfil = onSnapshot(
-  docRef,
-  (docSnap) => {
-    try {
-      if (docSnap.exists()) {
-        const p = docSnap.data();
-        edadUsuario = p.edad;
-        sexoUsuario = p.sexo;
-        paisUsuario = p.pais;
-        monedaUsuario = p.moneda || "USD";
-        metaMensualUsuario = Number(p.meta_mensual) || 0;
-        ingresoMensualUsuario = Number(p.ingreso_mensual) || 0;
-        objetivoNombre = p.objetivo_nombre || "";
-        objetivoValor = Number(p.objetivo_valor) || 0;
-        objetivoAhorroBase = Number(p.objetivo_ahorro_base) || 0;
-        objetivoFechaInicio = p.objetivo_fecha_inicio;
-        objetivoCompletado = p.objetivo_completado;
-        yaMostroModalCategorias = p.mostro_modal_categorias;
-        objetivosHistorial = p.objetivos_historial || [];
-      } else {
-        // Perfil ainda não existe (usuário novo)
-        metaMensualUsuario = 0; ingresoMensualUsuario = 0;
-        objetivoNombre = ""; objetivoValor = 0; objetivoAhorroBase = 0;
-        yaMostroModalCategorias = false;
-      }
-
-      inicializarInterfaz();
-    } catch (e) {
-      console.error("Erro inicializarInterfaz (perfil):", e);
-      alert("Error UI: " + e.message);
-    } finally {
-      loading(false); // <-- GARANTE QUE DESLIGA
-    }
-  },
-  (error) => {
-    console.error("Erro onSnapshot(perfil):", error);
-    loading(false);
-    alert("Error perfil/permisos: " + error.message);
-  }
-);
-
+const unsubPerfil = onSnapshot(docRef, (docSnap) => {
+   if (docSnap.exists()) {
+       const p = docSnap.data();
+       edadUsuario = p.edad;
+       sexoUsuario = p.sexo;
+       paisUsuario = p.pais;
+       monedaUsuario = p.moneda || "USD";
+       metaMensualUsuario = Number(p.meta_mensual) || 0;
+       ingresoMensualUsuario = Number(p.ingreso_mensual) || 0;
+       objetivoNombre = p.objetivo_nombre || "";
+       objetivoValor = Number(p.objetivo_valor) || 0;
+       objetivoAhorroBase = Number(p.objetivo_ahorro_base) || 0;
+       objetivoFechaInicio = p.objetivo_fecha_inicio;
+       objetivoCompletado = p.objetivo_completado;
+       yaMostroModalCategorias = p.mostro_modal_categorias;
+       objetivosHistorial = p.objetivos_historial || [];
+ 
+       if(!monedaUsuario && paisUsuario) monedaUsuario = monedaPorDefectoParaPais(paisUsuario);
+   } else {
+       metaMensualUsuario = 0; ingresoMensualUsuario = 0;
+       objetivoNombre = ""; objetivoValor = 0; objetivoAhorroBase = 0;
+       yaMostroModalCategorias = false;
+   }
+   inicializarInterfaz();
+   loading(false);
+});
 unsubs.push(unsubPerfil);
 }
 // ----------------------------------------------------------------------
@@ -2131,6 +2098,7 @@ window.pagarGastoFijo = (id) => {
     };
     lista.appendChild(btnTransf);
 
+        // ... (código anterior da função continua igual)
 
     // 👇 SUBSTITUA APENAS ESTA PARTE DAS TARJETAS 👇
     if (tarjetasLocal.length > 0) {
@@ -2159,6 +2127,9 @@ window.pagarGastoFijo = (id) => {
         lista.appendChild(aviso);
     }
     // 👆 FIM DA SUBSTITUIÇÃO 👆
+
+    // ... (o resto do código: Botão Cancelar, etc, continua igual)
+
 
     // Botão Cancelar
     const btnCancel = document.createElement("button");
@@ -2266,13 +2237,6 @@ const inputQtd = document.getElementById("qtd-parcelas");
 
 // Função para calcular e mostrar quanto vai ficar cada parcela
 function calcularPreviaParcela() {
-    // --- CORREÇÃO: Pegamos os elementos localmente ---
-    const chkParcelado = document.getElementById("chk-parcelado");
-    const inputValor = document.getElementById("valor");
-    const inputQtd = document.getElementById("qtd-parcelas");
-
-    if (!chkParcelado || !inputValor || !inputQtd) return;
-
     const avisoAntigo = document.getElementById("info-previa-parcela");
     if (avisoAntigo) avisoAntigo.remove();
 
@@ -2301,21 +2265,9 @@ function calcularPreviaParcela() {
     }
 }
 
-
 // Função que controla a visibilidade e os textos
-function actualizarParcelamento() {
-    // --- CORREÇÃO: Pegamos os elementos AQUI DENTRO para evitar erro de inicialização ---
-    const selTipo = document.getElementById("tipo");
-    const divParcelas = document.getElementById("campo-parcelas");
-    const chkParcelado = document.getElementById("chk-parcelado");
-    const divQtdParcelas = document.getElementById("div-qtd-parcelas");
-    const inputValor = document.getElementById("valor");
-    const inputQtd = document.getElementById("qtd-parcelas");
+function atualizarParcelamento() {
     const lblValor = document.querySelector('label[for="valor"]');
-    
-    // Segurança: se os elementos não existirem ainda (tela de login), paramos aqui
-    if (!selTipo || !divParcelas || !chkParcelado || !inputValor) return;
-
     const esPt = currentLang === 'pt';
     
     // 1. Mostra/Esconde o bloco de parcelas
@@ -2338,12 +2290,11 @@ function actualizarParcelamento() {
             
         lblValor.style.color = "var(--secondary-glow)"; 
         inputValor.placeholder = "1000,00";
-        // Chama a função de cálculo de prévia (certifique-se que ela não use variáveis globais também)
-        if(typeof calcularPreviaParcela === 'function') calcularPreviaParcela();
+        calcularPreviaParcela();
     } else {
         divQtdParcelas.classList.add("hidden");
         // Volta ao normal
-        lblValor.textContent = esPt ? "Valor" : "Valor"; 
+        lblValor.textContent = esPt ? "Valor" : "Valor"; // Ou pega do data-i18n se preferir
         lblValor.style.color = "#cbd5e1";
         inputValor.placeholder = esPt ? "Ex: 1.300,50" : "Ej: 1.300,50";
         const aviso = document.getElementById("info-previa-parcela");
@@ -2359,108 +2310,11 @@ inputQtd.addEventListener("input", calcularPreviaParcela);
 // 👆 FIM DA LÓGICA VISUAL 👆
 
 
-// ============================================================
-// LÓGICA DE PARCELAMENTO (Cole isso antes do formTransaccion)
-// ============================================================
 
-// 1. Função para calcular valor da parcela em tempo real
-function calcularPreviaParcela() {
-    const chk = document.getElementById("chk-parcelado");
-    const val = document.getElementById("valor");
-    const qtd = document.getElementById("qtd-parcelas");
-
-    const avisoAntigo = document.getElementById("info-previa-parcela");
-    if (avisoAntigo) avisoAntigo.remove();
-
-    if (chk && chk.checked && val.value) {
-        const total = parseNumeroLocal(val.value);
-        const q = parseInt(qtd.value) || 1;
-        
-        if (total > 0 && q > 1) {
-            const valorParcela = total / q;
-            const esPt = (localStorage.getItem('app_lang') === 'pt');
-            
-            const texto = esPt 
-                ? `ℹ️ Será registrado: <strong>${q}x</strong> de <strong>${formatearMoneda(valorParcela)}</strong>`
-                : `ℹ️ Se registrará: <strong>${q}x</strong> de <strong>${formatearMoneda(valorParcela)}</strong>`;
-            
-            const aviso = document.createElement("div");
-            aviso.id = "info-previa-parcela";
-            aviso.style.color = "#06b6d4"; 
-            aviso.style.fontSize = "0.85rem";
-            aviso.style.marginTop = "5px";
-            aviso.style.fontStyle = "italic";
-            aviso.innerHTML = texto;
-            
-            if(val.parentNode) val.parentNode.appendChild(aviso);
-        }
-    }
-}
-
-// 2. Função Principal que Mostra/Esconde os campos
-function actualizarParcelamento() {
-    const selTipo = document.getElementById("tipo");
-    const divParcelas = document.getElementById("campo-parcelas");
-    const chkParcelado = document.getElementById("chk-parcelado");
-    const divQtdParcelas = document.getElementById("div-qtd-parcelas");
-    const inputValor = document.getElementById("valor");
-    const lblValor = document.querySelector('label[for="valor"]');
-    
-    if (!selTipo || !divParcelas || !chkParcelado || !inputValor) return;
-
-    const esPt = (localStorage.getItem('app_lang') === 'pt');
-    
-    // A. Mostra/Esconde
-    if (selTipo.value === "salida") {
-        divParcelas.classList.remove("hidden");
-    } else {
-        divParcelas.classList.add("hidden");
-        chkParcelado.checked = false; 
-        divQtdParcelas.classList.add("hidden");
-    }
-
-    // B. Lógica Checkbox
-    if (chkParcelado.checked) {
-        divQtdParcelas.classList.remove("hidden");
-        lblValor.textContent = esPt ? "Valor TOTAL:" : "Valor TOTAL:";
-        lblValor.style.color = "#ec4899";
-        inputValor.placeholder = "1000,00";
-        calcularPreviaParcela();
-    } else {
-        divQtdParcelas.classList.add("hidden");
-        lblValor.textContent = esPt ? "Valor" : "Valor"; 
-        lblValor.style.color = "#cbd5e1";
-        inputValor.placeholder = "Ex: 100,00";
-        const aviso = document.getElementById("info-previa-parcela");
-        if (aviso) aviso.remove();
-    }
-}
-
-// 3. Ativa os ouvintes (Substitui os antigos)
-setTimeout(() => {
-    const elTipo = document.getElementById("tipo");
-    const elChk = document.getElementById("chk-parcelado");
-    const elVal = document.getElementById("valor");
-    const elQtd = document.getElementById("qtd-parcelas");
-
-    if(elTipo) elTipo.addEventListener("change", actualizarParcelamento);
-    if(elChk) elChk.addEventListener("change", actualizarParcelamento);
-    if(elVal) elVal.addEventListener("input", calcularPreviaParcela);
-    if(elQtd) elQtd.addEventListener("input", calcularPreviaParcela);
-}, 500);
-
-// Torna global para evitar erro "Can't find variable"
-window.actualizarParcelamento = actualizarParcelamento;
-
-
-// // ============================================================
-// FORMULÁRIO DE TRANSAÇÃO (ÚNICO / SEM DUPLICAR CONST)
-// ============================================================
+// 👇 SUBSTITUA O BLOCO formTransaccion INTEIRO POR ESTE 👇
 const formTransaccion = document.getElementById("form-transaccion");
-
 formTransaccion.addEventListener("submit", async (e) => {
     e.preventDefault();
-
     const tipo = document.getElementById("tipo").value;
     const catVal = document.getElementById("categoria").value;
     const orig = document.getElementById("origen").value;
@@ -2468,20 +2322,19 @@ formTransaccion.addEventListener("submit", async (e) => {
     const dataInicial = document.getElementById("data").value;
     const desc = document.getElementById("descripcion").value.trim();
 
+    // Novos campos
     const isParcelado = document.getElementById("chk-parcelado").checked;
-    const qtdParcelas = parseInt(document.getElementById("qtd-parcelas").value) || 1;
+    const qtdParcelas = parseInt(document.getElementById("qtd-parcelas").value);
 
-    // Validação: gasto fixo selecionado
+    // Validações
     let gfId = null;
     if (tipo === "salida" && catVal === "__gasto_fijo__") {
         gfId = document.getElementById("gasto-fijo-select").value;
         if (!gfId) { alert("Seleccione gasto fijo"); return; }
     }
 
-    // Origem / Tarjeta
-    let tId = null;
-    let origFinal = null;
-
+    // Validação da Origem
+    let tId = null, origFinal = null;
     if (tipo === "salida") {
         if (orig === "tarjeta") {
             tId = document.getElementById("tarjeta-select").value;
@@ -2494,47 +2347,42 @@ formTransaccion.addEventListener("submit", async (e) => {
         }
     }
 
-    // Validação básica
-    if (!dataInicial) { alert("Seleccione fecha"); return; }
-    if (!valTotal || valTotal <= 0) { alert("Ingrese un valor válido"); return; }
-
     loading(true);
     try {
         const catIdDB = (catVal === "__gasto_fijo__") ? null : catVal;
 
-        // PARCELADO: cria N docs
+        // --- VERIFICAÇÃO DE PARCELAMENTO ---
+        // Nota: Removi a restrição de cartão. Agora parcela qualquer saída.
         if (isParcelado && tipo === "salida" && qtdParcelas > 1) {
+            
             const valorParcela = valTotal / qtdParcelas;
-            const [ano, mes, dia] = dataInicial.split("-").map(Number);
-
             const promises = [];
+            const [ano, mes, dia] = dataInicial.split('-').map(Number);
+            
             for (let i = 0; i < qtdParcelas; i++) {
+                // Calcula data futura corretamente
                 const dataFutura = new Date(ano, (mes - 1) + i, dia);
+                const dataFormatada = dataFutura.toISOString().slice(0, 10);
 
-                // Evita bug de UTC:
-                const yyyy = dataFutura.getFullYear();
-                const mm = String(dataFutura.getMonth() + 1).padStart(2, "0");
-                const dd = String(dataFutura.getDate()).padStart(2, "0");
-                const dataFormatada = `${yyyy}-${mm}-${dd}`;
-
-                promises.push(addDoc(collection(db, "transacciones"), {
+                const docData = {
                     uid: usuarioActual.uid,
                     tipo: tipo,
                     categoriaId: catIdDB,
                     gastoFijoId: gfId,
                     tarjetaId: tId,
-                    origen: origFinal,
+                    origen: origFinal, // Salva a origem correta
                     valor: valorParcela,
                     fecha: dataFormatada,
-                    descripcion: `${desc} (${i + 1}/${qtdParcelas})`,
+                    descripcion: `${desc} (${i+1}/${qtdParcelas})`, // Ex: TV (1/10)
                     createdAt: serverTimestamp()
-                }));
+                };
+                promises.push(addDoc(collection(db, "transacciones"), docData));
             }
-
+            
             await Promise.all(promises);
-        } 
-        // NORMAL: 1 doc
-        else {
+
+        } else {
+            // --- MODO NORMAL (SEM PARCELAR) ---
             await addDoc(collection(db, "transacciones"), {
                 uid: usuarioActual.uid,
                 tipo: tipo,
@@ -2548,22 +2396,77 @@ formTransaccion.addEventListener("submit", async (e) => {
                 createdAt: serverTimestamp()
             });
         }
-
-        // Limpa campos
+        
+        // Limpa tudo
         document.getElementById("valor").value = "";
         document.getElementById("descripcion").value = "";
         document.getElementById("chk-parcelado").checked = false;
-        const divQtd = document.getElementById("div-qtd-parcelas");
-        if (divQtd) divQtd.classList.add("hidden");
-
+        document.getElementById("div-qtd-parcelas").classList.add("hidden");
+        
         actualizarObjetivo();
-    } catch (e) {
-        console.error(e);
-        alert("Error: " + e.message);
-    } finally {
-        loading(false);
-    }
+    } catch (e) { console.error(e); alert("Error: " + e.message); }
+    loading(false);
 });
+
+	// 👇 SUBSTITUA A FUNÇÃO 'eliminarTransaccion' POR ESTA VERSÃO INTELIGENTE 👇
+window.eliminarTransaccion = async (id) => {
+    // 1. Busca a transação na memória para analisar
+    const tx = transaccionesLocal.find(x => x.id === id);
+    if (!tx) return;
+
+    const esPt = currentLang === 'pt';
+
+    // 2. Verifica se é parcela usando "Expressão Regular"
+    // Procura pelo padrão: "Texto (Número/Número)" ex: "TV (1/5)"
+    const match = tx.descripcion ? tx.descripcion.match(/(.*?) \((\d+)\/(\d+)\)$/) : null;
+
+    if (match) {
+        // É UMA PARCELA!
+        const nomeBase = match[1]; // Ex: "TV"
+        
+        const msg = esPt
+            ? `Esta transação faz parte de um parcelamento ("${nomeBase}").\nDeseja apagar TODAS as parcelas relacionadas?`
+            : `Esta transacción es parte de una compra en cuotas ("${nomeBase}").\n¿Desea eliminar TODAS las cuotas relacionadas?`;
+
+        if (confirm(msg)) {
+            loading(true);
+            try {
+                // 3. Filtra todas as parcelas desse mesmo item
+                // Critério: Mesmo Tipo + Mesmo Valor + Descrição começa igual
+                const parcelasParaApagar = transaccionesLocal.filter(t => 
+                    t.tipo === tx.tipo &&
+                    Math.abs(t.valor - tx.valor) < 0.01 && // Compara valor (margem erro centavos)
+                    t.descripcion.startsWith(`${nomeBase} (`) &&
+                    t.descripcion.includes(`/${match[3]})`) // Garante que é do mesmo total (ex: /5)
+                );
+
+                // 4. Deleta todas em lote
+                const promises = parcelasParaApagar.map(t => deleteDoc(doc(db, "transacciones", t.id)));
+                await Promise.all(promises);
+                
+                actualizarObjetivo();
+                alert(esPt ? "Todas as parcelas foram apagadas." : "Todas las cuotas han sido eliminadas.");
+            
+            } catch (e) {
+                console.error(e);
+                alert("Error: " + e.message);
+            }
+            loading(false);
+            return; // Sai da função, pois já apagou tudo
+        }
+    }
+
+    // --- MODO NORMAL (Se não for parcela ou se o usuário cancelou apagar tudo) ---
+    const msgSimples = esPt ? "Apagar esta transação?" : "¿Eliminar esta transacción?";
+    if (!confirm(msgSimples)) return;
+
+    loading(true);
+    try {
+        await deleteDoc(doc(db, "transacciones", id));
+        actualizarObjetivo();
+    } catch (e) { console.error(e); }
+    loading(false);
+};
 
 
 // 👇 COLE ISSO LOGO APÓS window.eliminarTransaccion 👇
@@ -3148,43 +3051,25 @@ function rellenarTablaTarjetas() {
     rellenarSelectTarjetas();
 }
 
-// ==========================================================
-// CORREÇÃO #2: Histórico de Transações
-// Se tiver filtro de data, IGNORE o mês atual.
-// ==========================================================
+// 👇 SUBSTITUA A FUNÇÃO 'rellenarTablaTransacciones' POR ESTA VERSÃO FINAL COMPLETA 👇
 function rellenarTablaTransacciones() {
     const tb = document.querySelector("#tabla-transacciones tbody");
     tb.innerHTML = "";
+    const mes = obtenerAnioMesActual();
+    let l = transaccionesLocal.filter(t => t.fecha && t.fecha.startsWith(mes));
     
-    // Pega os valores dos filtros
     const ft = document.getElementById("filtro-texto").value.toLowerCase();
     const ff = document.getElementById("filtro-fecha").value;
     
-    // Começa com a lista completa
-    let l = transaccionesLocal; 
-
-    // 1. Se o usuário selecionou uma data específica, filtre por ela (ignorando mês atual)
-    if (ff) {
-        l = l.filter(t => t.fecha === ff);
-    } 
-    // 2. Se NÃO selecionou data, aplica o padrão: Mês Atual
-    else {
-        const mes = obtenerAnioMesActual();
-        l = l.filter(t => t.fecha && t.fecha.startsWith(mes));
-    }
+    if (ft) l = l.filter(t => (t.descripcion || "").toLowerCase().includes(ft));
+    if (ff) l = l.filter(t => t.fecha === ff);
     
-    // 3. Aplica o filtro de texto se houver
-    if (ft) {
-        l = l.filter(t => (t.descripcion || "").toLowerCase().includes(ft));
-    }
-    
-    // Ordena por data (mais recente primeiro)
     l.sort((a, b) => a.fecha < b.fecha ? 1 : -1);
 
     l.forEach(t => {
         const tr = document.createElement("tr");
         
-        // Define Categoria
+        // 1. Define Categoria (Mantém lógica de Gasto Fixo)
         let catNombre = "-";
         if (t.categoriaId === null && t.gastoFijoId) {
             const f = fijosLocal.find(x => x.id === t.gastoFijoId);
@@ -3194,17 +3079,20 @@ function rellenarTablaTransacciones() {
             catNombre = c ? c.nome : "-";
         }
 
-        // Define Origem
+        // 2. Define Origem (Mantém Bancos e Transferência)
         let origenTexto = "-";
         if (t.tipo === "salida") {
             if (t.origen === "tarjeta" && t.tarjetaId) {
+                // Mantém a visualização do Nome do Banco
                 const tar = tarjetasLocal.find(x => x.id === t.tarjetaId);
                 origenTexto = "💳 " + (tar ? `${tar.banco}` : "Tarjeta"); 
                 
             } else if (t.origen === "transferencia") {
+                // Mantém a opção Transferência Traduzida
                 origenTexto = "🏦 " + translations[currentLang].opt_transf;
                 
             } else {
+                // Dinheiro Traduzido
                 origenTexto = "💵 " + translations[currentLang].opt_efectivo;
             }
         }
@@ -3224,6 +3112,8 @@ function rellenarTablaTransacciones() {
         tb.appendChild(tr);
     });
 }
+
+
 
 function actualizarResumen() {
     const transMes = filtrarMesActual(transaccionesLocal, "fecha");
