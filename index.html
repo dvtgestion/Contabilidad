@@ -2257,6 +2257,13 @@ const inputQtd = document.getElementById("qtd-parcelas");
 
 // Função para calcular e mostrar quanto vai ficar cada parcela
 function calcularPreviaParcela() {
+    // --- CORREÇÃO: Pegamos os elementos localmente ---
+    const chkParcelado = document.getElementById("chk-parcelado");
+    const inputValor = document.getElementById("valor");
+    const inputQtd = document.getElementById("qtd-parcelas");
+
+    if (!chkParcelado || !inputValor || !inputQtd) return;
+
     const avisoAntigo = document.getElementById("info-previa-parcela");
     if (avisoAntigo) avisoAntigo.remove();
 
@@ -2285,9 +2292,21 @@ function calcularPreviaParcela() {
     }
 }
 
+
 // Função que controla a visibilidade e os textos
-function atualizarParcelamento() {
+function actualizarParcelamento() {
+    // --- CORREÇÃO: Pegamos os elementos AQUI DENTRO para evitar erro de inicialização ---
+    const selTipo = document.getElementById("tipo");
+    const divParcelas = document.getElementById("campo-parcelas");
+    const chkParcelado = document.getElementById("chk-parcelado");
+    const divQtdParcelas = document.getElementById("div-qtd-parcelas");
+    const inputValor = document.getElementById("valor");
+    const inputQtd = document.getElementById("qtd-parcelas");
     const lblValor = document.querySelector('label[for="valor"]');
+    
+    // Segurança: se os elementos não existirem ainda (tela de login), paramos aqui
+    if (!selTipo || !divParcelas || !chkParcelado || !inputValor) return;
+
     const esPt = currentLang === 'pt';
     
     // 1. Mostra/Esconde o bloco de parcelas
@@ -2310,17 +2329,19 @@ function atualizarParcelamento() {
             
         lblValor.style.color = "var(--secondary-glow)"; 
         inputValor.placeholder = "1000,00";
-        calcularPreviaParcela();
+        // Chama a função de cálculo de prévia (certifique-se que ela não use variáveis globais também)
+        if(typeof calcularPreviaParcela === 'function') calcularPreviaParcela();
     } else {
         divQtdParcelas.classList.add("hidden");
         // Volta ao normal
-        lblValor.textContent = esPt ? "Valor" : "Valor"; // Ou pega do data-i18n se preferir
+        lblValor.textContent = esPt ? "Valor" : "Valor"; 
         lblValor.style.color = "#cbd5e1";
         inputValor.placeholder = esPt ? "Ex: 1.300,50" : "Ej: 1.300,50";
         const aviso = document.getElementById("info-previa-parcela");
         if (aviso) aviso.remove();
     }
 }
+
 
 // Listeners
 selTipo.addEventListener("change", atualizarParcelamento);
